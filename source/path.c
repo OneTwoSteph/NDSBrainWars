@@ -5,7 +5,9 @@
  *      Author: Stephanie Amati
  */
 
+#include "general.h"
 #include "path.h"
+#include "path_arrow.h"
 
 COLOR color;
 DIRECTION direction;
@@ -49,12 +51,11 @@ void path_init(){
 	path_draw(direction, color);
 
 	// Configure interrupts and timer for false blinking effect
-	/*TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
+	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
-	irqInit();
+	//irqInit();
 	irqSet(IRQ_TIMER1, &path_wrong);
 	irqEnable(IRQ_TIMER1);
-	TIMER0_CR &= ~(TIMER_ENABLE);*/
 
 	// Set global variables
 	score = 0;
@@ -69,18 +70,20 @@ void path_draw(direction, color){
 		for(y=0; y<24; y++){
 			// Direction
 			switch(direction){
-				case RIGHT:
-					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+32+4)*32+x];
-					break;
-				case LEFT:
-					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+32+4)*32+(31-x)]^(1<<10);
-					break;
-				case UP:
-					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+4)*32+x];
-					break;
-				case DOWN:
-					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(31-4-y)*32+x]^(1<<11);
-					break;
+			case RIGHT:
+				BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+32+4)*32+x];
+				break;
+			case LEFT:
+				BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+32+4)*32+(31-x)]^(1<<10);
+				break;
+			case UP:
+				BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+4)*32+x];
+				break;
+			case DOWN:
+				BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(31-4-y)*32+x]^(1<<11);
+				break;
+			default:
+				break;
 			}
 
 			// Color
@@ -89,13 +92,16 @@ void path_draw(direction, color){
 	}
 }
 
-void path_game(){
+bool path_game(){
 	// Scan keys to find pressed ones
 	scanKeys();
 	u16 keys = (u16) keysDown();
 
-	// Check which key was pressed and if it is correct
-	switch(color){
+	if(keys & KEY_START)
+		return false;
+	else{
+		// Check which key was pressed and if it is correct
+		switch(color){
 		case BLUE:
 			if(keys & KEY_RIGHT){
 				if(direction == RIGHT) path_next();
@@ -139,6 +145,8 @@ void path_game(){
 				if(direction == UP) path_next();
 				else path_wrong();
 			}
+			if((keys & KEY_Y) ||( keys & KEY_X) || (keys & KEY_B) || (keys & KEY_A))
+				path_wrong();
 			break;
 		case GREEN:
 			if(keys & KEY_A){
@@ -160,6 +168,8 @@ void path_game(){
 				if(direction == DOWN) path_next();
 				else path_wrong();
 			}
+			if((keys & KEY_A) ||( keys & KEY_Y) || (keys & KEY_X) || (keys & KEY_B))
+				path_wrong();
 			break;
 		case YELLOW:
 			if(keys & KEY_A){
@@ -181,9 +191,13 @@ void path_game(){
 				if(direction == UP) path_next();
 				else path_wrong();
 			}
+			if((keys & KEY_A) ||( keys & KEY_Y) || (keys & KEY_X) || (keys & KEY_B))
+				path_wrong();
 			break;
 		default:
 			break;
+		}
+		return true;
 	}
 }
 
@@ -193,12 +207,16 @@ void path_next(){
 
 	// Check level
 	if(score == PATHMEDIUM) level = MEDIUM;
+	if(score == PATHHARD) level = HARD;
 
 	// Random numbers for direction and color
 	int nb1, nb2;
 	while((nb1 = rand()%4) == direction);
 	if(level == EASY) nb2 = rand()%2;
-	else nb2 = rand()%4;
+	else{
+		if(level == MEDIUM) nb2 = rand()%3;
+		else nb2 = rand()%4;
+	}
 
 	direction = nb1;
 	color = nb2;
@@ -209,7 +227,7 @@ void path_next(){
 
 void path_wrong(){
 	// Check what to do in function of wrong variable
-	/*switch(wrong){
+	switch(wrong){
 		case 0:
 			TIMER1_CR |= TIMER_ENABLE;
 			path_draw(direction, GREY);
@@ -224,9 +242,16 @@ void path_wrong(){
 			wrong++;
 			break;
 		case 3:
-			TIMER0_CR &= ~(TIMER_ENABLE);
+			TIMER1_CR &= ~(TIMER_ENABLE);
 			path_draw(direction, color);
 			wrong=0;
 			break;
-	}*/
+		default:
+			break;
+	}
+}
+
+void path_reset(){
+	// Draw nothing
+	path_draw(direction, GREY);
 }
