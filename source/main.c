@@ -5,13 +5,15 @@
 
 #include <nds.h>
 #include <stdio.h>
+#include "path.h"
 
 int main(void) {
-	
-    consoleDemoInit();
-    printf("\nTemplate nds\n");
-    printf("\nHello World\n");
 
-    while(1)
+    consoleDemoInit();
+
+    path_init();
+
+    while(1){
         swiWaitForVBlank();	
+    }
 }
