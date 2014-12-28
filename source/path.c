@@ -9,8 +9,9 @@
 
 COLOR color;
 DIRECTION direction;
-int score = 0;
-int wrong = 0;
+int score;
+int wrong;
+LEVEL level;
 
 void path_init(){
 	// Configure sub engine to tile mode
@@ -54,6 +55,11 @@ void path_init(){
 	irqSet(IRQ_TIMER1, &path_wrong);
 	irqEnable(IRQ_TIMER1);
 	TIMER0_CR &= ~(TIMER_ENABLE);*/
+
+	// Set global variables
+	score = 0;
+	wrong = 0;
+	level = EASY;
 }
 
 void path_draw(direction, color){
@@ -110,6 +116,8 @@ void path_game(){
 				if(direction == DOWN) path_next();
 				else path_wrong();
 			}
+			if((keys & KEY_Y) ||( keys & KEY_X) || (keys & KEY_B) || (keys & KEY_A))
+				path_wrong();
 			break;
 		case RED:
 			if(keys & KEY_RIGHT){
@@ -132,6 +140,48 @@ void path_game(){
 				else path_wrong();
 			}
 			break;
+		case GREEN:
+			if(keys & KEY_A){
+				if(direction == RIGHT) path_next();
+				else path_wrong();
+			}
+
+			if(keys & KEY_Y){
+				if(direction == LEFT) path_next();
+				else path_wrong();
+			}
+
+			if(keys & KEY_X){
+				if(direction == UP) path_next();
+				else path_wrong();
+			}
+
+			if(keys & KEY_B){
+				if(direction == DOWN) path_next();
+				else path_wrong();
+			}
+			break;
+		case YELLOW:
+			if(keys & KEY_A){
+				if(direction == LEFT) path_next();
+				else path_wrong();
+			}
+
+			if(keys & KEY_Y){
+				if(direction == RIGHT) path_next();
+				else path_wrong();
+			}
+
+			if(keys & KEY_X){
+				if(direction == DOWN) path_next();
+				else path_wrong();
+			}
+
+			if(keys & KEY_B){
+				if(direction == UP) path_next();
+				else path_wrong();
+			}
+			break;
 		default:
 			break;
 	}
@@ -141,10 +191,14 @@ void path_next(){
 	// Increment score
 	score++;
 
+	// Check level
+	if(score == PATHMEDIUM) level = MEDIUM;
+
 	// Random numbers for direction and color
 	int nb1, nb2;
 	while((nb1 = rand()%4) == direction);
-	nb2 = rand()%2;
+	if(level == EASY) nb2 = rand()%2;
+	else nb2 = rand()%4;
 
 	direction = nb1;
 	color = nb2;

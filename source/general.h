@@ -16,6 +16,8 @@
 #define GREENVAL ARGB16(1,7,22,14)
 #define YELLOWVAL ARGB16(1,31,26,0)
 
+#define PATHMEDIUM 10
+
 typedef enum COLOR COLOR;
 enum COLOR
 {
@@ -35,3 +37,10 @@ enum DIRECTION
     DOWN = 3
 };
 
+typedef enum LEVEL LEVEL;
+enum LEVEL
+{
+    EASY = 0,
+    MEDIUM = 1,
+    HARD = 2
+};
