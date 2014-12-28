@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define GREYVAL ARGB16(1,28,28,28)
+#define WHITEVAL ARGB16(1,28,28,29)
 #define BLUEVAL ARGB16(1,4,18,31)
 #define REDVAL ARGB16(1,31,13,22)
 #define GREENVAL ARGB16(1,7,22,14)
@@ -20,15 +22,16 @@ enum COLOR
     BLUE = 0,
     RED = 1,
     GREEN = 2,
-    YELLOW = 3
+    YELLOW = 3,
+    GREY = 4
 };
 
 typedef enum DIRECTION DIRECTION;
 enum DIRECTION
 {
-    RIGHT,
-    LEFT,
-    UP,
-    DOWN
+    RIGHT = 0,
+    LEFT = 1,
+    UP = 2,
+    DOWN = 3
 };
 
