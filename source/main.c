@@ -5,13 +5,16 @@
 
 #include <nds.h>
 #include <stdio.h>
-#include "path.h"
 #include "general.h"
+#include "brainwars.h"
+#include "path.h"
+#include "jankenpon.h"
 
 int main(void) {
 
     consoleDemoInit();
 
+    brainwars_init();
     srand(time(NULL));
 
     STATE state;
@@ -20,7 +23,7 @@ int main(void) {
     GAME game;
     game = NOGAME;
 
-    bool path;
+    bool gamestate;
 
     while(1){
 
@@ -36,16 +39,20 @@ int main(void) {
     			u16 keys = (u16) keysDown();
 
     			if(keys & KEY_START){
-    				path_init();
-    				game = PATH;
+    				//path_init();
+    				//game = PATH;
+    				jankenpon_init();
+    				game = JANKENPON;
     			}
     			break;
     		case PATH:
-    			path = path_game();
-    			if(!path){
+    			gamestate = path_game();
+    			if(!gamestate){
     				game = NOGAME;
     				path_reset();
     			}
+    			break;
+    		case JANKENPON:
     			break;
     		default:
     			break;

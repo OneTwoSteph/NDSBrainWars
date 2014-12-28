@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#define BLACKVAL ARGB16(1,11,11,11)
 #define GREYVAL ARGB16(1,28,28,28)
 #define WHITEVAL ARGB16(1,28,28,29)
 #define BLUEVAL ARGB16(1,4,18,31)
@@ -31,7 +32,8 @@ typedef enum GAME GAME;
 enum GAME
 {
     NOGAME = 0,
-	PATH = 1
+	PATH = 1,
+	JANKENPON = 2
 };
 
 typedef enum COLOR COLOR;
@@ -51,6 +53,14 @@ enum DIRECTION
     LEFT = 1,
     UP = 2,
     DOWN = 3
+};
+
+typedef enum SHAPE SHAPE;
+enum SHAPE
+{
+    PAPER = 0,
+    ROCK = 1,
+    SCISSOR = 2
 };
 
 typedef enum LEVEL LEVEL;

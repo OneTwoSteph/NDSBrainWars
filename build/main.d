@@ -47,8 +47,10 @@ main.o: /home/nds/files/workspace/NDSBrainWars/source/main.c \
   /opt/devkitPro/libnds/include/nds/arm9/sprite.h \
   /opt/devkitPro/libnds/include/nds/system.h \
   /opt/devkitPro/libnds/include/nds/arm9/decompress.h \
+  /home/nds/files/workspace/NDSBrainWars/source/general.h \
+  /home/nds/files/workspace/NDSBrainWars/source/brainwars.h \
   /home/nds/files/workspace/NDSBrainWars/source/path.h \
-  /home/nds/files/workspace/NDSBrainWars/source/general.h
+  /home/nds/files/workspace/NDSBrainWars/source/jankenpon.h
 
 /opt/devkitPro/libnds/include/nds.h:
 
@@ -146,6 +148,10 @@ main.o: /home/nds/files/workspace/NDSBrainWars/source/main.c \
 
 /opt/devkitPro/libnds/include/nds/arm9/decompress.h:
 
+/home/nds/files/workspace/NDSBrainWars/source/general.h:
+
+/home/nds/files/workspace/NDSBrainWars/source/brainwars.h:
+
 /home/nds/files/workspace/NDSBrainWars/source/path.h:
 
-/home/nds/files/workspace/NDSBrainWars/source/general.h:
+/home/nds/files/workspace/NDSBrainWars/source/jankenpon.h:
