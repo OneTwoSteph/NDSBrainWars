@@ -48,8 +48,7 @@ main.o: /home/nds/files/workspace/NDSBrainWars/source/main.c \
   /opt/devkitPro/libnds/include/nds/system.h \
   /opt/devkitPro/libnds/include/nds/arm9/decompress.h \
   /home/nds/files/workspace/NDSBrainWars/source/path.h \
-  /home/nds/files/workspace/NDSBrainWars/source/general.h \
-  /home/nds/files/workspace/NDSBrainWars/build/path_arrow.h
+  /home/nds/files/workspace/NDSBrainWars/source/general.h
 
 /opt/devkitPro/libnds/include/nds.h:
 
@@ -150,5 +149,3 @@ main.o: /home/nds/files/workspace/NDSBrainWars/source/main.c \
 /home/nds/files/workspace/NDSBrainWars/source/path.h:
 
 /home/nds/files/workspace/NDSBrainWars/source/general.h:
-
-/home/nds/files/workspace/NDSBrainWars/build/path_arrow.h:

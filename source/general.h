@@ -2,7 +2,7 @@
  * general.h
  *
  *  Created on: Dec 27, 2014
- *      Author: Stephanie amati
+ *      Author: Stephanie Amati
  */
 
 #include <nds.h>
@@ -16,7 +16,23 @@
 #define GREENVAL ARGB16(1,7,22,14)
 #define YELLOWVAL ARGB16(1,31,26,0)
 
-#define PATHMEDIUM 10
+#define PATHMEDIUM 20
+#define PATHHARD 40
+
+typedef enum STATE STATE;
+enum STATE
+{
+    INIT = 0,
+    TRAIN = 1,
+    ONEP = 2
+};
+
+typedef enum GAME GAME;
+enum GAME
+{
+    NOGAME = 0,
+	PATH = 1
+};
 
 typedef enum COLOR COLOR;
 enum COLOR

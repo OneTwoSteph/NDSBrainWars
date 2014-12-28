@@ -5,11 +5,11 @@
  *      Author: Stephanie Amati
  */
 
-#include "general.h"
-#include "path_arrow.h"
+#include <stdbool.h>
 
 void path_init(void);
 void path_draw(int direction, int color);
-void path_game(void);
+bool path_game(void);
 void path_next(void);
 void path_wrong(void);
+void path_reset();
