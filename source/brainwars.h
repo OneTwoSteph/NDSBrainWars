@@ -5,4 +5,6 @@
  *      Author: Stephanie amati
  */
 
+void configureGraphics_Main(void);
+void configureGraphics_Sub(void);
 void brainwars_init(void);
