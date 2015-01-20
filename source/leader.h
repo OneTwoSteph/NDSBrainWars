@@ -8,5 +8,6 @@
 #ifndef LEADER_H_
 #define LEADER_H_
 
+void leader_init(void);
 
 #endif /* LEADER_H_ */

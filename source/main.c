@@ -41,8 +41,10 @@ int main(void) {
     			if(keys & KEY_START){
     				//path_init();
     				//game = PATH;
-    				jankenpon_init();
-    				game = JANKENPON;
+    				//jankenpon_init();
+    				//game = JANKENPON;
+    				leader_init();
+    				game = LEADER;
     			}
     			break;
     		case PATH:
@@ -53,6 +55,8 @@ int main(void) {
     			}
     			break;
     		case JANKENPON:
+    			break;
+    		case LEADER:
     			break;
     		default:
     			break;

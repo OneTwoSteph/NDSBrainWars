@@ -1,4 +1,4 @@
-leader.o: /home/nds/files/workspace/NDSBrainWars/source/leader.c \
+pairs.o: /home/nds/files/workspace/NDSBrainWars/source/pairs.c \
   /home/nds/files/workspace/NDSBrainWars/source/general.h \
   /opt/devkitPro/libnds/include/nds.h \
   /opt/devkitPro/libnds/include/nds/libversion.h \
@@ -48,7 +48,7 @@ leader.o: /home/nds/files/workspace/NDSBrainWars/source/leader.c \
   /opt/devkitPro/libnds/include/nds/arm9/sprite.h \
   /opt/devkitPro/libnds/include/nds/system.h \
   /opt/devkitPro/libnds/include/nds/arm9/decompress.h \
-  /home/nds/files/workspace/NDSBrainWars/source/leader.h
+  /home/nds/files/workspace/NDSBrainWars/source/pairs.h
 
 /home/nds/files/workspace/NDSBrainWars/source/general.h:
 
@@ -148,4 +148,4 @@ leader.o: /home/nds/files/workspace/NDSBrainWars/source/leader.c \
 
 /opt/devkitPro/libnds/include/nds/arm9/decompress.h:
 
-/home/nds/files/workspace/NDSBrainWars/source/leader.h:
+/home/nds/files/workspace/NDSBrainWars/source/pairs.h:
