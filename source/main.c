@@ -26,7 +26,6 @@ int main(void) {
     bool gamestate;
 
     while(1){
-
     	// Check in which state the game is
     	switch(state){
     	case INIT:
