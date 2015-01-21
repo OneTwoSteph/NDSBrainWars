@@ -45,6 +45,7 @@ static volatile int leader_score;
 static volatile int order[6];
 static volatile int draw_timer;
 static volatile int direction;
+static volatile int wrong;
 
 static volatile int leader_step;
 
@@ -69,12 +70,14 @@ void leader_init() {
 	BG_PALETTE_SUB[0] = GREYVAL;
 	BG_PALETTE_SUB[2] = GREENVAL;
 
-	leader_new_order();
-	leader_draw();
-
 	leader_score = 0;
 	leader_step = 0;
+	draw_timer = 0;
+	wrong = 0;
 	level = VERYEASY;
+
+	leader_new_order();
+	leader_draw();
 
 }
 
@@ -300,30 +303,32 @@ bool leader_game() {
 void leader_correct(){
 
 	leader_step++;
-	leader_score++;
-	int current_level = level + 3;
 
-	if(leader_score == LEADEREASY) 			{ level = EASY; }
-	else if(leader_score == LEADERMEDIUM)	{ level = MEDIUM; }
-	else if(leader_score == LEADERHARD)		{ level = HARD; }
+	if(leader_step >= (level + 3)) {
 
-	if(leader_step == current_level) {
+		leader_score++;
+		wrong = 0;
+		leader_step = 0;
 
 		BG_PALETTE_SUB[0] = GREENVAL;
 
-		leader_step = 0;
-
 		draw_timer = 0;
 		irqEnable(IRQ_TIMER0);
-		while(draw_timer <= 5);
+		while(draw_timer <= 2);
 		irqDisable(IRQ_TIMER0);
 
 		BG_PALETTE_SUB[0] = GREYVAL;
+
+		if(leader_score >= LEADERHARD) 			{ level = HARD; }
+		else if(leader_score >= LEADERMEDIUM)	{ level = MEDIUM; }
+		else if(leader_score >= LEADEREASY)		{ level = EASY; }
 
 		leader_new_order();
 		leader_draw();
 
 	}
+
+
 
 }
 
@@ -331,12 +336,24 @@ void leader_wrong() {
 
 	BG_PALETTE_SUB[0] = TRUERED;
 
+	leader_step = 0;
+	wrong++;
+
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);
-	while(draw_timer <= 5);
+	while(draw_timer <= 2);
 	irqDisable(IRQ_TIMER0);
 
 	BG_PALETTE_SUB[0] = GREYVAL;
+
+	if(wrong >= 3) {
+		wrong = 0;
+		leader_score--;
+
+		if(level != VERYEASY){
+			level = level-1;
+		}
+	}
 
 	leader_new_order();
 	leader_draw();
@@ -351,4 +368,9 @@ void leader_reset() {
 			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
 		}
 	}
+	leader_score = 0;
+	leader_step = 0;
+	draw_timer = 0;
+	wrong = 0;
+	level = VERYEASY;
 }
