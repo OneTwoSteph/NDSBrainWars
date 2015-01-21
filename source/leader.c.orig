@@ -51,11 +51,16 @@ static volatile int leader_step;
 
 LEVEL level;
 
+<<<<<<< HEAD
+void leader_init(){
+=======
 void leader_timer_ISR(){
 	draw_timer++;
 }
 
 void leader_init() {
+>>>>>>> 73360ba1990ebf750e08ff9db84db609aa30961f
+
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_256;
 
 	dmaCopy(emptyTile, &BG_TILE_RAM_SUB(1)[0], 64);
@@ -188,7 +193,7 @@ bool leader_game() {
 	scanKeys();
 	u16 keys = keysDown();
 
-	if(keys & KEY_START) 		{ return true; }
+	if(keys & KEY_START) 		{ return false; }
 	else if(keys & KEY_TOUCH){
 
 		touchPosition touch;
@@ -290,11 +295,11 @@ bool leader_game() {
 			break;
 		}
 
-	return false;
+	return true;
 
 	}
 
-	return false;
+	return true;
 
 
 }

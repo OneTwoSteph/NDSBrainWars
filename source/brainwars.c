@@ -307,12 +307,12 @@ void brainwars_train(){
 		}
 
 		// Execute action of game
-		//gameChange = leader_game();
+		gameChange = leader_game();
 
 		// Check if game ended
 		if(gameChange){
 			game = NOGAME;
-			//leader_reset();
+			leader_reset();
 		}
 
 		break;

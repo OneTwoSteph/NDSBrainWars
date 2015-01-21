@@ -12,15 +12,25 @@
 #include <math.h>
 #include <stdbool.h>
 
+<<<<<<< HEAD
+#define BLACKVAL ARGB16(1,11,11,11)
+#define GREYVAL ARGB16(1,28,28,28)
+#define WHITEVAL ARGB16(1,31,31,31)
+#define BLUEVAL ARGB16(1,4,18,31)
+#define REDVAL ARGB16(1,31,13,22)
+#define GREENVAL ARGB16(1,7,22,14)
+#define YELLOWVAL ARGB16(1,31,26,0)
+=======
 #define BLACKVAL 	ARGB16(1,11,11,11)
 #define GREYVAL 	ARGB16(1,28,28,28)
-#define WHITEVAL 	ARGB16(1,31,31,31)
+#define WHITEVAL 	ARGB16(1,28,28,29)
 #define BLUEVAL 	ARGB16(1,4,18,31)
 #define REDVAL 		ARGB16(1,31,13,22)
 #define GREENVAL 	ARGB16(1,7,22,14)
 #define YELLOWVAL 	ARGB16(1,31,26,0)
 #define TRUERED		ARGB16(1,31,0,0)
 #define TRUEGREEN	ARGB16(1,0,31,0)
+>>>>>>> 73360ba1990ebf750e08ff9db84db609aa30961f
 
 #define PATHMEDIUM 20
 #define PATHHARD 40
