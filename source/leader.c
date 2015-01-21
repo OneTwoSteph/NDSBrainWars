@@ -30,14 +30,28 @@ u8 fullTile[64] = {
 	1,1,1,1,1,1,1,1
 };
 
-static volatile int score;
-static volatile int direction;
+u8 correctTile[64] = {
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2,
+	2,2,2,2,2,2,2,2
+};
+
+static volatile int leader_score;
 static volatile int order[6];
 static volatile int draw_timer;
+static volatile int direction;
+
+static volatile int leader_step;
+
 LEVEL level;
 
 void leader_timer_ISR(){
-	draw_timer = 1;
+	draw_timer++;
 }
 
 void leader_init() {
@@ -46,23 +60,27 @@ void leader_init() {
 
 	dmaCopy(emptyTile, &BG_TILE_RAM_SUB(1)[0], 64);
 	dmaCopy(fullTile, &BG_TILE_RAM_SUB(1)[32], 64);
+	dmaCopy(correctTile, &BG_TILE_RAM_SUB(1)[64], 64);
 
-	TIMER0_DATA = TIMER_FREQ_1024(5);
+	TIMER0_DATA = TIMER_FREQ_1024(4);
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
 	irqSet(IRQ_TIMER0, &leader_timer_ISR);
 
 	BG_PALETTE_SUB[0] = GREYVAL;
+	BG_PALETTE_SUB[2] = GREENVAL;
 
 	leader_new_order();
 	leader_draw();
 
-	score = 0;
+	leader_score = 0;
+	leader_step = 0;
 	level = VERYEASY;
 
 }
 
 void leader_new_order() {
 
+	int max_loop = level+3;
 	int rand_order[6];
 	int i, j, max, loop = 0;
 
@@ -70,8 +88,8 @@ void leader_new_order() {
 		rand_order[i] = rand();
 	}
 
-	while(loop < 6){
-		max = -1;
+	while(loop < max_loop){
+		max = 0;
 
 		for(i = 0; i < 6; i++) {
 			if(rand_order[i] >= max){
@@ -80,7 +98,7 @@ void leader_new_order() {
 			}
 		}
 		order[loop] = j;
-		rand_order[j] = 0;
+		rand_order[j] = -1;
 		loop++;
 	}
 
@@ -101,10 +119,7 @@ void leader_draw() {
 		}
 	}
 
-	if(level == VERYEASY)		{ draw_level = 3; }
-	else if(level == EASY) 		{ draw_level = 4; }
-	else if(level == MEDIUM)	{ draw_level = 5; }
-	else						{ draw_level = 6; }
+	draw_level = level + 3;
 
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);
@@ -161,7 +176,179 @@ void leader_draw() {
 			break;
 		}
 
-		if(i == 5) {irqDisable(IRQ_TIMER0);}
 		draw_timer = 0;
+	}
+	irqDisable(IRQ_TIMER0);
+}
+
+bool leader_game() {
+
+	scanKeys();
+	u16 keys = keysDown();
+
+	if(keys & KEY_START) 		{ return false; }
+	else if(keys & KEY_TOUCH){
+
+		touchPosition touch;
+		touchRead(&touch);
+
+		int row, col;
+		int next_step;
+
+		if(direction == 1)	{ next_step = leader_step;}
+		else				{ next_step = level+2 -leader_step;}
+
+		switch(order[next_step]){
+		case 0:
+			if((touch.px >= 16) && (touch.px < 80) &&
+			   (touch.py >= 32) && (touch.py < 80))	{
+
+				for(row = 4; row < 10; row++){
+					for(col = 2; col < 10; col++){
+						BG_MAP_RAM_SUB(0)[row*32+col] = 2;
+					}
+				}
+
+				leader_correct();
+			}
+			else { leader_wrong();	}
+			break;
+
+		case 1:
+			if((touch.px >= 16) && (touch.px < 80) &&
+			   (touch.py >= 112) && (touch.py < 160)) {;
+
+				for(row = 14; row < 20; row++){
+					for(col = 2; col < 10; col++){
+						BG_MAP_RAM_SUB(0)[row*32+col] = 2;
+					}
+				}
+				leader_correct();
+			}
+			else { leader_wrong();	}
+			break;
+
+		case 2:
+			if((touch.px >= 96) && (touch.px < 160) &&
+			   (touch.py >= 32) && (touch.py < 80))	{
+
+				for(row = 4; row < 10; row++){
+					for(col = 12; col < 20; col++){
+						BG_MAP_RAM_SUB(0)[row*32+col] = 2;
+					}
+				}
+				leader_correct();
+			}
+			else { leader_wrong();	}
+			break;
+
+		case 3:
+			if((touch.px >= 96) && (touch.px < 160) &&
+			   (touch.py >= 112) && (touch.py < 160)) {
+
+				for(row = 14; row < 20; row++){
+					for(col = 12; col < 20; col++){
+						BG_MAP_RAM_SUB(0)[row*32+col] = 2;
+					}
+				}
+				leader_correct();
+			}
+			else { leader_wrong();	}
+			break;
+
+		case 4:
+			if((touch.px >= 176) && (touch.px < 240) &&
+			   (touch.py >= 32) && (touch.py < 80))	{
+
+				for(row = 4; row < 10; row++){
+					for(col = 22; col < 30; col++){
+						BG_MAP_RAM_SUB(0)[row*32+col] = 2;
+					}
+				}
+				leader_correct();
+			}
+			else { leader_wrong();	}
+			break;
+
+		case 5:
+			if((touch.px >= 176) && (touch.px < 240) &&
+			   (touch.py >= 112) && (touch.py < 160)) {
+
+				for(row = 14; row < 20; row++){
+					for(col = 22; col < 30; col++){
+						BG_MAP_RAM_SUB(0)[row*32+col] = 2;
+					}
+				}
+				leader_correct();
+			}
+			else { leader_wrong();	}
+			break;
+
+		default:
+			break;
+		}
+
+	return true;
+
+	}
+
+	return true;
+
+
+}
+
+void leader_correct(){
+
+	leader_step++;
+	leader_score++;
+	int current_level = level + 3;
+
+	if(leader_score == LEADEREASY) 			{ level = EASY; }
+	else if(leader_score == LEADERMEDIUM)	{ level = MEDIUM; }
+	else if(leader_score == LEADERHARD)		{ level = HARD; }
+
+	if(leader_step == current_level) {
+
+		BG_PALETTE_SUB[0] = GREENVAL;
+
+		leader_step = 0;
+
+		draw_timer = 0;
+		irqEnable(IRQ_TIMER0);
+		while(draw_timer <= 5);
+		irqDisable(IRQ_TIMER0);
+
+		BG_PALETTE_SUB[0] = GREYVAL;
+
+		leader_new_order();
+		leader_draw();
+
+	}
+
+}
+
+void leader_wrong() {
+
+	BG_PALETTE_SUB[0] = TRUERED;
+
+	draw_timer = 0;
+	irqEnable(IRQ_TIMER0);
+	while(draw_timer <= 5);
+	irqDisable(IRQ_TIMER0);
+
+	BG_PALETTE_SUB[0] = GREYVAL;
+
+	leader_new_order();
+	leader_draw();
+}
+
+void leader_reset() {
+
+	int row,col;
+
+	for(row = 0; row < 32; row++){
+		for(col = 0; col < 32; col++){
+			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
+		}
 	}
 }

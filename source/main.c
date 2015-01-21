@@ -10,6 +10,7 @@
 #include "brainwars.h"
 #include "path.h"
 #include "jankenpon.h"
+#include "leader.h"
 
 int main(void) {
 
@@ -46,7 +47,7 @@ int main(void) {
     				//jankenpon_init();
     				//game = JANKENPON;
     				leader_init();
-    				//game = LEADER;
+    				game = LEADER;
     			}
     			break;
     		case PATH:
@@ -59,6 +60,11 @@ int main(void) {
     		case JANKENPON:
     			break;
     		case LEADER:
+    			gamestate = leader_game();
+    			if(!gamestate){
+    				game = NOGAME;
+    				leader_reset();
+    			}
     			break;
     		default:
     			break;

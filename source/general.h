@@ -9,16 +9,22 @@
 #include <stdio.h>
 #include <string.h>
 
-#define BLACKVAL ARGB16(1,11,11,11)
-#define GREYVAL ARGB16(1,28,28,28)
-#define WHITEVAL ARGB16(1,28,28,29)
-#define BLUEVAL ARGB16(1,4,18,31)
-#define REDVAL ARGB16(1,31,13,22)
-#define GREENVAL ARGB16(1,7,22,14)
-#define YELLOWVAL ARGB16(1,31,26,0)
+#define BLACKVAL 	ARGB16(1,11,11,11)
+#define GREYVAL 	ARGB16(1,28,28,28)
+#define WHITEVAL 	ARGB16(1,28,28,29)
+#define BLUEVAL 	ARGB16(1,4,18,31)
+#define REDVAL 		ARGB16(1,31,13,22)
+#define GREENVAL 	ARGB16(1,7,22,14)
+#define YELLOWVAL 	ARGB16(1,31,26,0)
+#define TRUERED		ARGB16(1,31,0,0)
+#define TRUEGREEN	ARGB16(1,0,31,0)
 
 #define PATHMEDIUM 20
 #define PATHHARD 40
+
+#define LEADEREASY 10
+#define LEADERMEDIUM 15
+#define LEADERHARD 30
 
 typedef enum STATE STATE;
 enum STATE

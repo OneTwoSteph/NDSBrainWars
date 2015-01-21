@@ -50,7 +50,8 @@ main.o: /home/nds/files/workspace/NDSBrainWars/source/main.c \
   /home/nds/files/workspace/NDSBrainWars/source/general.h \
   /home/nds/files/workspace/NDSBrainWars/source/brainwars.h \
   /home/nds/files/workspace/NDSBrainWars/source/path.h \
-  /home/nds/files/workspace/NDSBrainWars/source/jankenpon.h
+  /home/nds/files/workspace/NDSBrainWars/source/jankenpon.h \
+  /home/nds/files/workspace/NDSBrainWars/source/leader.h
 
 /opt/devkitPro/libnds/include/nds.h:
 
@@ -155,3 +156,5 @@ main.o: /home/nds/files/workspace/NDSBrainWars/source/main.c \
 /home/nds/files/workspace/NDSBrainWars/source/path.h:
 
 /home/nds/files/workspace/NDSBrainWars/source/jankenpon.h:
+
+/home/nds/files/workspace/NDSBrainWars/source/leader.h:
