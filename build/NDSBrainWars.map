@@ -255,17 +255,17 @@ Linker script and memory map
  .text          0x02000380        0x0 jankenpon_hand.o
  .text          0x02000380        0x0 path_arrow.o
  .text          0x02000380      0x740 brainwars.o
-                0x020008b0                brainwars_train_select
+                0x020008b8                brainwars_train_select
                 0x020003d4                brainwars_configSub
                 0x020003f0                brainwars_main_init
                 0x0200069c                brainwars_train_init
-                0x020004e4                brainwars_main_draw
-                0x020007a4                brainwars_train_draw
-                0x02000600                brainwars_main_select
+                0x020005d0                brainwars_main_draw
+                0x020009b4                brainwars_train_draw
+                0x02000538                brainwars_main_select
                 0x020003b8                brainwars_configMain
-                0x020009ac                brainwars_train
+                0x020007a4                brainwars_train
                 0x02000380                brainwars_init
-                0x020005ac                brainwars_main
+                0x020004e4                brainwars_main
                 0x02000698                brainwars_1p
  .text          0x02000ac0      0x670 eatit.o
                 0x02000f40                eatit_game
@@ -1765,57 +1765,57 @@ Linker script and memory map
  .debug_pubnames
                 0x0000104d       0x99 /opt/devkitPro/libnds/lib/libnds9.a(trig.o)
 
-.debug_info     0x00000000     0x9b74
+.debug_info     0x00000000     0x9b7f
  *(.debug_info)
  .debug_info    0x00000000       0x68 /opt/devkitPro/devkitARM/lib/gcc/arm-eabi/4.3.3/thumb/crti.o
- .debug_info    0x00000068      0x94d brainwars.o
- .debug_info    0x000009b5      0x760 eatit.o
- .debug_info    0x00001115      0x8a8 jankenpon.o
- .debug_info    0x000019bd      0x8ab leader.o
- .debug_info    0x00002268      0x30d main.o
- .debug_info    0x00002575      0x3c3 pairs.o
- .debug_info    0x00002938      0x762 path.o
- .debug_info    0x0000309a     0x1db6 /opt/devkitPro/libnds/lib/libnds9.a(console.o)
- .debug_info    0x00004e50      0x36a /opt/devkitPro/libnds/lib/libnds9.a(initSystem.o)
- .debug_info    0x000051ba      0x317 /opt/devkitPro/libnds/lib/libnds9.a(keys.o)
- .debug_info    0x000054d1      0x503 /opt/devkitPro/libnds/lib/libnds9.a(system.o)
- .debug_info    0x000059d4      0x222 /opt/devkitPro/libnds/lib/libnds9.a(touch.o)
- .debug_info    0x00005bf6      0x5c3 /opt/devkitPro/libnds/lib/libnds9.a(video.o)
- .debug_info    0x000061b9     0x1382 /opt/devkitPro/libnds/lib/libnds9.a(videoGL.o)
- .debug_info    0x0000753b     0x1452 /opt/devkitPro/libnds/lib/libnds9.a(fifosystem.o)
- .debug_info    0x0000898d      0x321 /opt/devkitPro/libnds/lib/libnds9.a(interrupts.o)
- .debug_info    0x00008cae       0xc7 /opt/devkitPro/libnds/lib/libnds9.a(biosCalls.o)
- .debug_info    0x00008d75       0xc8 /opt/devkitPro/libnds/lib/libnds9.a(debugprint.o)
- .debug_info    0x00008e3d       0xd1 /opt/devkitPro/libnds/lib/libnds9.a(interruptDispatcher.o)
- .debug_info    0x00008f0e      0x857 /opt/devkitPro/libnds/lib/libnds9.a(background.o)
- .debug_info    0x00009765      0x3a7 /opt/devkitPro/libnds/lib/libnds9.a(trig.o)
- .debug_info    0x00009b0c       0x68 /opt/devkitPro/devkitARM/lib/gcc/arm-eabi/4.3.3/thumb/crtn.o
+ .debug_info    0x00000068      0x958 brainwars.o
+ .debug_info    0x000009c0      0x760 eatit.o
+ .debug_info    0x00001120      0x8a8 jankenpon.o
+ .debug_info    0x000019c8      0x8ab leader.o
+ .debug_info    0x00002273      0x30d main.o
+ .debug_info    0x00002580      0x3c3 pairs.o
+ .debug_info    0x00002943      0x762 path.o
+ .debug_info    0x000030a5     0x1db6 /opt/devkitPro/libnds/lib/libnds9.a(console.o)
+ .debug_info    0x00004e5b      0x36a /opt/devkitPro/libnds/lib/libnds9.a(initSystem.o)
+ .debug_info    0x000051c5      0x317 /opt/devkitPro/libnds/lib/libnds9.a(keys.o)
+ .debug_info    0x000054dc      0x503 /opt/devkitPro/libnds/lib/libnds9.a(system.o)
+ .debug_info    0x000059df      0x222 /opt/devkitPro/libnds/lib/libnds9.a(touch.o)
+ .debug_info    0x00005c01      0x5c3 /opt/devkitPro/libnds/lib/libnds9.a(video.o)
+ .debug_info    0x000061c4     0x1382 /opt/devkitPro/libnds/lib/libnds9.a(videoGL.o)
+ .debug_info    0x00007546     0x1452 /opt/devkitPro/libnds/lib/libnds9.a(fifosystem.o)
+ .debug_info    0x00008998      0x321 /opt/devkitPro/libnds/lib/libnds9.a(interrupts.o)
+ .debug_info    0x00008cb9       0xc7 /opt/devkitPro/libnds/lib/libnds9.a(biosCalls.o)
+ .debug_info    0x00008d80       0xc8 /opt/devkitPro/libnds/lib/libnds9.a(debugprint.o)
+ .debug_info    0x00008e48       0xd1 /opt/devkitPro/libnds/lib/libnds9.a(interruptDispatcher.o)
+ .debug_info    0x00008f19      0x857 /opt/devkitPro/libnds/lib/libnds9.a(background.o)
+ .debug_info    0x00009770      0x3a7 /opt/devkitPro/libnds/lib/libnds9.a(trig.o)
+ .debug_info    0x00009b17       0x68 /opt/devkitPro/devkitARM/lib/gcc/arm-eabi/4.3.3/thumb/crtn.o
 
-.debug_abbrev   0x00000000     0x2219
+.debug_abbrev   0x00000000     0x222a
  *(.debug_abbrev)
  .debug_abbrev  0x00000000       0x12 /opt/devkitPro/devkitARM/lib/gcc/arm-eabi/4.3.3/thumb/crti.o
- .debug_abbrev  0x00000012      0x1be brainwars.o
- .debug_abbrev  0x000001d0      0x1c0 eatit.o
- .debug_abbrev  0x00000390      0x1d2 jankenpon.o
- .debug_abbrev  0x00000562      0x217 leader.o
- .debug_abbrev  0x00000779      0x11c main.o
- .debug_abbrev  0x00000895      0x12b pairs.o
- .debug_abbrev  0x000009c0      0x1a9 path.o
- .debug_abbrev  0x00000b69      0x40a /opt/devkitPro/libnds/lib/libnds9.a(console.o)
- .debug_abbrev  0x00000f73      0x15d /opt/devkitPro/libnds/lib/libnds9.a(initSystem.o)
- .debug_abbrev  0x000010d0      0x15e /opt/devkitPro/libnds/lib/libnds9.a(keys.o)
- .debug_abbrev  0x0000122e      0x14f /opt/devkitPro/libnds/lib/libnds9.a(system.o)
- .debug_abbrev  0x0000137d      0x108 /opt/devkitPro/libnds/lib/libnds9.a(touch.o)
- .debug_abbrev  0x00001485       0xfc /opt/devkitPro/libnds/lib/libnds9.a(video.o)
- .debug_abbrev  0x00001581      0x3fe /opt/devkitPro/libnds/lib/libnds9.a(videoGL.o)
- .debug_abbrev  0x0000197f      0x349 /opt/devkitPro/libnds/lib/libnds9.a(fifosystem.o)
- .debug_abbrev  0x00001cc8      0x161 /opt/devkitPro/libnds/lib/libnds9.a(interrupts.o)
- .debug_abbrev  0x00001e29       0x14 /opt/devkitPro/libnds/lib/libnds9.a(biosCalls.o)
- .debug_abbrev  0x00001e3d       0x14 /opt/devkitPro/libnds/lib/libnds9.a(debugprint.o)
- .debug_abbrev  0x00001e51       0x14 /opt/devkitPro/libnds/lib/libnds9.a(interruptDispatcher.o)
- .debug_abbrev  0x00001e65      0x22a /opt/devkitPro/libnds/lib/libnds9.a(background.o)
- .debug_abbrev  0x0000208f      0x178 /opt/devkitPro/libnds/lib/libnds9.a(trig.o)
- .debug_abbrev  0x00002207       0x12 /opt/devkitPro/devkitARM/lib/gcc/arm-eabi/4.3.3/thumb/crtn.o
+ .debug_abbrev  0x00000012      0x1cf brainwars.o
+ .debug_abbrev  0x000001e1      0x1c0 eatit.o
+ .debug_abbrev  0x000003a1      0x1d2 jankenpon.o
+ .debug_abbrev  0x00000573      0x217 leader.o
+ .debug_abbrev  0x0000078a      0x11c main.o
+ .debug_abbrev  0x000008a6      0x12b pairs.o
+ .debug_abbrev  0x000009d1      0x1a9 path.o
+ .debug_abbrev  0x00000b7a      0x40a /opt/devkitPro/libnds/lib/libnds9.a(console.o)
+ .debug_abbrev  0x00000f84      0x15d /opt/devkitPro/libnds/lib/libnds9.a(initSystem.o)
+ .debug_abbrev  0x000010e1      0x15e /opt/devkitPro/libnds/lib/libnds9.a(keys.o)
+ .debug_abbrev  0x0000123f      0x14f /opt/devkitPro/libnds/lib/libnds9.a(system.o)
+ .debug_abbrev  0x0000138e      0x108 /opt/devkitPro/libnds/lib/libnds9.a(touch.o)
+ .debug_abbrev  0x00001496       0xfc /opt/devkitPro/libnds/lib/libnds9.a(video.o)
+ .debug_abbrev  0x00001592      0x3fe /opt/devkitPro/libnds/lib/libnds9.a(videoGL.o)
+ .debug_abbrev  0x00001990      0x349 /opt/devkitPro/libnds/lib/libnds9.a(fifosystem.o)
+ .debug_abbrev  0x00001cd9      0x161 /opt/devkitPro/libnds/lib/libnds9.a(interrupts.o)
+ .debug_abbrev  0x00001e3a       0x14 /opt/devkitPro/libnds/lib/libnds9.a(biosCalls.o)
+ .debug_abbrev  0x00001e4e       0x14 /opt/devkitPro/libnds/lib/libnds9.a(debugprint.o)
+ .debug_abbrev  0x00001e62       0x14 /opt/devkitPro/libnds/lib/libnds9.a(interruptDispatcher.o)
+ .debug_abbrev  0x00001e76      0x22a /opt/devkitPro/libnds/lib/libnds9.a(background.o)
+ .debug_abbrev  0x000020a0      0x178 /opt/devkitPro/libnds/lib/libnds9.a(trig.o)
+ .debug_abbrev  0x00002218       0x12 /opt/devkitPro/devkitARM/lib/gcc/arm-eabi/4.3.3/thumb/crtn.o
 
 .debug_line     0x00000000     0x3b12
  *(.debug_line)

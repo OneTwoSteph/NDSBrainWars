@@ -39,7 +39,7 @@ void brainwars_init(){
 	brainwars_configMain();
 	brainwars_configSub();
 
-	// Init main menu
+	// Initialize main menu
 	brainwars_main_init();
 }
 
@@ -64,7 +64,7 @@ void brainwars_main_init(){
 	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
 	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen);
 
-	// Set up palette colors (palette contains back, arrow, circle in this order)
+	// Set up palette colors
 	BG_PALETTE_SUB[1] = WHITEVAL;
 	BG_PALETTE_SUB[3] = BLUEVAL;
 	BG_PALETTE_SUB[5] = GREENVAL;
@@ -79,31 +79,11 @@ void brainwars_main_init(){
 	BG_PALETTE_SUB[23] = BLACKVAL;
 	BG_PALETTE_SUB[24] = GREYVAL;
 
-	// Initialize variable
-	selectMain = TRAIN;
+	// Initialize selection variable
+	selectMain = ONEP;
 
 	// Draw main menu
 	brainwars_main_draw();
-}
-
-void brainwars_main_draw(){
-	int x, y;
-	int height = 4;
-	int L = 32;	// length of the image
-
-	// Draw menu
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = brainwars_mainMap[y*L+x];
-		}
-	}
-
-	// Change color of the selected button
-	for(x=0; x<32; x++){
-		for(y=selectMain*height; y<(selectMain+1)*height; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
-		}
-	}
 }
 
 void brainwars_main(){
@@ -145,7 +125,7 @@ void brainwars_main_select(){
 
 	// Check if up key pressed
 	if(keys & KEY_UP){
-		// Updates selected button
+		// Update selected button
 		if(selectMain==TRAIN)
 			selectMain = CREDITS;
 		else
@@ -157,7 +137,7 @@ void brainwars_main_select(){
 
 	// Check if down key pressed
 	if(keys & KEY_DOWN){
-		// Updates selected button
+		// Update selected button
 		if(selectMain==CREDITS)
 			selectMain = TRAIN;
 		else
@@ -169,9 +149,29 @@ void brainwars_main_select(){
 
 	// Check if start key pressed
 	if(keys & KEY_START){
-		// Updates game state
+		// Update game state
 		state = selectMain;
 		stateChange = true;
+	}
+}
+
+void brainwars_main_draw(){
+	int x, y;
+	int height = 4;
+	int L = 32;	// length of the image
+
+	// Draw main menu
+	for(x=0; x<32; x++){
+		for(y=0; y<24; y++){
+			BG_MAP_RAM_SUB(0)[y*L+x] = brainwars_mainMap[y*L+x];
+		}
+	}
+
+	// Change color of the selected button
+	for(x=0; x<32; x++){
+		for(y=selectMain*height; y<(selectMain+1)*height; y++){
+			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
+		}
 	}
 }
 
@@ -190,7 +190,7 @@ void brainwars_train_init(){
 	swiCopy(brainwars_trainPal, BG_PALETTE_SUB, brainwars_trainPalLen/2);
 	swiCopy(brainwars_trainPal, &BG_PALETTE_SUB[16], brainwars_trainPalLen);
 
-	// Set up palette colors (palette contains back, arrow, circle in this order)
+	// Set up palette colors
 	BG_PALETTE_SUB[1] = WHITEVAL;
 	BG_PALETTE_SUB[3] = BLUEVAL;
 	BG_PALETTE_SUB[5] = GREENVAL;
@@ -210,90 +210,8 @@ void brainwars_train_init(){
 	selectTrain = LEADER;
 	gameChange = false;
 
-	// Draw main menu
+	// Draw training menu
 	brainwars_train_draw();
-}
-
-void brainwars_train_draw(){
-	int x, y;
-	int xstart = 4;
-	int ystart = 3;
-	int length = 8;
-	int height = 6;
-	int L = 32;	// length of the image
-
-	// Draw menu
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = brainwars_trainMap[y*L+x];
-		}
-	}
-
-	// Change color of the selected button
-	int row, col;
-	row = selectTrain/3;
-	col = selectTrain%3;
-
-	for(x=xstart+col*length; x<xstart+(col+1)*length; x++){
-		for(y=ystart+row*height; y<ystart+(row+1)*height; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
-		}
-	}
-}
-
-void brainwars_train_select(){
-	// Scan keys
-	scanKeys();
-	u16 keys = (u16) keysDown();
-
-	// Check if right key pressed
-	if(keys & KEY_RIGHT){
-		// Updates selected button
-		selectTrain = (selectTrain+1)%9;
-
-		// Draw updates
-		brainwars_train_draw();
-	}
-
-	// Check if left key pressed
-	if(keys & KEY_LEFT){
-		// Updates selected button
-		selectTrain = (selectTrain+8)%9;
-
-		// Draw updates
-		brainwars_train_draw();
-	}
-
-	// Check if down key pressed
-	if(keys & KEY_DOWN){
-		// Updates selected button
-		selectTrain = (selectTrain+3)%9;
-
-		// Draw updates
-		brainwars_train_draw();
-	}
-
-	// Check if up key pressed
-	if(keys & KEY_UP){
-		// Updates selected button
-		selectTrain = (selectTrain+6)%9;
-
-		// Draw updates
-		brainwars_train_draw();
-	}
-
-	// Check if start key pressed
-	if(keys & KEY_START){
-		// Updates game state
-		game = selectTrain;
-		gameChange = true;
-
-		// Exit case
-		if(game == NOGAME){
-			state = MAIN;
-			stateChange = true;
-		}
-	}
 }
 
 void brainwars_train(){
@@ -448,5 +366,87 @@ void brainwars_train(){
 		break;
 	default:
 		break;
+	}
+}
+
+void brainwars_train_select(){
+	// Scan keys
+	scanKeys();
+	u16 keys = (u16) keysDown();
+
+	// Check if right key pressed
+	if(keys & KEY_RIGHT){
+		// Update selected button
+		selectTrain = (selectTrain+1)%9;
+
+		// Draw updates
+		brainwars_train_draw();
+	}
+
+	// Check if left key pressed
+	if(keys & KEY_LEFT){
+		// Update selected button
+		selectTrain = (selectTrain+8)%9;
+
+		// Draw updates
+		brainwars_train_draw();
+	}
+
+	// Check if down key pressed
+	if(keys & KEY_DOWN){
+		// Update selected button
+		selectTrain = (selectTrain+3)%9;
+
+		// Draw updates
+		brainwars_train_draw();
+	}
+
+	// Check if up key pressed
+	if(keys & KEY_UP){
+		// Update selected button
+		selectTrain = (selectTrain+6)%9;
+
+		// Draw updates
+		brainwars_train_draw();
+	}
+
+	// Check if start key pressed
+	if(keys & KEY_START){
+		// Update game state
+		game = selectTrain;
+		gameChange = true;
+
+		// Exit case
+		if(game == NOGAME){
+			state = MAIN;
+			stateChange = true;
+		}
+	}
+}
+
+void brainwars_train_draw(){
+	int x, y;
+	int xstart = 4;
+	int ystart = 3;
+	int length = 8;
+	int height = 6;
+	int L = 32;			// length of the image
+
+	// Draw training menu
+	for(x=0; x<32; x++){
+		for(y=0; y<24; y++){
+			BG_MAP_RAM_SUB(0)[y*L+x] = brainwars_trainMap[y*L+x];
+		}
+	}
+
+	// Change color of the selected button
+	int row, col;
+	row = selectTrain/3;
+	col = selectTrain%3;
+
+	for(x=xstart+col*length; x<xstart+(col+1)*length; x++){
+		for(y=ystart+row*height; y<ystart+(row+1)*height; y++){
+			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
+		}
 	}
 }
