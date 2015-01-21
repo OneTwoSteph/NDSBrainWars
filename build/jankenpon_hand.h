@@ -5,11 +5,11 @@
 //
 //	jankenpon_hand, 608x256@4, 
 //	+ palette 16 entries, not compressed
-//	+ 265 tiles (t|f reduced) not compressed
+//	+ 244 tiles (t|f reduced) not compressed
 //	+ regular map (flat), not compressed, 76x32 
-//	Total size: 32 + 8480 + 4864 = 13376
+//	Total size: 32 + 7808 + 4864 = 12704
 //
-//	Time-stamp: 2014-12-28, 18:31:33
+//	Time-stamp: 2015-01-20, 18:26:31
 //	Exported by Cearn's GBA Image Transmogrifier, v0.8.3
 //	( http://www.coranac.com/projects/#grit )
 //
@@ -18,8 +18,8 @@
 #ifndef GRIT_JANKENPON_HAND_H
 #define GRIT_JANKENPON_HAND_H
 
-#define jankenpon_handTilesLen 8480
-extern const unsigned int jankenpon_handTiles[2120];
+#define jankenpon_handTilesLen 7808
+extern const unsigned int jankenpon_handTiles[1952];
 
 #define jankenpon_handMapLen 4864
 extern const unsigned short jankenpon_handMap[2432];

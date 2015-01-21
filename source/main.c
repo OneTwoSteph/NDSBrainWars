@@ -53,6 +53,11 @@ int main(void) {
     			}
     			break;
     		case JANKENPON:
+    			gamestate = jankenpon_game();
+				if(!gamestate){
+					game = NOGAME;
+					jankenpon_reset();
+				}
     			break;
     		default:
     			break;

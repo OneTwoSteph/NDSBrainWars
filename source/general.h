@@ -8,6 +8,7 @@
 #include <nds.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #define BLACKVAL ARGB16(1,11,11,11)
 #define GREYVAL ARGB16(1,28,28,28)
@@ -17,8 +18,8 @@
 #define GREENVAL ARGB16(1,7,22,14)
 #define YELLOWVAL ARGB16(1,31,26,0)
 
-#define PATHMEDIUM 20
-#define PATHHARD 40
+#define PATHMEDIUM 5
+#define PATHHARD 10
 
 typedef enum STATE STATE;
 enum STATE
@@ -58,9 +59,20 @@ enum DIRECTION
 typedef enum SHAPE SHAPE;
 enum SHAPE
 {
-    PAPER = 0,
-    ROCK = 1,
-    SCISSOR = 2
+    SCISSOR = 0,
+    PAPER = 1,
+    ROCK = 2
+};
+
+typedef enum ORDER ORDER;
+enum ORDER
+{
+    SPR = 0,
+    RSP = 1,
+    PRS = 2,
+    PSR = 3,
+    RPS = 4,
+    SRP = 5,
 };
 
 typedef enum LEVEL LEVEL;

@@ -30,12 +30,16 @@ void path_init(){
 	BG_PALETTE_SUB[0] = GREYVAL;
 	BG_PALETTE_SUB[1] = WHITEVAL;
 	BG_PALETTE_SUB[2] = BLUEVAL;
+
 	BG_PALETTE_SUB[17] = WHITEVAL;
 	BG_PALETTE_SUB[18] = REDVAL;
+
 	BG_PALETTE_SUB[33] = WHITEVAL;
 	BG_PALETTE_SUB[34] = GREENVAL;
+
 	BG_PALETTE_SUB[49] = WHITEVAL;
 	BG_PALETTE_SUB[50] = YELLOWVAL;
+
 	BG_PALETTE_SUB[65] = GREYVAL;
 	BG_PALETTE_SUB[66] = GREYVAL;
 
@@ -94,8 +98,8 @@ bool path_game(){
 	scanKeys();
 	u16 keys = (u16) keysDown();
 
-	if(keys & KEY_START)
-		return false;
+	// Stop game if START button pressed
+	if(keys & KEY_START) return false;
 	else{
 		// Check which key was pressed and if it is correct
 		switch(color){
