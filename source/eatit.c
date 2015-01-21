@@ -73,9 +73,9 @@ void eatit_draw(){
 
 	// Draw first background with grey
 	for(x=0; x<32; x++){
-			for(y=0; y<24; y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[0];
-			}
+		for(y=0; y<24; y++){
+			BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[0];
+		}
 	}
 
 	// If we are not in the wrong case, draw figures

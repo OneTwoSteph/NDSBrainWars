@@ -43,10 +43,10 @@ int main(void) {
     			u16 keys = (u16) keysDown();
 
     			if(keys & KEY_START){
-    				//path_init();
-    				//game = PATH;
-    				jankenpon_init();
-    				game = JANKENPON;
+    				path_init();
+    				game = PATH;
+    				//jankenpon_init();
+    				//game = JANKENPON;
     				//leader_init();
     				//game = LEADER;
     				//eatit_init();

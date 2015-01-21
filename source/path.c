@@ -3,6 +3,7 @@
  *
  *  Created on: Dec 27, 2014
  *      Author: Stephanie Amati
+ *
  */
 
 #include "general.h"
@@ -27,7 +28,6 @@ void path_init(){
 	swiCopy(path_arrowPal, BG_PALETTE_SUB, path_arrowPalLen/2);
 	swiCopy(path_arrowPal, &BG_PALETTE_SUB[16], path_arrowPalLen);
 	swiCopy(path_arrowPal, &BG_PALETTE_SUB[16*2], path_arrowPalLen);
-	swiCopy(path_arrowPal, &BG_PALETTE_SUB[16*3], path_arrowPalLen);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
 	BG_PALETTE_SUB[0] = GREYVAL;
@@ -43,20 +43,17 @@ void path_init(){
 	BG_PALETTE_SUB[49] = WHITEVAL;
 	BG_PALETTE_SUB[50] = YELLOWVAL;
 
-	BG_PALETTE_SUB[65] = GREYVAL;
-	BG_PALETTE_SUB[66] = GREYVAL;
-
 	// Set initial random direction and color
 	direction = rand()%4;
 	color = rand()%2;
 
 	// Set draw on screen
-	path_draw(direction, color);
+	path_draw();
 
 	// Configure interrupts and timer for false blinking effect
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
-	//irqInit();
+
 	irqSet(IRQ_TIMER1, &path_wrong);
 	irqEnable(IRQ_TIMER1);
 
@@ -66,32 +63,42 @@ void path_init(){
 	level = EASY;
 }
 
-void path_draw(direction, color){
+void path_draw(){
 	int x, y;
-	int W = 32;
+	int L = 32;	// length of the image
 
+	// Draw first background with grey
 	for(x=0; x<32; x++){
 		for(y=0; y<24; y++){
-			// Direction
-			switch(direction){
-			case RIGHT:
-				BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+32+4)*W+x];
-				break;
-			case LEFT:
-				BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+32+4)*W+(31-x)]^(1<<10);
-				break;
-			case UP:
-				BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+4)*W+x];
-				break;
-			case DOWN:
-				BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(31-4-y)*W+x]^(1<<11);
-				break;
-			default:
-				break;
-			}
+			BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[0];
+		}
+	}
 
-			// Color
-			BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(color<<12);
+	// If we are not in the wrong case, draw figures
+	if((wrong%2)==0){
+		for(x=0; x<32; x++){
+			for(y=0; y<24; y++){
+				// Direction
+				switch(direction){
+				case RIGHT:
+					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+32+4)*L+x];
+					break;
+				case LEFT:
+					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+32+4)*L+(31-x)]^(1<<10);
+					break;
+				case UP:
+					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+4)*L+x];
+					break;
+				case DOWN:
+					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(31-4-y)*L+x]^(1<<11);
+					break;
+				default:
+					break;
+				}
+
+				// Color
+				BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(color<<12);
+			}
 		}
 	}
 }
@@ -226,36 +233,30 @@ void path_next(){
 	color = nb2;
 
 	// Redraw screen
-	path_draw(direction, color);
+	path_draw();
 }
 
 void path_wrong(){
-	// Check what to do in function of wrong variable
-	switch(wrong){
-		case 0:
-			TIMER1_CR |= TIMER_ENABLE;
-			path_draw(direction, GREY);
-			wrong++;
-			break;
-		case 1:
-			path_draw(direction, color);
-			wrong++;
-			break;
-		case 2:
-			path_draw(direction, GREY);
-			wrong++;
-			break;
-		case 3:
-			TIMER1_CR &= ~(TIMER_ENABLE);
-			path_draw(direction, color);
-			wrong=0;
-			break;
-		default:
-			break;
+	// Update wrong variable
+	wrong++;
+
+	// Start timer at beginning and stop after two blinking effect
+	if(wrong==1) TIMER1_CR |= TIMER_ENABLE;
+	if(wrong==4){
+		TIMER1_CR &= ~(TIMER_ENABLE);
+		wrong = 0;
 	}
+
+	// Draw
+	path_draw();
 }
 
 void path_reset(){
 	// Draw nothing
-	path_draw(direction, GREY);
+	wrong = 1;
+	path_draw();
+
+	// Reset all global variables
+	score = 0;
+	wrong = 0;
 }
