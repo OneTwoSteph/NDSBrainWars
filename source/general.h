@@ -34,7 +34,8 @@ enum GAME
 {
     NOGAME = 0,
 	PATH = 1,
-	JANKENPON = 2
+	JANKENPON = 2,
+	LEADER = 3
 };
 
 typedef enum COLOR COLOR;
