@@ -132,7 +132,7 @@ bool eatit_game(void){
 	u16 keys = (u16) keysDown();
 
 	// Stop game if START button pressed
-	if(keys & KEY_START) return false;
+	if(keys & KEY_START) return true;
 	else{
 		// If up arrow was pressed
 		if(keys & KEY_UP){
@@ -159,7 +159,7 @@ bool eatit_game(void){
 		}
 
 		// Return true for the game to continue
-		return true;
+		return false;
 	}
 }
 

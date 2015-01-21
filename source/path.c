@@ -109,7 +109,7 @@ bool path_game(){
 	u16 keys = (u16) keysDown();
 
 	// Stop game if START button pressed
-	if(keys & KEY_START) return false;
+	if(keys & KEY_START) return true;
 	else{
 		// Check which key was pressed and if it is correct
 		switch(color){
@@ -208,7 +208,7 @@ bool path_game(){
 		default:
 			break;
 		}
-		return true;
+		return false;
 	}
 }
 

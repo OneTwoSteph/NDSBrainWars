@@ -49,10 +49,13 @@ brainwars.o: /home/nds/files/workspace/NDSBrainWars/source/brainwars.c \
   /opt/devkitPro/libnds/include/nds/system.h \
   /opt/devkitPro/libnds/include/nds/arm9/decompress.h \
   /home/nds/files/workspace/NDSBrainWars/source/brainwars.h \
-  /home/nds/files/workspace/NDSBrainWars/source/path.h \
-  /home/nds/files/workspace/NDSBrainWars/source/jankenpon.h \
+  /home/nds/files/workspace/NDSBrainWars/build/brainwars_main.h \
+  /home/nds/files/workspace/NDSBrainWars/build/brainwars_train.h \
   /home/nds/files/workspace/NDSBrainWars/source/leader.h \
-  /home/nds/files/workspace/NDSBrainWars/source/eatit.h
+  /home/nds/files/workspace/NDSBrainWars/source/eatit.h \
+  /home/nds/files/workspace/NDSBrainWars/source/pairs.h \
+  /home/nds/files/workspace/NDSBrainWars/source/path.h \
+  /home/nds/files/workspace/NDSBrainWars/source/jankenpon.h
 
 /home/nds/files/workspace/NDSBrainWars/source/general.h:
 
@@ -154,10 +157,16 @@ brainwars.o: /home/nds/files/workspace/NDSBrainWars/source/brainwars.c \
 
 /home/nds/files/workspace/NDSBrainWars/source/brainwars.h:
 
-/home/nds/files/workspace/NDSBrainWars/source/path.h:
+/home/nds/files/workspace/NDSBrainWars/build/brainwars_main.h:
 
-/home/nds/files/workspace/NDSBrainWars/source/jankenpon.h:
+/home/nds/files/workspace/NDSBrainWars/build/brainwars_train.h:
 
 /home/nds/files/workspace/NDSBrainWars/source/leader.h:
 
 /home/nds/files/workspace/NDSBrainWars/source/eatit.h:
+
+/home/nds/files/workspace/NDSBrainWars/source/pairs.h:
+
+/home/nds/files/workspace/NDSBrainWars/source/path.h:
+
+/home/nds/files/workspace/NDSBrainWars/source/jankenpon.h:

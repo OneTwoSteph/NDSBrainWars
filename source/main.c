@@ -3,7 +3,7 @@
  *
  *  Created on: Dec 27, 2014
  *    Original: Template Nintendo DS (May 2011)
- * Modified by: Stephanie Amati & Nawaaz S. Gujja Shaik
+ * Modified by: Stephanie Amati & Nawaaz GS
  *
  */
 

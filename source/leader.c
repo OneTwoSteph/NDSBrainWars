@@ -35,7 +35,7 @@ int direction;
 int order[6];
 LEVEL level;
 
-void leader_init() {
+void leader_init(){
 
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_256;
 

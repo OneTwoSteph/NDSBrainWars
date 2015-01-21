@@ -119,7 +119,7 @@ bool jankenpon_game(){
 	u16 keys = (u16) keysDown();
 
 	// Stop game if START button pressed
-	if(keys & KEY_START) return false;
+	if(keys & KEY_START) return true;
 	else{
 		// If touchscreen was touched, check if correct
 		if(keys & KEY_TOUCH){
@@ -176,7 +176,7 @@ bool jankenpon_game(){
 		}
 
 		// Return true for the game to continue
-		return true;
+		return false;
 	}
 }
 

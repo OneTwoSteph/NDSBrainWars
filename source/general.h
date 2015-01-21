@@ -2,7 +2,7 @@
  * general.h
  *
  *  Created on: Dec 27, 2014
- *      Author: Stephanie Amati & Nawaaz S. Gujja Shaik
+ *      Author: Stephanie Amati & Nawaaz GS
  *
  */
 
@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <stdbool.h>
 
 #define BLACKVAL ARGB16(1,11,11,11)
 #define GREYVAL ARGB16(1,28,28,28)
@@ -26,18 +27,26 @@ typedef enum STATE STATE;
 enum STATE
 {
     MAIN = 0,
-    ONEP = 1,
-    TRAIN = 2
+    TRAIN = 1,
+    ONEP = 2,
+    TWOP = 3,
+    SCORE = 4,
+    CREDITS = 5
+
 };
 
 typedef enum GAME GAME;
 enum GAME
 {
-    NOGAME = 0,
-	PATH = 1,
-	JANKENPON = 2,
-	LEADER = 3,
-	EATIT = 4
+	LEADER = 0,
+	EATIT = 1,
+	PAIRS = 2,
+	MUSICAL = 3,
+	PATH = 4,
+	ADDITION = 5,
+	PLUSMINUS = 6,
+	JANKENPON = 7,
+	NOGAME = 8,
 };
 
 typedef enum COLOR COLOR;
