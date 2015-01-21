@@ -2,7 +2,8 @@
  * general.h
  *
  *  Created on: Dec 27, 2014
- *      Author: Stephanie Amati
+ *      Author: Stephanie Amati & Nawaaz S. Gujja Shaik
+ *
  */
 
 #include <nds.h>
@@ -12,14 +13,14 @@
 
 #define BLACKVAL ARGB16(1,11,11,11)
 #define GREYVAL ARGB16(1,28,28,28)
-#define WHITEVAL ARGB16(1,28,28,29)
+#define WHITEVAL ARGB16(1,31,31,31)
 #define BLUEVAL ARGB16(1,4,18,31)
 #define REDVAL ARGB16(1,31,13,22)
 #define GREENVAL ARGB16(1,7,22,14)
 #define YELLOWVAL ARGB16(1,31,26,0)
 
-#define PATHMEDIUM 5
-#define PATHHARD 10
+#define PATHMEDIUM 20
+#define PATHHARD 40
 
 typedef enum STATE STATE;
 enum STATE
@@ -35,7 +36,8 @@ enum GAME
     NOGAME = 0,
 	PATH = 1,
 	JANKENPON = 2,
-	LEADER = 3
+	LEADER = 3,
+	EATIT = 4
 };
 
 typedef enum COLOR COLOR;
@@ -74,6 +76,21 @@ enum ORDER
     PSR = 3,
     RPS = 4,
     SRP = 5,
+};
+
+typedef enum ROW ROW;
+enum ROW
+{
+    FIRST = 0,
+    SECOND = 1,
+};
+
+typedef enum FOOD FOOD;
+enum FOOD
+{
+    EMPTY = 0,
+    MONSTER = 1,
+    CHERRY = 2
 };
 
 typedef enum LEVEL LEVEL;

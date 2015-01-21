@@ -1,116 +1,124 @@
 /*
- * jankenpon.c
+ * eatit.c
  *
- *  Created on: Dec 28, 2014
+ *  Created on: Jan 21, 2015
  *      Author: Stephanie Amati
  *
  */
 
 #include "general.h"
-#include "jankenpon.h"
-#include "jankenpon_hand.h"
+#include "eatit.h"
+#include "eatit_pacman.h"
 
-SHAPE shape;
-COLOR color;
-SHAPE U, M, D;
+ROW row;
+FOOD up[4];
+FOOD down[4];
 
 int score;
 int wrong;
-LEVEL level;
 
-void jankenpon_init(){
+void eatit_init(){
 	// Configure Background
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 
 	// Copy tiles to memory
-	swiCopy(jankenpon_handTiles, BG_TILE_RAM_SUB(1), jankenpon_handTilesLen/2);
+	swiCopy(eatit_pacmanTiles, BG_TILE_RAM_SUB(1), eatit_pacmanTilesLen/2);
 
 	// Copy palette
-	swiCopy(jankenpon_handPal, BG_PALETTE_SUB, jankenpon_handPalLen/2);
-	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16], jankenpon_handPalLen);
-	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16*2], jankenpon_handPalLen);
-	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16*3], jankenpon_handPalLen);
+	swiCopy(eatit_pacmanPal, BG_PALETTE_SUB, eatit_pacmanPalLen/2);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
 	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[2] = BLUEVAL;
-	BG_PALETTE_SUB[3] = GREYVAL;
+	BG_PALETTE_SUB[3] = REDVAL;
 	BG_PALETTE_SUB[4] = BLACKVAL;
-
-	BG_PALETTE_SUB[17] = WHITEVAL;
-	BG_PALETTE_SUB[18] = REDVAL;
-	BG_PALETTE_SUB[19] = GREYVAL;
-	BG_PALETTE_SUB[20] = BLACKVAL;
-
-	BG_PALETTE_SUB[65] = GREYVAL;
-	BG_PALETTE_SUB[66] = GREYVAL;
-	BG_PALETTE_SUB[67] = GREYVAL;
-	BG_PALETTE_SUB[68] = GREYVAL;
+	BG_PALETTE_SUB[5] = GREENVAL;
+	BG_PALETTE_SUB[6] = BLUEVAL;
+	BG_PALETTE_SUB[7] = GREYVAL;
 
 	// Set draw on screen
-	shape = rand()%3;
-	color = BLUE;
-	U = SCISSOR;
-	M = PAPER;
-	D = ROCK;
-	jankenpon_draw(shape, color, U, M, D);
+	up[0] = EMPTY;
+	up[1] = CHERRY;
+	up[2] = CHERRY;
+	up[3] = MONSTER;
+
+	down[0] = EMPTY;
+	down[1] = CHERRY;
+	down[2] = CHERRY;
+	down[3] = MONSTER;
+
+	row = FIRST;
+
+	eatit_draw();
 
 	// Configure interrupts and timer for false blinking effect
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
 
-	irqSet(IRQ_TIMER1, &jankenpon_wrong);
-	irqEnable(IRQ_TIMER1);
+	//irqSet(IRQ_TIMER1, &eatit_wrong);
+	//irqEnable(IRQ_TIMER1);
 
 	// Set global variables
 	score = 0;
 	wrong = 0;
-	level = EASY;
 }
 
-void jankenpon_draw(shape, color, U, M, D){
+void eatit_draw(){
 	int x, y;
-	int length = 22; // of the big hands
-	int W = 76;	// of the whole image containing the 3 big and small hands
-	int height = 8;
 
-	// Draw
+	int lPac = 8; 			// length of pacman
+	int lFood = 6; 			// length of food
+	int height = 12; 		// height of one raw
+
+	int L = 34;				// length of the whole image
+
+	// Draw on screen
 	for(x=0; x<32; x++){
 		for(y=0; y<24; y++){
-			// Big hand and mini hands
-			if(x<length){
-				switch(shape){
-				case PAPER:
-					BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*W+x];
-					break;
-				case ROCK:
-					BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*W+length+x];
-					break;
-				case SCISSOR:
-					BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*W+2*length+x];
-					break;
-				default:
-					break;
+			// Up and down
+			if(y<height){
+				// 0, 1, 2, 3 position (0 = left)
+				if(x<lFood)
+					BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+x+up[0]*lFood];
+				else{
+					if(x<2*lFood)
+						BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-lFood)+up[1]*lFood];
+					else{
+						if(x<3*lFood)
+							BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-2*lFood)+up[2]*lFood];
+						else{
+							if(x<4*lFood)
+								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-3*lFood)+up[3]*lFood];
+							else
+								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-4*lFood)+3*lFood+row*lPac];
+						}
+
+					}
 				}
+
 			}
 			else{
-				// First little hand
-				if(y<height)
-					BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(U*height + y)*W+3*length+(x-length)];
+				if(x<lFood)
+					BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+x+down[0]*lFood];
 				else{
-					if(y<2*height)
-						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(M*height + (y-height))*W+3*length+(x-length)];
-					else
-						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(D*height + (y-2*height))*W+3*length+(x-length)];
+					if(x<2*lFood)
+						BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-lFood)+down[1]*lFood];
+					else{
+						if(x<3*lFood)
+							BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-2*lFood)+down[2]*lFood];
+						else{
+							if(x<4*lFood)
+								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-3*lFood)+down[3]*lFood];
+							else
+								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-4*lFood)+3*lFood+(row+1)%2*lPac];
+						}
+					}
 				}
 			}
-
-			// Color
-			BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(color<<12);
 		}
 	}
 }
 
+/*
 bool jankenpon_game(void){
 	// Scan keys
 	scanKeys();
@@ -254,3 +262,4 @@ void jankenpon_reset(){
 	// Draw nothing
 	jankenpon_draw(shape, GREY, U, M, D);
 }
+*/

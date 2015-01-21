@@ -1,6 +1,10 @@
 /*
- * Template Nintendo DS
- * May 2011
+ * main.c
+ *
+ *  Created on: Dec 27, 2014
+ *    Original: Template Nintendo DS (May 2011)
+ * Modified by: Stephanie Amati & Nawaaz S. Gujja Shaik
+ *
  */
 
 #include <nds.h>
@@ -40,10 +44,12 @@ int main(void) {
     			if(keys & KEY_START){
     				//path_init();
     				//game = PATH;
-    				//jankenpon_init();
-    				//game = JANKENPON;
-    				leader_init();
-    				game = LEADER;
+    				jankenpon_init();
+    				game = JANKENPON;
+    				//leader_init();
+    				//game = LEADER;
+    				eatit_init();
+    				game = EATIT;
     			}
     			break;
     		case PATH:
@@ -61,7 +67,19 @@ int main(void) {
 				}
     			break;
     		case LEADER:
-    			break;
+    			/*gamestate = leader_game();
+				if(!gamestate){
+					game = NOGAME;
+					leader_reset();
+				}
+    			break;*/
+    		case EATIT:
+    			/*gamestate = eatit_game();
+				if(!gamestate){
+					game = NOGAME;
+					eatit_reset();
+				}
+				break;*/
     		default:
     			break;
     		}

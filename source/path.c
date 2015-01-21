@@ -17,8 +17,9 @@ int wrong;
 LEVEL level;
 
 void path_init(){
-
+	// Configure Background
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
+
 	// Copy tiles to memory
 	swiCopy(path_arrowTiles, BG_TILE_RAM_SUB(1), path_arrowTilesLen/2);
 
