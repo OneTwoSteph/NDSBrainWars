@@ -45,12 +45,12 @@ int main(void) {
     			if(keys & KEY_START){
     				//path_init();
     				//game = PATH;
-    				//jankenpon_init();
-    				//game = JANKENPON;
+    				jankenpon_init();
+    				game = JANKENPON;
     				//leader_init();
     				//game = LEADER;
-    				eatit_init();
-    				game = EATIT;
+    				//eatit_init();
+    				//game = EATIT;
     			}
     			break;
     		case PATH:

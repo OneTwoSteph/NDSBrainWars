@@ -26,7 +26,6 @@ void eatit_init(){
 
 	// Copy palette
 	swiCopy(eatit_pacmanPal, BG_PALETTE_SUB, eatit_pacmanPalLen);
-	swiCopy(eatit_pacmanPal, &BG_PALETTE_SUB[16], eatit_pacmanPalLen);
 
 	// Set up palette colors
 	BG_PALETTE_SUB[1] = WHITEVAL;
@@ -35,13 +34,6 @@ void eatit_init(){
 	BG_PALETTE_SUB[5] = GREENVAL;
 	BG_PALETTE_SUB[6] = BLUEVAL;
 	BG_PALETTE_SUB[7] = GREYVAL;
-
-	BG_PALETTE_SUB[17] = GREYVAL;
-	BG_PALETTE_SUB[20] = GREYVAL;
-	BG_PALETTE_SUB[21] = GREYVAL;
-	BG_PALETTE_SUB[22] = GREYVAL;
-	BG_PALETTE_SUB[23] = GREYVAL;
-	BG_PALETTE_SUB[24] = GREYVAL;
 
 	// Set draw on screen
 	up[0] = CHERRY;
@@ -79,7 +71,7 @@ void eatit_draw(){
 
 	int L = 34;				// length of the whole image
 
-	// Draw first background with empty
+	// Draw first background with grey
 	for(x=0; x<32; x++){
 			for(y=0; y<24; y++){
 				BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[0];

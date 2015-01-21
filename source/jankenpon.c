@@ -28,8 +28,6 @@ void jankenpon_init(){
 	// Copy palette
 	swiCopy(jankenpon_handPal, BG_PALETTE_SUB, jankenpon_handPalLen);
 	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16], jankenpon_handPalLen);
-	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16*2], jankenpon_handPalLen);
-	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16*3], jankenpon_handPalLen);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
 	BG_PALETTE_SUB[1] = WHITEVAL;
@@ -42,18 +40,13 @@ void jankenpon_init(){
 	BG_PALETTE_SUB[19] = GREYVAL;
 	BG_PALETTE_SUB[20] = BLACKVAL;
 
-	BG_PALETTE_SUB[65] = GREYVAL;
-	BG_PALETTE_SUB[66] = GREYVAL;
-	BG_PALETTE_SUB[67] = GREYVAL;
-	BG_PALETTE_SUB[68] = GREYVAL;
-
 	// Set draw on screen
 	shape = rand()%3;
 	color = BLUE;
 	U = SCISSOR;
 	M = PAPER;
 	D = ROCK;
-	jankenpon_draw(shape, color, U, M, D);
+	jankenpon_draw();
 
 	// Configure interrupts and timer for false blinking effect
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
@@ -68,50 +61,59 @@ void jankenpon_init(){
 	level = EASY;
 }
 
-void jankenpon_draw(shape, color, U, M, D){
+void jankenpon_draw(){
 	int x, y;
 	int length = 22; // of the big hands
-	int W = 76;	// of the whole image containing the 3 big and small hands
+	int L = 76;	// length of the whole image
 	int height = 8;
 
-	// Draw
+	// Draw first background with grey
 	for(x=0; x<32; x++){
 		for(y=0; y<24; y++){
-			// Big hand and mini hands
-			if(x<length){
-				switch(shape){
-				case PAPER:
-					BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*W+x];
-					break;
-				case ROCK:
-					BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*W+length+x];
-					break;
-				case SCISSOR:
-					BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*W+2*length+x];
-					break;
-				default:
-					break;
-				}
-			}
-			else{
-				// First little hand
-				if(y<height)
-					BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(U*height + y)*W+3*length+(x-length)];
-				else{
-					if(y<2*height)
-						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(M*height + (y-height))*W+3*length+(x-length)];
-					else
-						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(D*height + (y-2*height))*W+3*length+(x-length)];
-				}
-			}
+			BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[0];
+		}
+	}
 
-			// Color
-			BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(color<<12);
+	// If we are not in the wrong case, draw figures
+	if((wrong%2)==0){
+		for(x=0; x<32; x++){
+			for(y=0; y<24; y++){
+				// Big hand and mini hands
+				if(x<length){
+					switch(shape){
+					case PAPER:
+						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*L+x];
+						break;
+					case ROCK:
+						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*L+length+x];
+						break;
+					case SCISSOR:
+						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*L+2*length+x];
+						break;
+					default:
+						break;
+					}
+				}
+				else{
+					// First little hand
+					if(y<height)
+						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(U*height + y)*L+3*length+(x-length)];
+					else{
+						if(y<2*height)
+							BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(M*height + (y-height))*L+3*length+(x-length)];
+						else
+							BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(D*height + (y-2*height))*L+3*length+(x-length)];
+					}
+				}
+
+				// Color
+				BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(color<<12);
+			}
 		}
 	}
 }
 
-bool jankenpon_game(void){
+bool jankenpon_game(){
 	// Scan keys
 	scanKeys();
 	u16 keys = (u16) keysDown();
@@ -178,7 +180,7 @@ bool jankenpon_game(void){
 	}
 }
 
-void jankenpon_next(void){
+void jankenpon_next(){
 	// Increment score
 	score++;
 
@@ -222,35 +224,29 @@ void jankenpon_next(void){
 	}
 
 	// Redraw screen
-	jankenpon_draw(shape, color, U, M, D);
+	jankenpon_draw();
 }
 void jankenpon_wrong(void){
-	// Check what to do in function of wrong variable
-	switch(wrong){
-		case 0:
-			TIMER1_CR |= TIMER_ENABLE;
-			jankenpon_draw(shape, GREY, U, M, D);
-			wrong++;
-			break;
-		case 1:
-			jankenpon_draw(shape, color, U, M, D);
-			wrong++;
-			break;
-		case 2:
-			jankenpon_draw(shape, GREY, U, M, D);
-			wrong++;
-			break;
-		case 3:
-			TIMER1_CR &= ~(TIMER_ENABLE);
-			jankenpon_draw(shape, color, U, M, D);
-			wrong=0;
-			break;
-		default:
-			break;
+	// Update wrong variable
+	wrong++;
+
+	// Start timer at beginning and stop after two blinking effect
+	if(wrong==1) TIMER1_CR |= TIMER_ENABLE;
+	if(wrong==4){
+		TIMER1_CR &= ~(TIMER_ENABLE);
+		wrong = 0;
 	}
+
+	// Draw
+	jankenpon_draw();
 }
 
 void jankenpon_reset(){
 	// Draw nothing
-	jankenpon_draw(shape, GREY, U, M, D);
+	wrong = 1;
+	jankenpon_draw();
+
+	// Reset all global variables
+	score = 0;
+	wrong = 0;
 }
