@@ -22,12 +22,13 @@ void eatit_init(){
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 
 	// Copy tiles to memory
-	swiCopy(eatit_pacmanTiles, BG_TILE_RAM_SUB(1), eatit_pacmanTilesLen/2);
+	swiCopy(eatit_pacmanTiles, BG_TILE_RAM_SUB(1), eatit_pacmanTilesLen);
 
 	// Copy palette
-	swiCopy(eatit_pacmanPal, BG_PALETTE_SUB, eatit_pacmanPalLen/2);
+	swiCopy(eatit_pacmanPal, BG_PALETTE_SUB, eatit_pacmanPalLen);
+	swiCopy(eatit_pacmanPal, &BG_PALETTE_SUB[16], eatit_pacmanPalLen);
 
-	// Set up palette colors (palette contains back, arrow, circle in this order)
+	// Set up palette colors
 	BG_PALETTE_SUB[1] = WHITEVAL;
 	BG_PALETTE_SUB[3] = REDVAL;
 	BG_PALETTE_SUB[4] = BLACKVAL;
@@ -35,16 +36,23 @@ void eatit_init(){
 	BG_PALETTE_SUB[6] = BLUEVAL;
 	BG_PALETTE_SUB[7] = GREYVAL;
 
+	BG_PALETTE_SUB[17] = GREYVAL;
+	BG_PALETTE_SUB[20] = GREYVAL;
+	BG_PALETTE_SUB[21] = GREYVAL;
+	BG_PALETTE_SUB[22] = GREYVAL;
+	BG_PALETTE_SUB[23] = GREYVAL;
+	BG_PALETTE_SUB[24] = GREYVAL;
+
 	// Set draw on screen
-	up[0] = EMPTY;
+	up[0] = CHERRY;
 	up[1] = CHERRY;
-	up[2] = CHERRY;
-	up[3] = MONSTER;
+	up[2] = EMPTY;
+	up[3] = CHERRY;
 
 	down[0] = EMPTY;
-	down[1] = CHERRY;
-	down[2] = CHERRY;
-	down[3] = MONSTER;
+	down[1] = EMPTY;
+	down[2] = MONSTER;
+	down[3] = EMPTY;
 
 	row = FIRST;
 
@@ -54,8 +62,8 @@ void eatit_init(){
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
 
-	//irqSet(IRQ_TIMER1, &eatit_wrong);
-	//irqEnable(IRQ_TIMER1);
+	irqSet(IRQ_TIMER1, &eatit_wrong);
+	irqEnable(IRQ_TIMER1);
 
 	// Set global variables
 	score = 0;
@@ -71,45 +79,52 @@ void eatit_draw(){
 
 	int L = 34;				// length of the whole image
 
-	// Draw on screen
+	// Draw first background with empty
 	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			// Up and down
-			if(y<height){
-				// 0, 1, 2, 3 position (0 = left)
-				if(x<lFood)
-					BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+x+up[0]*lFood];
-				else{
-					if(x<2*lFood)
-						BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-lFood)+up[1]*lFood];
-					else{
-						if(x<3*lFood)
-							BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-2*lFood)+up[2]*lFood];
-						else{
-							if(x<4*lFood)
-								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-3*lFood)+up[3]*lFood];
-							else
-								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-4*lFood)+3*lFood+row*lPac];
-						}
+			for(y=0; y<24; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[0];
+			}
+	}
 
+	// If we are not in the wrong case, draw figures
+	if((wrong%2)==0){
+		for(x=0; x<32; x++){
+			for(y=0; y<24; y++){
+				// Up and down
+				if(y<height){
+					// 0, 1, 2, 3 position (0 = left)
+					if(x<lFood)
+						BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+x+up[0]*lFood];
+					else{
+						if(x<2*lFood)
+							BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-lFood)+up[1]*lFood];
+						else{
+							if(x<3*lFood)
+								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-2*lFood)+up[2]*lFood];
+							else{
+								if(x<4*lFood)
+									BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-3*lFood)+up[3]*lFood];
+								else
+									BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-4*lFood)+3*lFood+row*lPac];
+							}
+						}
 					}
 				}
-
-			}
-			else{
-				if(x<lFood)
-					BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+x+down[0]*lFood];
 				else{
-					if(x<2*lFood)
-						BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-lFood)+down[1]*lFood];
+					if(x<lFood)
+						BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+x+down[0]*lFood];
 					else{
-						if(x<3*lFood)
-							BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-2*lFood)+down[2]*lFood];
+						if(x<2*lFood)
+							BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-lFood)+down[1]*lFood];
 						else{
-							if(x<4*lFood)
-								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-3*lFood)+down[3]*lFood];
-							else
-								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-4*lFood)+3*lFood+(row+1)%2*lPac];
+							if(x<3*lFood)
+								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-2*lFood)+down[2]*lFood];
+							else{
+								if(x<4*lFood)
+									BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-3*lFood)+down[3]*lFood];
+								else
+									BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-4*lFood)+3*lFood+(row+1)%2*lPac];
+							}
 						}
 					}
 				}
@@ -118,8 +133,8 @@ void eatit_draw(){
 	}
 }
 
-/*
-bool jankenpon_game(void){
+
+bool eatit_game(void){
 	// Scan keys
 	scanKeys();
 	u16 keys = (u16) keysDown();
@@ -127,58 +142,28 @@ bool jankenpon_game(void){
 	// Stop game if START button pressed
 	if(keys & KEY_START) return false;
 	else{
-		// If touchscreen was touched, check if correct
-		if(keys & KEY_TOUCH){
-			// Find position touched on touchscreen
-			touchPosition touch;
-			touchRead(&touch);
+		// If up arrow was pressed
+		if(keys & KEY_UP){
+			// Update pacman position
+			row = FIRST;
 
-			// Define circle center and radius in pixels
-			// 1, 2 ,3 corresponds to scissor, paper, rock (like on the image)
-			double r = 25;
-			double cx = 208;
-			double cy1 = 34;
-			double cy2 = 98;
-			double cy3 = 162;
+			// Check if up[3] is cherry
+			if((up[3] == CHERRY) || (down[3] == MONSTER))
+				eatit_next();
+			else
+				eatit_wrong();
+		}
 
-			// Check if touched correct symbol
-			switch(color){
-			case BLUE:
-				if((pow(cx - touch.px, 2) + pow(cy1 - touch.py,2)) < pow(r,2)){
-					if((U+1)%3 == shape) jankenpon_next();
-					else jankenpon_wrong();
-				}
+		// If down arrow was pressed
+		if(keys & KEY_DOWN){
+			// Update pacman position
+			row = SECOND;
 
-				if((pow(cx - touch.px, 2) + pow(cy2 - touch.py,2)) < pow(r,2)){
-					if((M+1)%3 == shape) jankenpon_next();
-					else jankenpon_wrong();
-				}
-
-				if((pow(cx - touch.px, 2) + pow(cy3 - touch.py,2)) < pow(r,2)){
-					if((D+1)%3 == shape) jankenpon_next();
-					else jankenpon_wrong();
-				}
-				break;
-			case RED:
-				if((pow(cx - touch.px, 2) + pow(cy1 - touch.py,2)) < pow(r,2)){
-					if(U == (shape+1)%3) jankenpon_next();
-					else jankenpon_wrong();
-				}
-
-				if((pow(cx - touch.px, 2) + pow(cy2 - touch.py,2)) < pow(r,2)){
-					if(M == (shape+1)%3) jankenpon_next();
-					else jankenpon_wrong();
-				}
-
-				if((pow(cx - touch.px, 2) + pow(cy3 - touch.py,2)) < pow(r,2)){
-					if(D == (shape+1)%3) jankenpon_next();
-					else jankenpon_wrong();
-				}
-				break;
-			case GREEN: break;
-			case YELLOW: break;
-			default: break;
-			}
+			// Check if up[3] is cherry
+			if((down[3] == CHERRY) || (up[3] == MONSTER))
+				eatit_next();
+			else
+				eatit_wrong();
 		}
 
 		// Return true for the game to continue
@@ -186,80 +171,55 @@ bool jankenpon_game(void){
 	}
 }
 
-void jankenpon_next(void){
+void eatit_next(void){
 	// Increment score
 	score++;
 
-	// Check level
-	if(score == PATHMEDIUM) level = MEDIUM;
-	if(score == PATHHARD) level = HARD;
+	// Random food for up[0] and down[0]
+	int nb1, nb2;
 
-	// Random numbers for direction and color
-	int nb1, nb2, nb3;
+	nb1 = rand()%3;
 
-	while((nb1 = rand()%3) == shape);
-
-	if((level == MEDIUM) || (level == HARD)) nb2 = rand()%2;
-	else nb2 = 0;
-
-	if(level == HARD) nb3 = rand()%6;
-	else nb3 = 0;
-
-	shape = nb1;
-	color = nb2;
-
-	switch(nb3){
-	case SPR:
-		U = SCISSOR; M = PAPER; D = ROCK;
-		break;
-	case RSP:
-		U = ROCK; M = SCISSOR; D = PAPER;
-		break;
-	case PRS:
-		U = PAPER; M = ROCK; D = SCISSOR;
-		break;
-	case PSR:
-		U = PAPER; M = SCISSOR; D = ROCK;
-		break;
-	case RPS:
-		U = ROCK; M = PAPER; D = SCISSOR;
-		break;
-	case SRP:
-		U = ROCK; M = PAPER; D = SCISSOR;
-		break;
+	if(nb1 == MONSTER) while((nb2 = rand()%3) == MONSTER);
+	else{
+		if(nb1 == CHERRY) while((nb2 = rand()%3) == CHERRY);
+		else while((nb2 = rand()%3) == EMPTY);
 	}
+
+	// Update up and down rows
+	int i;
+
+	for(i=3; i>0; i--){
+		up[i] = up[i-1];
+		down[i] = down[i-1];
+	}
+	up[0] = nb1;
+	down[0] = nb2;
 
 	// Redraw screen
-	jankenpon_draw(shape, color, U, M, D);
+	eatit_draw();
 }
-void jankenpon_wrong(void){
-	// Check what to do in function of wrong variable
-	switch(wrong){
-		case 0:
-			TIMER1_CR |= TIMER_ENABLE;
-			jankenpon_draw(shape, GREY, U, M, D);
-			wrong++;
-			break;
-		case 1:
-			jankenpon_draw(shape, color, U, M, D);
-			wrong++;
-			break;
-		case 2:
-			jankenpon_draw(shape, GREY, U, M, D);
-			wrong++;
-			break;
-		case 3:
-			TIMER1_CR &= ~(TIMER_ENABLE);
-			jankenpon_draw(shape, color, U, M, D);
-			wrong=0;
-			break;
-		default:
-			break;
+void eatit_wrong(void){
+	// Update wrong variable
+	wrong++;
+
+	// Start timer at beginning and stop after two blinking effect
+	if(wrong==1) TIMER1_CR |= TIMER_ENABLE;
+	if(wrong==4){
+		TIMER1_CR &= ~(TIMER_ENABLE);
+		wrong = 0;
 	}
+
+	// Draw
+	eatit_draw();
 }
 
-void jankenpon_reset(){
+void eatit_reset(){
 	// Draw nothing
-	jankenpon_draw(shape, GREY, U, M, D);
+	wrong = 1;
+	eatit_draw();
+
+	// Reset all global variables
+	score = 0;
+	wrong = 0;
 }
-*/

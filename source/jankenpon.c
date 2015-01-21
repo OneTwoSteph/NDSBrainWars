@@ -23,10 +23,10 @@ void jankenpon_init(){
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 
 	// Copy tiles to memory
-	swiCopy(jankenpon_handTiles, BG_TILE_RAM_SUB(1), jankenpon_handTilesLen/2);
+	swiCopy(jankenpon_handTiles, BG_TILE_RAM_SUB(1), jankenpon_handTilesLen);
 
 	// Copy palette
-	swiCopy(jankenpon_handPal, BG_PALETTE_SUB, jankenpon_handPalLen/2);
+	swiCopy(jankenpon_handPal, BG_PALETTE_SUB, jankenpon_handPalLen);
 	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16], jankenpon_handPalLen);
 	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16*2], jankenpon_handPalLen);
 	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16*3], jankenpon_handPalLen);
@@ -58,7 +58,7 @@ void jankenpon_init(){
 	// Configure interrupts and timer for false blinking effect
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
-
+	//irqInit();
 	irqSet(IRQ_TIMER1, &jankenpon_wrong);
 	irqEnable(IRQ_TIMER1);
 

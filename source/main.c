@@ -13,6 +13,7 @@
 #include "brainwars.h"
 #include "path.h"
 #include "jankenpon.h"
+#include "eatit.h"
 
 int main(void) {
 
@@ -44,8 +45,8 @@ int main(void) {
     			if(keys & KEY_START){
     				//path_init();
     				//game = PATH;
-    				jankenpon_init();
-    				game = JANKENPON;
+    				//jankenpon_init();
+    				//game = JANKENPON;
     				//leader_init();
     				//game = LEADER;
     				eatit_init();
@@ -74,12 +75,12 @@ int main(void) {
 				}
     			break;*/
     		case EATIT:
-    			/*gamestate = eatit_game();
+    			gamestate = eatit_game();
 				if(!gamestate){
 					game = NOGAME;
 					eatit_reset();
 				}
-				break;*/
+				break;
     		default:
     			break;
     		}
