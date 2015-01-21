@@ -25,9 +25,9 @@
 typedef enum STATE STATE;
 enum STATE
 {
-    INIT = 0,
-    TRAIN = 1,
-    ONEP = 2
+    MAIN = 0,
+    ONEP = 1,
+    TRAIN = 2
 };
 
 typedef enum GAME GAME;
