@@ -9,5 +9,8 @@
 #define LEADER_H_
 
 void leader_init(void);
+void leader_new_order(void);
+void leader_draw(void);
+
 
 #endif /* LEADER_H_ */

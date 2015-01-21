@@ -5,6 +5,7 @@
 
 #include <nds.h>
 #include <stdio.h>
+#include <time.h>
 #include "general.h"
 #include "brainwars.h"
 #include "path.h"
@@ -15,6 +16,7 @@ int main(void) {
     consoleDemoInit();
 
     brainwars_init();
+
     srand(time(NULL));
 
     STATE state;
@@ -44,7 +46,7 @@ int main(void) {
     				//jankenpon_init();
     				//game = JANKENPON;
     				leader_init();
-    				game = LEADER;
+    				//game = LEADER;
     			}
     			break;
     		case PATH:

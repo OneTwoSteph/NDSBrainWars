@@ -67,7 +67,8 @@ enum SHAPE
 typedef enum LEVEL LEVEL;
 enum LEVEL
 {
-    EASY = 0,
-    MEDIUM = 1,
-    HARD = 2
+	VERYEASY = 0,
+    EASY = 1,
+    MEDIUM = 2,
+    HARD = 3
 };
