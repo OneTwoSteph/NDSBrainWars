@@ -8,12 +8,19 @@
 
 #include "general.h"
 #include "brainwars.h"
+
+#include "title.h"
 #include "brainwars_main.h"
 #include "brainwars_train.h"
+#include "exp_leader.h"
+#include "exp_eatit.h"
+#include "exp_path.h"
+#include "exp_jankenpon.h"
+
 #include "leader.h"
 #include "eatit.h"
 #include "pairs.h"
-//#include "muscial.h"
+#include "musical.h"
 #include "path.h"
 #include "addition.h"
 #include "plusminus.h"
@@ -45,7 +52,7 @@ void brainwars_init(){
 
 void brainwars_configMain(){
 	VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
-	REG_DISPCNT = MODE_5_2D | DISPLAY_BG0_ACTIVE;
+	REG_DISPCNT = MODE_5_2D | DISPLAY_BG2_ACTIVE ;
 }
 
 void brainwars_configSub(){
@@ -55,12 +62,21 @@ void brainwars_configSub(){
 
 void brainwars_main_init(){
 	// Configure background
+	BGCTRL[2] = BG_MAP_BASE(0) | BgSize_B8_256x256;
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 
-	// Copy tiles to memory
+	// Main affine matrix
+	REG_BG2PA = 256;
+	REG_BG2PC = 0;
+	REG_BG2PB = 0;
+	REG_BG2PD = 256;
+
+	// Copy bitmap and tiles to memory
+	swiCopy(titleBitmap, BG_GFX, titleBitmapLen);
 	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
 
-	// Copy palette
+	// Copy palettes
+	swiCopy(titlePal, BG_PALETTE, titlePalLen);
 	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
 	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen);
 
@@ -180,17 +196,26 @@ void brainwars_1p(){
 }
 
 void brainwars_train_init(){
-	// Configure background
+	// Configure backgrounds
+	BGCTRL[2] = BG_MAP_BASE(0) | BgSize_B8_256x256;
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 
-	// Copy tiles to memory
+	// Main affine matrix
+	REG_BG2PA = 256;
+	REG_BG2PC = 0;
+	REG_BG2PB = 0;
+	REG_BG2PD = 256;
+
+	// Copy bitmap and tiles to memory
+	swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
 	swiCopy(brainwars_trainTiles, BG_TILE_RAM_SUB(1), brainwars_trainTilesLen/2);
 
-	// Copy palette
+	// Copy palettes
+	swiCopy(exp_leaderPal, BG_PALETTE, exp_leaderPalLen/2);
 	swiCopy(brainwars_trainPal, BG_PALETTE_SUB, brainwars_trainPalLen/2);
 	swiCopy(brainwars_trainPal, &BG_PALETTE_SUB[16], brainwars_trainPalLen);
 
-	// Set up palette colors
+	// Set up sub palette colors
 	BG_PALETTE_SUB[1] = WHITEVAL;
 	BG_PALETTE_SUB[3] = BLUEVAL;
 	BG_PALETTE_SUB[5] = GREENVAL;
@@ -207,7 +232,7 @@ void brainwars_train_init(){
 
 	// Initialize variable
 	game = NOGAME;
-	selectTrain = LEADER;
+	selectTrain = NOGAME;
 	gameChange = false;
 
 	// Draw training menu
@@ -269,13 +294,13 @@ void brainwars_train(){
 
 		break;
 	case MUSICAL:
-		/*// Check if game just changed
+		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
 			musical_init();
 		}
 
-		// Execute action of game
+		/*// Execute action of game
 		gameChange = musical_game();
 
 		// Check if game ended
@@ -431,6 +456,46 @@ void brainwars_train_draw(){
 	int length = 8;
 	int height = 6;
 	int L = 32;			// length of the image
+
+	// Draw instructions on main
+	switch(selectTrain){
+	case LEADER:
+		swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
+		swiCopy(exp_leaderPal, BG_PALETTE, exp_leaderPalLen/2);
+		break;
+	case EATIT:
+		swiCopy(exp_eatitBitmap, BG_GFX, exp_eatitBitmapLen/2);
+		swiCopy(exp_eatitPal, BG_PALETTE, exp_eatitPalLen/2);
+		break;
+	case PAIRS:
+		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
+		break;
+	case MUSICAL:
+		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
+		break;
+	case PATH:
+		swiCopy(exp_pathBitmap, BG_GFX, exp_pathBitmapLen/2);
+		swiCopy(exp_pathPal, BG_PALETTE, exp_pathPalLen/2);
+		break;
+	case ADDITION:
+		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
+		break;
+	case PLUSMINUS:
+		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
+		break;
+	case JANKENPON:
+		swiCopy(exp_jankenponBitmap, BG_GFX, exp_jankenponBitmapLen/2);
+		swiCopy(exp_jankenponPal, BG_PALETTE, exp_jankenponPalLen/2);
+		break;
+	case NOGAME:
+		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
+		break;
+	}
 
 	// Draw training menu
 	for(x=0; x<32; x++){
