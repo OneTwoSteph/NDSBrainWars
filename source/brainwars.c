@@ -50,7 +50,7 @@ void brainwars_configMain(){
 
 void brainwars_configSub(){
 	VRAM_C_CR = VRAM_ENABLE| VRAM_C_SUB_BG;
-	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE;
+	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
 }
 
 void brainwars_main_init(){
@@ -321,7 +321,7 @@ void brainwars_train(){
 		break;
 	case PLUSMINUS:
 		// Check if game just changed
-		/*if(gameChange){
+		if(gameChange){
 			gameChange = false;
 			plusminus_init();
 		}
@@ -333,7 +333,7 @@ void brainwars_train(){
 		if(gameChange){
 			game = NOGAME;
 			plusminus_reset();
-		}*/
+		}
 
 		break;
 	case JANKENPON:

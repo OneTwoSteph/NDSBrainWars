@@ -13,7 +13,7 @@
 void musical_wrong(){
 
 }
-
+/*
 void musical_init(){
 	// Configure Backgrounds
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
@@ -57,6 +57,7 @@ void musical_init(){
 	wrong = 0;
 	level = EASY;
 }
+*/
 void musical_draw(){
 
 }
