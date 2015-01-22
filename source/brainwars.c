@@ -274,7 +274,7 @@ void brainwars_train(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			musical_init();
+			/*musical_init();*/
 		}
 
 		/*// Execute action of game
