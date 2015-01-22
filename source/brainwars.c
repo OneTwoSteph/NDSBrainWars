@@ -19,7 +19,6 @@
 
 #include "leader.h"
 #include "eatit.h"
-#include "pairs.h"
 #include "musical.h"
 #include "path.h"
 //#include "addition.h"
@@ -82,21 +81,15 @@ void brainwars_main_init(){
 
 	// Set up palette colors
 	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[3] = BLUEVAL;
-	BG_PALETTE_SUB[5] = GREENVAL;
-	BG_PALETTE_SUB[6] = REDVAL;
-	BG_PALETTE_SUB[7] = BLACKVAL;
-	BG_PALETTE_SUB[8] = GREYVAL;
+	BG_PALETTE_SUB[5] = BLACKVAL;
+	BG_PALETTE_SUB[6] = GREYVAL;
 
 	BG_PALETTE_SUB[17] = YELLOWVAL;
-	BG_PALETTE_SUB[19] = BLUEVAL;
-	BG_PALETTE_SUB[21] = GREENVAL;
-	BG_PALETTE_SUB[22] = REDVAL;
-	BG_PALETTE_SUB[23] = BLACKVAL;
-	BG_PALETTE_SUB[24] = GREYVAL;
+	BG_PALETTE_SUB[21] = BLACKVAL;
+	BG_PALETTE_SUB[22] = GREYVAL;
 
 	// Initialize selection variable
-	selectMain = ONEP;
+	selectMain = TRAIN;
 
 	// Draw main menu
 	brainwars_main_draw();
@@ -173,6 +166,7 @@ void brainwars_main_select(){
 
 void brainwars_main_draw(){
 	int x, y;
+	int ystart = 2;
 	int height = 4;
 	int L = 32;	// length of the image
 
@@ -185,7 +179,7 @@ void brainwars_main_draw(){
 
 	// Change color of the selected button
 	for(x=0; x<32; x++){
-		for(y=selectMain*height; y<(selectMain+1)*height; y++){
+		for(y=(selectMain-1)*height+ystart; y<selectMain*height+ystart; y++){
 			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
 		}
 	}
@@ -217,18 +211,18 @@ void brainwars_train_init(){
 
 	// Set up sub palette colors
 	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[3] = BLUEVAL;
-	BG_PALETTE_SUB[5] = GREENVAL;
-	BG_PALETTE_SUB[6] = REDVAL;
-	BG_PALETTE_SUB[7] = BLACKVAL;
-	BG_PALETTE_SUB[8] = GREYVAL;
+	BG_PALETTE_SUB[5] = REDVAL;
+	BG_PALETTE_SUB[6] = BLUEVAL;
+	BG_PALETTE_SUB[7] = GREENVAL;
+	BG_PALETTE_SUB[8] = BLACKVAL;
+	BG_PALETTE_SUB[9] = GREYVAL;
 
 	BG_PALETTE_SUB[17] = YELLOWVAL;
-	BG_PALETTE_SUB[19] = BLUEVAL;
-	BG_PALETTE_SUB[21] = GREENVAL;
-	BG_PALETTE_SUB[22] = REDVAL;
-	BG_PALETTE_SUB[23] = BLACKVAL;
-	BG_PALETTE_SUB[24] = GREYVAL;
+	BG_PALETTE_SUB[21] = REDVAL;
+	BG_PALETTE_SUB[22] = BLUEVAL;
+	BG_PALETTE_SUB[23] = GREENVAL;
+	BG_PALETTE_SUB[24] = BLACKVAL;
+	BG_PALETTE_SUB[25] = GREYVAL;
 
 	// Initialize variable
 	game = NOGAME;
@@ -274,23 +268,6 @@ void brainwars_train(){
 			game = NOGAME;
 			eatit_reset();
 		}
-
-		break;
-	case PAIRS:
-		/*// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			pairs_init();
-		}
-
-		// Execute action of game
-		gameChange = pairs_game();
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			pairs_reset();
-		}*/
 
 		break;
 	case MUSICAL:
@@ -402,37 +379,27 @@ void brainwars_train_select(){
 	// Check if right key pressed
 	if(keys & KEY_RIGHT){
 		// Update selected button
-		selectTrain = (selectTrain+1)%9;
+		selectTrain = (selectTrain+1)%8;
 
-		// Draw updates
-		brainwars_train_draw();
+
 	}
 
 	// Check if left key pressed
 	if(keys & KEY_LEFT){
 		// Update selected button
-		selectTrain = (selectTrain+8)%9;
-
-		// Draw updates
-		brainwars_train_draw();
+		selectTrain = (selectTrain+7)%8;
 	}
 
 	// Check if down key pressed
 	if(keys & KEY_DOWN){
 		// Update selected button
-		selectTrain = (selectTrain+3)%9;
-
-		// Draw updates
-		brainwars_train_draw();
+		selectTrain = (selectTrain+3)%8;
 	}
 
 	// Check if up key pressed
 	if(keys & KEY_UP){
 		// Update selected button
-		selectTrain = (selectTrain+6)%9;
-
-		// Draw updates
-		brainwars_train_draw();
+		selectTrain = (selectTrain+5)%8;
 	}
 
 	// Check if start key pressed
@@ -447,14 +414,17 @@ void brainwars_train_select(){
 			stateChange = true;
 		}
 	}
+
+	// Draw updates
+	brainwars_train_draw();
 }
 
 void brainwars_train_draw(){
 	int x, y;
 	int xstart = 4;
-	int ystart = 3;
+	int ystart = 2;
 	int length = 8;
-	int height = 6;
+	int height = 7;
 	int L = 32;			// length of the image
 
 	// Draw instructions on main
@@ -466,10 +436,6 @@ void brainwars_train_draw(){
 	case EATIT:
 		swiCopy(exp_eatitBitmap, BG_GFX, exp_eatitBitmapLen/2);
 		swiCopy(exp_eatitPal, BG_PALETTE, exp_eatitPalLen/2);
-		break;
-	case PAIRS:
-		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
-		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
 		break;
 	case MUSICAL:
 		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);

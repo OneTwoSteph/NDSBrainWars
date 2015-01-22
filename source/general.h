@@ -46,13 +46,12 @@ enum GAME
 {
 	LEADER = 0,
 	EATIT = 1,
-	PAIRS = 2,
-	MUSICAL = 3,
-	PATH = 4,
-	ADDITION = 5,
-	PLUSMINUS = 6,
-	JANKENPON = 7,
-	NOGAME = 8,
+	MUSICAL = 2,
+	PATH = 3,
+	ADDITION = 4,
+	PLUSMINUS = 5,
+	JANKENPON = 6,
+	NOGAME = 7,
 };
 
 typedef enum COLOR COLOR;
