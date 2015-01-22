@@ -21,7 +21,7 @@
 #include "eatit.h"
 #include "musical.h"
 #include "path.h"
-//#include "addition.h"
+#include "addition.h"
 #include "plusminus.h"
 #include "jankenpon.h"
 
@@ -305,7 +305,7 @@ void brainwars_train(){
 
 		break;
 	case ADDITION:
-		/*// Check if game just changed
+		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
 			addition_init();
@@ -318,7 +318,7 @@ void brainwars_train(){
 		if(gameChange){
 			game = NOGAME;
 			addition_reset();
-		}*/
+		}
 
 		break;
 	case PLUSMINUS:
