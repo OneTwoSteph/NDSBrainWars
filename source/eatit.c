@@ -17,6 +17,21 @@ FOOD down[4];
 int score;
 int wrong;
 
+void eatit_wrong(void){
+	// Update wrong variable
+	wrong++;
+
+	// Start timer at beginning and stop after two blinking effect
+	if(wrong==1) TIMER1_CR |= TIMER_ENABLE;
+	if(wrong==4){
+		TIMER1_CR &= ~(TIMER_ENABLE);
+		wrong = 0;
+	}
+
+	// Draw
+	eatit_draw();
+}
+
 void eatit_init(){
 	// Configure Background
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
@@ -189,20 +204,6 @@ void eatit_next(void){
 	down[0] = nb2;
 
 	// Redraw screen
-	eatit_draw();
-}
-void eatit_wrong(void){
-	// Update wrong variable
-	wrong++;
-
-	// Start timer at beginning and stop after two blinking effect
-	if(wrong==1) TIMER1_CR |= TIMER_ENABLE;
-	if(wrong==4){
-		TIMER1_CR &= ~(TIMER_ENABLE);
-		wrong = 0;
-	}
-
-	// Draw
 	eatit_draw();
 }
 

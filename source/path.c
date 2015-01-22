@@ -17,6 +17,21 @@ int score;
 int wrong;
 LEVEL level;
 
+void path_wrong(){
+	// Update wrong variable
+	wrong++;
+
+	// Start timer at beginning and stop after two blinking effect
+	if(wrong==1) TIMER1_CR |= TIMER_ENABLE;
+	if(wrong==4){
+		TIMER1_CR &= ~(TIMER_ENABLE);
+		wrong = 0;
+	}
+
+	// Draw
+	path_draw();
+}
+
 void path_init(){
 	// Configure Background
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
@@ -233,21 +248,6 @@ void path_next(){
 	color = nb2;
 
 	// Redraw screen
-	path_draw();
-}
-
-void path_wrong(){
-	// Update wrong variable
-	wrong++;
-
-	// Start timer at beginning and stop after two blinking effect
-	if(wrong==1) TIMER1_CR |= TIMER_ENABLE;
-	if(wrong==4){
-		TIMER1_CR &= ~(TIMER_ENABLE);
-		wrong = 0;
-	}
-
-	// Draw
 	path_draw();
 }
 

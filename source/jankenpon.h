@@ -6,11 +6,9 @@
  *
  */
 
-#include <stdbool.h>
-
+void jankenpon_wrong(void);
 void jankenpon_init(void);
 void jankenpon_draw(void);
 bool jankenpon_game(void);
 void jankenpon_next(void);
-void jankenpon_wrong(void);
 void jankenpon_reset(void);

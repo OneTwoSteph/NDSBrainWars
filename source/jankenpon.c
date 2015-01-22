@@ -18,6 +18,21 @@ int score;
 int wrong;
 LEVEL level;
 
+void jankenpon_wrong(void){
+	// Update wrong variable
+	wrong++;
+
+	// Start timer at beginning and stop after two blinking effect
+	if(wrong==1) TIMER1_CR |= TIMER_ENABLE;
+	if(wrong==4){
+		TIMER1_CR &= ~(TIMER_ENABLE);
+		wrong = 0;
+	}
+
+	// Draw
+	jankenpon_draw();
+}
+
 void jankenpon_init(){
 	// Configure Background
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
@@ -224,20 +239,6 @@ void jankenpon_next(){
 	}
 
 	// Redraw screen
-	jankenpon_draw();
-}
-void jankenpon_wrong(void){
-	// Update wrong variable
-	wrong++;
-
-	// Start timer at beginning and stop after two blinking effect
-	if(wrong==1) TIMER1_CR |= TIMER_ENABLE;
-	if(wrong==4){
-		TIMER1_CR &= ~(TIMER_ENABLE);
-		wrong = 0;
-	}
-
-	// Draw
 	jankenpon_draw();
 }
 
