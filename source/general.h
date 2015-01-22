@@ -108,6 +108,22 @@ enum FOOD
     CHERRY = 2
 };
 
+typedef enum MUSIC MUSIC;
+enum MUSIC
+{
+	DO = 0,
+	RE = 1,
+	MI = 2,
+	FA = 3
+};
+
+typedef enum ANSWER ANSWER;
+enum ANSWER
+{
+    NO = 0,
+    YES = 1
+};
+
 typedef enum LEVEL LEVEL;
 enum LEVEL
 {

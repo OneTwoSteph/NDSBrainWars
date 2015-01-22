@@ -48,7 +48,8 @@ musical.o: /home/nds/files/workspace/NDSBrainWars/source/musical.c \
   /opt/devkitPro/libnds/include/nds/arm9/sprite.h \
   /opt/devkitPro/libnds/include/nds/system.h \
   /opt/devkitPro/libnds/include/nds/arm9/decompress.h \
-  /home/nds/files/workspace/NDSBrainWars/source/musical.h
+  /home/nds/files/workspace/NDSBrainWars/source/musical.h \
+  /home/nds/files/workspace/NDSBrainWars/build/musical_tone.h
 
 /home/nds/files/workspace/NDSBrainWars/source/general.h:
 
@@ -149,3 +150,5 @@ musical.o: /home/nds/files/workspace/NDSBrainWars/source/musical.c \
 /opt/devkitPro/libnds/include/nds/arm9/decompress.h:
 
 /home/nds/files/workspace/NDSBrainWars/source/musical.h:
+
+/home/nds/files/workspace/NDSBrainWars/build/musical_tone.h:
