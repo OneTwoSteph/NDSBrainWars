@@ -48,7 +48,9 @@ plusminus.o: /home/nds/files/workspace/NDSBrainWars/source/plusminus.c \
   /opt/devkitPro/libnds/include/nds/arm9/sprite.h \
   /opt/devkitPro/libnds/include/nds/system.h \
   /opt/devkitPro/libnds/include/nds/arm9/decompress.h \
-  /home/nds/files/workspace/NDSBrainWars/source/plusminus.h
+  /home/nds/files/workspace/NDSBrainWars/source/plusminus.h \
+  /home/nds/files/workspace/NDSBrainWars/build/plusminus_im.h \
+  /home/nds/files/workspace/NDSBrainWars/build/numbers.h
 
 /home/nds/files/workspace/NDSBrainWars/source/general.h:
 
@@ -149,3 +151,7 @@ plusminus.o: /home/nds/files/workspace/NDSBrainWars/source/plusminus.c \
 /opt/devkitPro/libnds/include/nds/arm9/decompress.h:
 
 /home/nds/files/workspace/NDSBrainWars/source/plusminus.h:
+
+/home/nds/files/workspace/NDSBrainWars/build/plusminus_im.h:
+
+/home/nds/files/workspace/NDSBrainWars/build/numbers.h:
