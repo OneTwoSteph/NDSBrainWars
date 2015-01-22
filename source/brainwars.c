@@ -16,7 +16,7 @@
 //#include "muscial.h"
 #include "path.h"
 //#include "addition.h"
-//#include "plusminus.h"
+#include "plusminus.h"
 #include "jankenpon.h"
 
 STATE state;

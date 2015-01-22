@@ -202,8 +202,8 @@ bool leader_game() {
 
 		switch(order[next_step]){
 		case 0:
-			if((touch.px >= 16) && (touch.px < 80) &&
-			   (touch.py >= 32) && (touch.py < 80))	{
+			if((touch.px < 85) &&
+			   (touch.py < 96))	{
 
 				for(row = 4; row < 10; row++){
 					for(col = 2; col < 10; col++){
@@ -217,8 +217,8 @@ bool leader_game() {
 			break;
 
 		case 1:
-			if((touch.px >= 16) && (touch.px < 80) &&
-			   (touch.py >= 112) && (touch.py < 160)) {;
+			if((touch.px < 85) &&
+			   (touch.py >= 96)) {;
 
 				for(row = 14; row < 20; row++){
 					for(col = 2; col < 10; col++){
@@ -231,8 +231,8 @@ bool leader_game() {
 			break;
 
 		case 2:
-			if((touch.px >= 96) && (touch.px < 160) &&
-			   (touch.py >= 32) && (touch.py < 80))	{
+			if((touch.px >= 85) && (touch.px < 170) &&
+			   (touch.py < 96))	{
 
 				for(row = 4; row < 10; row++){
 					for(col = 12; col < 20; col++){
@@ -245,8 +245,8 @@ bool leader_game() {
 			break;
 
 		case 3:
-			if((touch.px >= 96) && (touch.px < 160) &&
-			   (touch.py >= 112) && (touch.py < 160)) {
+			if((touch.px >= 85) && (touch.px < 170) &&
+			   (touch.py >= 96)) {
 
 				for(row = 14; row < 20; row++){
 					for(col = 12; col < 20; col++){
@@ -259,8 +259,8 @@ bool leader_game() {
 			break;
 
 		case 4:
-			if((touch.px >= 176) && (touch.px < 240) &&
-			   (touch.py >= 32) && (touch.py < 80))	{
+			if((touch.px >= 170) &&
+			   (touch.py < 96))	{
 
 				for(row = 4; row < 10; row++){
 					for(col = 22; col < 30; col++){
@@ -273,8 +273,8 @@ bool leader_game() {
 			break;
 
 		case 5:
-			if((touch.px >= 176) && (touch.px < 240) &&
-			   (touch.py >= 112) && (touch.py < 160)) {
+			if((touch.px >= 170) &&
+			   (touch.py >= 96)) {
 
 				for(row = 14; row < 20; row++){
 					for(col = 22; col < 30; col++){
