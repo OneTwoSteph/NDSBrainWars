@@ -57,6 +57,7 @@ void leader_timer_ISR(){
 
 void leader_init() {
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_256;
+	BGCTRL_SUB[1] = 0;
 
 	dmaCopy(emptyTile, &BG_TILE_RAM_SUB(1)[0], 64);
 	dmaCopy(fullTile, &BG_TILE_RAM_SUB(1)[32], 64);

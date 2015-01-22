@@ -8,7 +8,13 @@
 #ifndef PLUSMINUS_H_
 #define PLUSMINUS_H_
 
+#define GREATER 	1
+#define SMALLER 	2
+#define MULTIPLY	3
+#define DIVIDED 	4
+
 void plusminus_init(void);
+void plusminus_new_number(void);
 void plusminus_draw(void);
 
 bool plusminus_game(void);
