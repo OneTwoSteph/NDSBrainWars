@@ -55,6 +55,7 @@ brainwars.o: /home/nds/files/workspace/NDSBrainWars/source/brainwars.c \
   /home/nds/files/workspace/NDSBrainWars/source/eatit.h \
   /home/nds/files/workspace/NDSBrainWars/source/pairs.h \
   /home/nds/files/workspace/NDSBrainWars/source/path.h \
+  /home/nds/files/workspace/NDSBrainWars/source/addition.h \
   /home/nds/files/workspace/NDSBrainWars/source/plusminus.h \
   /home/nds/files/workspace/NDSBrainWars/source/jankenpon.h
 
@@ -169,6 +170,8 @@ brainwars.o: /home/nds/files/workspace/NDSBrainWars/source/brainwars.c \
 /home/nds/files/workspace/NDSBrainWars/source/pairs.h:
 
 /home/nds/files/workspace/NDSBrainWars/source/path.h:
+
+/home/nds/files/workspace/NDSBrainWars/source/addition.h:
 
 /home/nds/files/workspace/NDSBrainWars/source/plusminus.h:
 
