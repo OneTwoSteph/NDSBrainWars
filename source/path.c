@@ -46,18 +46,21 @@ void path_init(){
 	swiCopy(path_arrowPal, &BG_PALETTE_SUB[16*2], path_arrowPalLen);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
-	BG_PALETTE_SUB[0] = GREYVAL;
-	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[2] = BLUEVAL;
+	BG_PALETTE_SUB[5] = WHITEVAL;
+	BG_PALETTE_SUB[6] = BLUEVAL;
+	BG_PALETTE_SUB[7] = GREYVAL;
 
-	BG_PALETTE_SUB[17] = WHITEVAL;
-	BG_PALETTE_SUB[18] = REDVAL;
+	BG_PALETTE_SUB[21] = WHITEVAL;
+	BG_PALETTE_SUB[22] = REDVAL;
+	BG_PALETTE_SUB[23] = GREYVAL;
 
-	BG_PALETTE_SUB[33] = WHITEVAL;
-	BG_PALETTE_SUB[34] = GREENVAL;
+	BG_PALETTE_SUB[37] = WHITEVAL;
+	BG_PALETTE_SUB[38] = GREENVAL;
+	BG_PALETTE_SUB[39] = GREYVAL;
 
-	BG_PALETTE_SUB[49] = WHITEVAL;
-	BG_PALETTE_SUB[50] = YELLOWVAL;
+	BG_PALETTE_SUB[53] = WHITEVAL;
+	BG_PALETTE_SUB[54] = YELLOWVAL;
+	BG_PALETTE_SUB[55] = GREYVAL;
 
 	// Set initial random direction and color
 	direction = rand()%4;
@@ -195,7 +198,7 @@ bool path_game(){
 				if(direction == DOWN) path_next();
 				else path_wrong();
 			}
-			if((keys & KEY_A) ||( keys & KEY_Y) || (keys & KEY_X) || (keys & KEY_B))
+			if((keys & KEY_RIGHT) ||( keys & KEY_LEFT) || (keys & KEY_UP) || (keys & KEY_DOWN))
 				path_wrong();
 			break;
 		case YELLOW:
@@ -218,7 +221,7 @@ bool path_game(){
 				if(direction == UP) path_next();
 				else path_wrong();
 			}
-			if((keys & KEY_A) ||( keys & KEY_Y) || (keys & KEY_X) || (keys & KEY_B))
+			if((keys & KEY_RIGHT) ||( keys & KEY_LEFT) || (keys & KEY_UP) || (keys & KEY_DOWN))
 				path_wrong();
 			break;
 		default:

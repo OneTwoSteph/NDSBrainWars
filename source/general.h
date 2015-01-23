@@ -26,8 +26,8 @@
 #define TRUERED		ARGB16(1,31,0,0)
 #define TRUEGREEN	ARGB16(1,0,31,0)
 
-#define PATHMEDIUM 20
-#define PATHHARD 40
+#define PATHMEDIUM 5
+#define PATHHARD 10
 
 #define MUSICALMEDIUM 5
 #define MUSICALHARD 10
