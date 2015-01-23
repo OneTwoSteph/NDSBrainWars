@@ -58,18 +58,22 @@ void leader_timer_ISR(){
 void leader_init() {
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_256;
 	BGCTRL_SUB[1] = 0;
-
+	
+	// Load tiles in RAM
 	dmaCopy(emptyTile, &BG_TILE_RAM_SUB(1)[0], 64);
 	dmaCopy(fullTile, &BG_TILE_RAM_SUB(1)[32], 64);
 	dmaCopy(correctTile, &BG_TILE_RAM_SUB(1)[64], 64);
-
+	
+	//Init. Timer for interrupt
 	TIMER0_DATA = TIMER_FREQ_1024(4);
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
 	irqSet(IRQ_TIMER0, &leader_timer_ISR);
-
+	
+	//Load Constant Palette values
 	BG_PALETTE_SUB[0] = GREYVAL;
 	BG_PALETTE_SUB[2] = GREENVAL;
-
+	
+	// Initialize parameters
 	leader_score = 0;
 	leader_step = 0;
 	draw_timer = 0;
@@ -86,11 +90,14 @@ void leader_new_order() {
 	int max_loop = level+3;
 	int rand_order[6];
 	int i, j, max, loop = 0;
-
+	
+	//Initialize an array with random values
 	for(i = 0; i < 6 ; i++) {
 		rand_order[i] = rand();
 	}
-
+	
+	//Check position of numbers from greatest to smallest
+	// Load the order in the order array to define aparition order
 	while(loop < max_loop){
 		max = 0;
 
@@ -110,23 +117,28 @@ void leader_new_order() {
 void leader_draw() {
 
 	direction = rand()%2;
-
+	
+	// Determine if mode will be order or reverse (blue or red)
 	if(direction == 1)		{	BG_PALETTE_SUB[1] = BLUEVAL;}
 	else					{	BG_PALETTE_SUB[1] = REDVAL;}
 
 	int i, draw_level, row, col;
-
+	
+	//Draw Empty tiles all over the map
 	for(row = 0; row < 32; row++){
 		for(col = 0; col < 32; col++){
 			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
 		}
 	}
-
+	
+	//Determine number of tiles to draw
 	draw_level = level + 3;
-
+	
+	// Activate timer so that tiles don't all appear instantly
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);
-
+	
+	// Progressively draw all tiles that are needed
 	for(i = 0; i < draw_level; i++){
 
 		while(draw_timer == 0);
@@ -181,6 +193,7 @@ void leader_draw() {
 
 		draw_timer = 0;
 	}
+	//Disable Timer IRQ
 	irqDisable(IRQ_TIMER0);
 }
 
@@ -188,7 +201,9 @@ bool leader_game() {
 
 	scanKeys();
 	u16 keys = keysDown();
-
+	
+	//Check which key (if pressed)
+	// If start, end game. Else check position
 	if(keys & KEY_START) 		{ return true; }
 	else if(keys & KEY_TOUCH){
 
@@ -303,7 +318,7 @@ bool leader_game() {
 void leader_correct(){
 
 	leader_step++;
-
+	//If all tiles correctly found, give correct condition & generate new tiles
 	if(leader_step >= (level + 3)) {
 
 		leader_score++;
@@ -334,6 +349,7 @@ void leader_correct(){
 
 void leader_wrong() {
 
+	// If mistake, generate WRONG flash and redraw new tiles
 	BG_PALETTE_SUB[0] = TRUERED;
 
 	leader_step = 0;
