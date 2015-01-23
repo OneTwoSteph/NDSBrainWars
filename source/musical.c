@@ -87,7 +87,7 @@ void musical_init(){
 	BG_PALETTE_SUB[39] = GREENVAL;
 	BG_PALETTE_SUB[40] = GREYVAL;
 
-	// Configure interrupts and timers, timer 0 for music and timer 1 for wait
+	// Configure interrupts and timers, timer 0 for music and timer 1 for waiting
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
 	TIMER0_DATA = TIMER_FREQ_1024(4);
 
@@ -119,7 +119,7 @@ void musical_init(){
 	tonenb = 0;
 
 	// Launch first music
-	musical_next();
+	TIMER1_CR |= TIMER_ENABLE;
 }
 
 bool musical_game(){
