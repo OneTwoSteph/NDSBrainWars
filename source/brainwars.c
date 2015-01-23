@@ -11,6 +11,7 @@
 
 #include "brainwars_main.h"
 #include "brainwars_train.h"
+#include "start.h"
 
 #include "title.h"
 #include "credits.h"
@@ -39,9 +40,6 @@ void brainwars_init(){
 	// Initialize game state
 	state = MAIN;
 	stateChange = false;
-
-	// Initialize random number generation
-	srand(time(NULL));
 
 	// Configure main and sub engines for graphics
 	brainwars_configMain();
@@ -76,10 +74,13 @@ void brainwars_main_init(){
 	swiCopy(titleBitmap, BG_GFX, titleBitmapLen);
 	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
 
+
+
 	// Copy palettes
 	swiCopy(titlePal, BG_PALETTE, titlePalLen);
 	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
 	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen);
+
 
 	// Set up palette colors
 	BG_PALETTE_SUB[1] = WHITEVAL;
@@ -89,6 +90,8 @@ void brainwars_main_init(){
 	BG_PALETTE_SUB[17] = YELLOWVAL;
 	BG_PALETTE_SUB[21] = BLACKVAL;
 	BG_PALETTE_SUB[22] = GREYVAL;
+
+
 
 	// Initialize selection variable
 	selectMain = TRAIN;
@@ -176,13 +179,70 @@ void brainwars_main_select(){
 	}
 }
 
+void brainwars_start_draw(){
+
+	int x, y;
+	int L = 32;	// length of the image
+
+	swiCopy(startTiles, BG_TILE_RAM_SUB(1), startTilesLen/2);
+
+	swiCopy(startPal, BG_PALETTE_SUB, startPalLen/2);
+
+
+	// Draw start screen
+	for(x=0; x<32; x++){
+		for(y=0; y<24; y++){
+			BG_MAP_RAM_SUB(0)[y*L+x] = startMap[y*L+x];
+		}
+	}
+
+	touchPosition touch;
+	x = 1;
+	scanKeys();
+	u16 keys = keysDown();
+	if(keys & KEY_TOUCH) {	touchRead(&touch); }
+
+	while(x){
+
+		if(keys & KEY_TOUCH) {	touchRead(&touch); }
+
+		if((keys & KEY_TOUCH) &&
+		   (touch.px > 0) &&
+		   (touch.py > 0)) {
+			// Initialize random number generation
+			srand(touch.px + touch.py);
+			x = 0;
+		}
+		else {
+			scanKeys();
+			keys = keysDown();
+		}
+	}
+
+	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
+
+	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
+	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen);
+
+	// Set up palette colors
+	BG_PALETTE_SUB[1] = WHITEVAL;
+	BG_PALETTE_SUB[5] = BLACKVAL;
+	BG_PALETTE_SUB[6] = GREYVAL;
+
+	BG_PALETTE_SUB[17] = YELLOWVAL;
+	BG_PALETTE_SUB[21] = BLACKVAL;
+	BG_PALETTE_SUB[22] = GREYVAL;
+
+	brainwars_main_draw();
+
+}
+
 void brainwars_main_draw(){
 	int x, y;
 	int ystart = 2;
 	int height = 4;
 	int L = 32;	// length of the image
 
-	// Draw main menu
 	for(x=0; x<32; x++){
 		for(y=0; y<24; y++){
 			BG_MAP_RAM_SUB(0)[y*L+x] = brainwars_mainMap[y*L+x];
