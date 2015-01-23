@@ -516,5 +516,4 @@ void brainwars_credits(){
 		state = MAIN;
 		stateChange = true;
 	}
-
 }
