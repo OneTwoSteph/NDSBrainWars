@@ -7,7 +7,7 @@
 
 #include "general.h"
 #include "addition.h"
-#include "plusminus_im.h"
+#include "addition_im.h"
 #include "numbers.h"
 
 static volatile int draw_timer;
@@ -28,11 +28,13 @@ void addition_init() {
 
 	// Copy tiles to memory
 	swiCopy(numbersTiles, BG_TILE_RAM_SUB(1), numbersTilesLen/2);
-	swiCopy(plusminus_imTiles, BG_TILE_RAM_SUB(3), plusminus_imTilesLen/2);
+	swiCopy(addition_imTiles, BG_TILE_RAM_SUB(3), addition_imTilesLen/2);
 
 	// Copy palette
 	swiCopy(numbersPal, BG_PALETTE_SUB, numbersPalLen/2);
-	swiCopy(plusminus_imPal, &BG_PALETTE_SUB[16], plusminus_imPalLen/2);
+	swiCopy(addition_imPal, &BG_PALETTE_SUB[16], addition_imPalLen/2);
+
+	BG_PALETTE_SUB[22] = BG_PALETTE_SUB[1];
 
 
 	TIMER0_DATA = TIMER_FREQ_1024(4);
@@ -45,7 +47,7 @@ void addition_init() {
 	for(row=0; row<32; row++){
 		for(col=0; col<32; col++){
 			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
-			BG_MAP_RAM_SUB(16)[row*32+col] = plusminus_imMap[row*32+col] | (1<<12);
+			BG_MAP_RAM_SUB(16)[row*32+col] = addition_imMap[row*32+col] | (1<<12);
 		}
 	}
 
@@ -143,27 +145,22 @@ bool addition_game() {
 
 void addition_add_num(int num) {
 
-	if (counter == 0) {
-		total_number[0] = num;
-		counter++;
-	}
+	if (counter == 0) 					{ total_number[0] = num; }
 	else if ((counter == 1) &&
-			 (num != total_number[0])) {
-		total_number[1] = num;
-		counter++;
-	}
+			 (num != total_number[0])) 	{ total_number[1] = num; }
 	else if ((counter == 2) &&
 			 (num != total_number[0]) &&
-			 (num != total_number[1]))   {
-		total_number[2] = num;
-		counter++;
-	}
+			 (num != total_number[1]))  { total_number[2] = num; }
+    else 								{ counter--; }
+
+	counter++;
 
 	if (counter >= 3) {
 
 		int i, total;
+		total = 0;
 
-		for(i = 0; i < 3; i++) { total = total_number[i]; }
+		for(i = 0; i < 3; i++) { total = total + total_number[i]; }
 
 		if(total == final_number) { addition_correct(); }
 		else					  { addition_wrong();   }
@@ -180,6 +177,7 @@ void addition_correct() {
 	int old_color = BG_PALETTE_SUB[1];
 
 	BG_PALETTE_SUB[1] = TRUEGREEN;
+	BG_PALETTE_SUB[22] = TRUEGREEN;
 
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);
@@ -187,6 +185,7 @@ void addition_correct() {
 	irqDisable(IRQ_TIMER0);
 
 	BG_PALETTE_SUB[1] = old_color;
+	BG_PALETTE_SUB[22] = old_color;
 
 	addition_new_number();
 	addition_draw();
@@ -200,6 +199,7 @@ void addition_wrong() {
 	int old_color = BG_PALETTE_SUB[1];
 
 	BG_PALETTE_SUB[1] = TRUERED;
+	BG_PALETTE_SUB[22] = TRUERED;
 
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);
@@ -207,6 +207,7 @@ void addition_wrong() {
 	irqDisable(IRQ_TIMER0);
 
 	BG_PALETTE_SUB[1] = old_color;
+	BG_PALETTE_SUB[22] = old_color;
 
 	addition_new_number();
 	addition_draw();
