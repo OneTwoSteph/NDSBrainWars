@@ -9,7 +9,7 @@
 #ifndef SCORE_H_
 #define SCORE_H_
 
-void info_finish(void);
+void info_finish(int score, int game);
 void info_init();
 void info_update(int score);
 

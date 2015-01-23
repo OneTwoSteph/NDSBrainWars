@@ -216,6 +216,9 @@ void eatit_next(void){
 }
 
 void eatit_reset(){
+	// Suppress infos
+	info_finish(score, EATIT);
+
 	// Draw nothing
 	wrong = 1;
 	eatit_draw();
@@ -223,7 +226,4 @@ void eatit_reset(){
 	// Reset all global variables
 	score = 0;
 	wrong = 0;
-
-	// Suppress infos
-	info_finish();
 }

@@ -3,6 +3,7 @@
  *
  *  Created on: Jan 20, 2015
  *      Author: Nawaaz GS
+ *
  */
 
 #include "general.h"
@@ -377,6 +378,9 @@ void leader_wrong() {
 }
 
 void leader_reset() {
+	// Suppress infos
+	info_finish(leader_score, LEADER);
+
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 
 	leader_score = 0;
@@ -384,7 +388,4 @@ void leader_reset() {
 	draw_timer = 0;
 	wrong = 0;
 	level = VERYEASY;
-
-	// Suppress infos
-	info_finish();
 }

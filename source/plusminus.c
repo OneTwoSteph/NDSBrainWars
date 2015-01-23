@@ -23,16 +23,27 @@ void plusminus_timer_ISR(){
 }
 
 void plusminus_init() {
+	// Add BG1 and configure
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+	BGCTRL_SUB[1] = BG_TILE_BASE(4) | BG_MAP_BASE(17) | BG_32x32 | BG_COLOR_16;
+
 	// Copy tiles to memory. Number tiles in BG0 and game BG in BG1
 	swiCopy(numbersTiles, BG_TILE_RAM_SUB(1), numbersTilesLen/2);
-	swiCopy(plusminus_imTiles, BG_TILE_RAM_SUB(3), plusminus_imTilesLen/2);
+	swiCopy(plusminus_imTiles, BG_TILE_RAM_SUB(4), plusminus_imTilesLen/2);
 
 	// Copy palette for both images
 	swiCopy(numbersPal, BG_PALETTE_SUB, numbersPalLen/2);
 	swiCopy(plusminus_imPal, &BG_PALETTE_SUB[16], plusminus_imPalLen/2);
 
 	// Same background color in both images
-	BG_PALETTE_SUB[1] = BG_PALETTE_SUB[27];
+	BG_PALETTE_SUB[1] = GREYVAL;
+	BG_PALETTE_SUB[5] = BLACKVAL;
+
+	BG_PALETTE_SUB[21] = GREYVAL;
+	BG_PALETTE_SUB[22] = YELLOWVAL;
+	BG_PALETTE_SUB[23] = YELLOWVAL;
+	BG_PALETTE_SUB[24] = YELLOWVAL;
+	BG_PALETTE_SUB[25] = GREYVAL;
 	
 	// Init. Timer for interrupt
 	TIMER0_DATA = TIMER_FREQ_1024(4);
@@ -45,7 +56,7 @@ void plusminus_init() {
 	for(row=0; row<32; row++){
 		for(col=0; col<32; col++){
 			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
-			BG_MAP_RAM_SUB(16)[row*32+col] = plusminus_imMap[row*32+col] | (1<<12);
+			BG_MAP_RAM_SUB(17)[row*32+col] = plusminus_imMap[row*32+col] | (1<<12);
 		}
 	}
 
@@ -221,8 +232,8 @@ void plusminus_correct(void) {
 
 	int old_color = BG_PALETTE_SUB[1];
 
-	BG_PALETTE_SUB[1] = TRUEGREEN;
-	BG_PALETTE_SUB[27] = TRUEGREEN;
+	BG_PALETTE_SUB[1] = GREENVAL;
+	BG_PALETTE_SUB[27] = GREENVAL;
 
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);
@@ -244,8 +255,8 @@ void plusminus_wrong(void) {
 	// Generate WRONG condition
 	int old_color = BG_PALETTE_SUB[1];
 
-	BG_PALETTE_SUB[1] = TRUERED;
-	BG_PALETTE_SUB[27] = TRUERED;
+	BG_PALETTE_SUB[1] = REDVAL;
+	BG_PALETTE_SUB[27] = REDVAL;
 
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);
@@ -260,11 +271,12 @@ void plusminus_wrong(void) {
 }
 
 void plusminus_reset(void) {
+	// Suppress infos
+	info_finish(pm_score, PLUSMINUS);
 
 	draw_timer = 0;
 	pm_score = 0;
 	compare = 1;
 
-	// Suppress infos
-	info_finish();
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 }

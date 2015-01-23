@@ -22,9 +22,6 @@
 #include "exp_eatit.h"
 #include "exp_path.h"
 #include "exp_jankenpon.h"
-#include "exp_musical.h"
-#include "exp_addition.h"
-#include "exp_plusminus.h"
 
 #include "leader.h"
 #include "eatit.h"
@@ -88,6 +85,9 @@ void brainwars_configSub(){
 
 	// Background 0 configuration
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
+
+	// Background 1
+	BGCTRL_SUB[1] = BG_TILE_BASE(3) | BG_MAP_BASE(16) | BG_32x32 | BG_COLOR_16;
 }
 
 void brainwars_main_init(){
@@ -95,11 +95,23 @@ void brainwars_main_init(){
 	swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
 	swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
 
+<<<<<<< HEAD
 	// Copy tiles and palette for BG0 in sub
 	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
+=======
+
+
+	// Copy palettes
+	swiCopy(titlePal, BG_PALETTE, titlePalLen);
+>>>>>>> 2ec11a2e4615b2baf11aea581c6f70f97b47bc03
 	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
 	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen/2);
 
+<<<<<<< HEAD
+=======
+
+	// Set up palette colors
+>>>>>>> 2ec11a2e4615b2baf11aea581c6f70f97b47bc03
 	BG_PALETTE_SUB[1] = WHITEVAL;
 	BG_PALETTE_SUB[5] = BLACKVAL;
 	BG_PALETTE_SUB[6] = GREYVAL;
@@ -108,14 +120,13 @@ void brainwars_main_init(){
 	BG_PALETTE_SUB[21] = BLACKVAL;
 	BG_PALETTE_SUB[22] = GREYVAL;
 
+
+
 	// Initialize selection variable
 	selectMain = TRAIN;
 
 	// Draw main menu
 	brainwars_main_draw();
-
-	// Init score saving
-	fatInitDefault();
 }
 
 void brainwars_main(){
@@ -516,20 +527,20 @@ void brainwars_train_draw(){
 		swiCopy(exp_eatitPal, BG_PALETTE, exp_eatitPalLen/2);
 		break;
 	case MUSICAL:
-		swiCopy(exp_musicalBitmap, BG_GFX, exp_musicalBitmapLen/2);
-		swiCopy(exp_musicalPal, BG_PALETTE, exp_musicalPalLen/2);
+		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
 		break;
 	case PATH:
 		swiCopy(exp_pathBitmap, BG_GFX, exp_pathBitmapLen/2);
 		swiCopy(exp_pathPal, BG_PALETTE, exp_pathPalLen/2);
 		break;
 	case ADDITION:
-		swiCopy(exp_additionBitmap, BG_GFX, exp_additionBitmapLen/2);
-		swiCopy(exp_additionPal, BG_PALETTE, exp_additionPalLen/2);
+		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
 		break;
 	case PLUSMINUS:
-		swiCopy(exp_plusminusBitmap, BG_GFX, exp_plusminusBitmapLen/2);
-		swiCopy(exp_plusminusPal, BG_PALETTE, exp_plusminusPalLen/2);
+		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
 		break;
 	case JANKENPON:
 		swiCopy(exp_jankenponBitmap, BG_GFX, exp_jankenponBitmapLen/2);

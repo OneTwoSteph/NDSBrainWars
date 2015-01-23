@@ -262,6 +262,9 @@ void path_next(){
 }
 
 void path_reset(){
+	// Suppress infos
+	info_finish(score, PATH);
+
 	// Draw nothing
 	wrong = 1;
 	path_draw();
@@ -269,7 +272,4 @@ void path_reset(){
 	// Reset all global variables
 	score = 0;
 	wrong = 0;
-
-	// Suppress infos
-	info_finish();
 }

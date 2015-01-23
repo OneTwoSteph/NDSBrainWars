@@ -317,11 +317,11 @@ void musical_draw(){
 }
 
 void musical_reset(){
+	// Suppress infos
+	info_finish(score, MUSICAL);
+
 	// Reset all global variables
 	score = 0;
 	wrong = 0;
 	level = EASY;
-
-	// Suppress infos
-	info_finish();
 }

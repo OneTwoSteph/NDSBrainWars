@@ -250,6 +250,9 @@ void jankenpon_next(){
 }
 
 void jankenpon_reset(){
+	// Suppress infos
+	info_finish(score, JANKENPON);
+
 	// Draw nothing
 	wrong = 1;
 	jankenpon_draw();
@@ -259,5 +262,5 @@ void jankenpon_reset(){
 	wrong = 0;
 
 	// Suppress infos
-	info_finish();
+	info_finish(score, JANKENPON);
 }

@@ -23,7 +23,7 @@ void info_time_ISR(){
 	}
 }
 
-void info_finish(){
+void info_finish(int score, int game){
 	// Put transparent tiles on BGO of sub since no score has to be shown for now
 	int x, y;
 	for(x=0;x<32;x++){
@@ -36,6 +36,127 @@ void info_finish(){
 	TIMER2_CR &= ~(TIMER_ENABLE);
 
 	// Read into file to find if best score beated
+	FILE* file;
+	int max_score;
+
+	switch(game){
+	case LEADER:
+		file = fopen("/leader.txt", "r");
+		if(file==NULL){
+			file = fopen("/leader.txt","w+");
+			fprintf(file,"%i\n", score);
+		}
+		else{
+			fscanf(file,"%i\n",&max_score);
+
+			if(score > max_score){
+				fclose(file);
+				file = fopen("/leader.txt","w+");
+				fprintf(file,"%i\n", score);
+			}
+		}
+
+		break;
+	case EATIT:
+		file = fopen("/eatit.txt", "r");
+		if(file==NULL){
+			file = fopen("/eatit.txt","w+");
+			fprintf(file,"%i\n", score);
+		}
+		else{
+			fscanf(file,"%i\n",&max_score);
+
+			if(score > max_score){
+				fclose(file);
+				file = fopen("/eatit.txt","w+");
+				fprintf(file,"%i\n", score);
+			}
+		}
+		break;
+	case MUSICAL:
+		file = fopen("/musical.txt", "r");
+		if(file==NULL){
+			file = fopen("/musical.txt","w+");
+			fprintf(file,"%i\n", score);
+		}
+		else{
+			fscanf(file,"%i\n",&max_score);
+
+			if(score > max_score){
+				fclose(file);
+				file = fopen("/musical.txt","w+");
+				fprintf(file,"%i\n", score);
+			}
+		}
+		break;
+	case PATH:
+		file = fopen("/path.txt", "r");
+		if(file==NULL){
+			file = fopen("/path.txt","w+");
+			fprintf(file,"%i\n", score);
+		}
+		else{
+			fscanf(file,"%i\n",&max_score);
+
+			if(score > max_score){
+				fclose(file);
+				file = fopen("/path.txt","w+");
+				fprintf(file,"%i\n", score);
+			}
+		}
+		break;
+	case ADDITION:
+		file = fopen("/addition.txt", "r");
+		if(file==NULL){
+			file = fopen("/addition.txt","w+");
+			fprintf(file,"%i\n", score);
+		}
+		else{
+			fscanf(file,"%i\n",&max_score);
+
+			if(score > max_score){
+				fclose(file);
+				file = fopen("/addition.txt","w+");
+				fprintf(file,"%i\n", score);
+			}
+		}
+		break;
+	case PLUSMINUS:
+		file = fopen("/plusminus.txt", "r");
+		if(file==NULL){
+			file = fopen("/plusminus.txt","w+");
+			fprintf(file,"%i\n", score);
+		}
+		else{
+			fscanf(file,"%i\n",&max_score);
+
+			if(score > max_score){
+				fclose(file);
+				file = fopen("/plusminus.txt","w+");
+				fprintf(file,"%i\n", score);
+			}
+		}
+		break;
+	case JANKENPON:
+		file = fopen("/jankenpon.txt", "r");
+		if(file==NULL){
+			file = fopen("/jankenpon.txt","w+");
+			fprintf(file,"%i\n", score);
+		}
+		else{
+			fscanf(file,"%i\n",&max_score);
+
+			if(score > max_score){
+				fclose(file);
+				file = fopen("/jankenpon.txt","w+");
+				fprintf(file,"%i\n", score);
+			}
+		}
+	case NOGAME:
+		break;
+	}
+
+	fclose(file);
 }
 
 void info_init(){

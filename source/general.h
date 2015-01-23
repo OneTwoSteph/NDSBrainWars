@@ -10,6 +10,10 @@
 #include <maxmod9.h>
 #include "soundbank.h"
 #include "soundbank_bin.h"
+#include <sys/dir.h>
+#include <fat.h>
+#include <dirent.h>
+#include "string.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -23,8 +27,6 @@
 #define REDVAL 		ARGB16(1,31,13,22)
 #define GREENVAL 	ARGB16(1,7,22,14)
 #define YELLOWVAL 	ARGB16(1,31,26,0)
-#define TRUERED		ARGB16(1,31,0,0)
-#define TRUEGREEN	ARGB16(1,0,31,0)
 
 #define PATHMEDIUM 5
 #define PATHHARD 10
