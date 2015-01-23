@@ -9,9 +9,11 @@
 #include "general.h"
 #include "brainwars.h"
 
-#include "title.h"
 #include "brainwars_main.h"
 #include "brainwars_train.h"
+
+#include "title.h"
+#include "credits.h"
 #include "exp_leader.h"
 #include "exp_eatit.h"
 #include "exp_path.h"
@@ -56,7 +58,7 @@ void brainwars_configMain(){
 
 void brainwars_configSub(){
 	VRAM_C_CR = VRAM_ENABLE| VRAM_C_SUB_BG;
-	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE | DISPLAY_BG2_ACTIVE;
 }
 
 void brainwars_main_init(){
@@ -121,6 +123,16 @@ void brainwars_main(){
 
 		break;
 	case ONEP:
+		break;
+	case CREDITS:
+		// Check if state just changed
+		if(stateChange){
+			stateChange = false;
+			brainwars_credits_init();
+		}
+
+		// Execute action of state
+		brainwars_credits();
 		break;
 	default:
 		break;
@@ -380,8 +392,6 @@ void brainwars_train_select(){
 	if(keys & KEY_RIGHT){
 		// Update selected button
 		selectTrain = (selectTrain+1)%8;
-
-
 	}
 
 	// Check if left key pressed
@@ -480,4 +490,31 @@ void brainwars_train_draw(){
 			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
 		}
 	}
+}
+
+void brainwars_credits_init(){
+	// Configure backgrounds
+	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
+
+	// Copy map
+	swiCopy(creditsMap, BG_MAP_RAM_SUB(0), creditsMapLen/2);
+
+	// Copy tiles
+	swiCopy(creditsTiles, BG_TILE_RAM_SUB(1), creditsTilesLen/2);
+
+	// Copy palette
+	swiCopy(creditsPal, BG_PALETTE_SUB, creditsPalLen/2);
+}
+
+void brainwars_credits(){
+	// Scan keys
+	scanKeys();
+	u16 keys = (u16) keysDown();
+
+	// Scan if exit asked
+	if((keys & KEY_TOUCH) | (keys & KEY_A) | (keys & KEY_START)){
+		state = MAIN;
+		stateChange = true;
+	}
+
 }

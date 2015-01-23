@@ -20,3 +20,6 @@ void brainwars_train_init(void);
 void brainwars_train(void);
 void brainwars_train_select(void);
 void brainwars_train_draw(void);
+
+void brainwars_credits_init(void);
+void brainwars_credits(void);

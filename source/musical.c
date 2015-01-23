@@ -95,7 +95,7 @@ void musical_init(){
 	irqEnable(IRQ_TIMER0);
 
 	TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-	TIMER1_DATA = TIMER_FREQ_1024(1);
+	TIMER1_DATA = TIMER_FREQ_1024(2);
 
 	irqSet(IRQ_TIMER1, &musical_wait_ISR);
 	irqEnable(IRQ_TIMER1);
@@ -119,7 +119,7 @@ void musical_init(){
 	tonenb = 0;
 
 	// Launch first music
-	TIMER1_CR |= TIMER_ENABLE;
+	musical_next();
 }
 
 bool musical_game(){
@@ -181,9 +181,7 @@ bool musical_game(){
 				if((touch.px>=35)&&(touch.px<=61)&&(touch.py>=150)&&(touch.py<=171)){
 					sound.rate = (int)(1.0f * 1024);
 
-					if(music[answer]==DO){
-						answer++;
-					}
+					if(music[answer]==DO) answer++;
 					else wrong = DO;
 
 					// Draw correct or wrong tone
@@ -265,7 +263,7 @@ void musical_next(){
 	musical_draw();
 
 	// Wait a moment and launch music
-	musical_play();
+	TIMER1_CR |= TIMER_ENABLE;
 }
 
 void musical_draw(){
@@ -292,9 +290,11 @@ void musical_draw(){
 	int i;
 
 	for(i=0;i<answer;i++){
-		for(x=xstart+music[i]*length; x<xstart+(music[i]+1)*length;x++){
-			for(y=0;y<24;y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(GREEN<<12);
+		if(music[i]!=wrong){
+			for(x=xstart+music[i]*length; x<xstart+(music[i]+1)*length;x++){
+				for(y=0;y<24;y++){
+					BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(GREEN<<12);
+				}
 			}
 		}
 	}
