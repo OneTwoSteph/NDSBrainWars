@@ -9,11 +9,11 @@
 #ifndef MUSICAL_H_
 #define MUSICAL_H_
 
-void musical_wrong(void);
 void musical_init(void);
-void musical_draw(void);
 bool musical_game(void);
 void musical_next(void);
+void musical_draw(void);
+void musical_play(void);
 void musical_reset(void);
 
 #endif /* MUSICAL_H_ */

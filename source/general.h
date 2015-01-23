@@ -7,6 +7,10 @@
  */
 
 #include <nds.h>
+#include <maxmod9.h>
+#include "soundbank.h"
+#include "soundbank_bin.h"
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -24,6 +28,12 @@
 
 #define PATHMEDIUM 20
 #define PATHHARD 40
+
+#define MUSICALMEDIUM 5
+#define MUSICALHARD 10
+
+#define JANKENPONMEDIUM 10
+#define JANKENPONHARD 20
 
 #define LEADEREASY 10
 #define LEADERMEDIUM 15
@@ -114,13 +124,6 @@ enum MUSIC
 	RE = 1,
 	MI = 2,
 	FA = 3
-};
-
-typedef enum ANSWER ANSWER;
-enum ANSWER
-{
-    NO = 0,
-    YES = 1
 };
 
 typedef enum LEVEL LEVEL;

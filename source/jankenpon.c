@@ -200,8 +200,8 @@ void jankenpon_next(){
 	score++;
 
 	// Check level
-	if(score == PATHMEDIUM) level = MEDIUM;
-	if(score == PATHHARD) level = HARD;
+	if(score == JANKENPONMEDIUM) level = MEDIUM;
+	if(score == JANKENPONHARD) level = HARD;
 
 	// Random numbers for direction and color
 	int nb1, nb2, nb3;

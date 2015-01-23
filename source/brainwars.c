@@ -274,17 +274,17 @@ void brainwars_train(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			/*musical_init();*/
+			musical_init();
 		}
 
-		/*// Execute action of game
+		// Execute action of game
 		gameChange = musical_game();
 
 		// Check if game ended
 		if(gameChange){
 			game = NOGAME;
 			musical_reset();
-		}*/
+		}
 
 		break;
 	case PATH:

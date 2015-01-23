@@ -7,7 +7,7 @@
  *
  */
 
-#include <nds.h>
+#include "general.h"
 #include "brainwars.h"
 
 int main(void) {
