@@ -9,14 +9,10 @@
 #include "general.h"
 #include "brainwars.h"
 
-#include "brainwars_main.h"
-#include "brainwars_train.h"
 #include "start.h"
-
+#include "brainwars_main.h"
 #include "title.h"
-
-#include "credits.h"
-
+#include "brainwars_train.h"
 #include "score.h"
 #include "exp_leader.h"
 #include "exp_eatit.h"
@@ -25,6 +21,7 @@
 #include "exp_musical.h"
 #include "exp_addition.h"
 #include "exp_plusminus.h"
+#include "credits.h"
 
 #include "leader.h"
 #include "eatit.h"
@@ -41,6 +38,64 @@ bool stateChange;
 GAME game;
 GAME selectTrain;
 bool gameChange;
+
+void brainwars_start_draw(){
+
+	int x, y;
+	int L = 32;	// length of the image
+
+	swiCopy(startTiles, BG_TILE_RAM_SUB(1), startTilesLen/2);
+
+	swiCopy(startPal, BG_PALETTE_SUB, startPalLen/2);
+
+
+	// Draw start screen
+	for(x=0; x<32; x++){
+		for(y=0; y<24; y++){
+			BG_MAP_RAM_SUB(0)[y*L+x] = startMap[y*L+x];
+		}
+	}
+
+	touchPosition touch;
+	x = 1;
+	scanKeys();
+	u16 keys = keysDown();
+	if(keys & KEY_TOUCH) {	touchRead(&touch); }
+
+	while(x){
+
+		if(keys & KEY_TOUCH) {	touchRead(&touch); }
+
+		if((keys & KEY_TOUCH) &&
+		   (touch.px > 0) &&
+		   (touch.py > 0)) {
+			// Initialize random number generation
+			srand(touch.px + touch.py);
+			x = 0;
+		}
+		else {
+			scanKeys();
+			keys = keysDown();
+		}
+	}
+
+	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
+
+	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
+	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen);
+
+	// Set up palette colors
+	BG_PALETTE_SUB[1] = WHITEVAL;
+	BG_PALETTE_SUB[5] = BLACKVAL;
+	BG_PALETTE_SUB[6] = GREYVAL;
+
+	BG_PALETTE_SUB[17] = YELLOWVAL;
+	BG_PALETTE_SUB[21] = BLACKVAL;
+	BG_PALETTE_SUB[22] = GREYVAL;
+
+	brainwars_main_draw();
+
+}
 
 void brainwars_init(){
 	// Initialize game state
@@ -143,8 +198,6 @@ void brainwars_main(){
 		brainwars_train();
 
 		break;
-	case ONEP:
-		break;
 	case CREDITS:
 		// Check if state just changed
 		if(stateChange){
@@ -190,75 +243,17 @@ void brainwars_main_select(){
 	}
 
 	// Check if start key pressed
-	if(keys & KEY_START){
+	if(keys & KEY_A){
 		// Update game state
 		state = selectMain;
 		stateChange = true;
 	}
 }
 
-void brainwars_start_draw(){
-
-	int x, y;
-	int L = 32;	// length of the image
-
-	swiCopy(startTiles, BG_TILE_RAM_SUB(1), startTilesLen/2);
-
-	swiCopy(startPal, BG_PALETTE_SUB, startPalLen/2);
-
-
-	// Draw start screen
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = startMap[y*L+x];
-		}
-	}
-
-	touchPosition touch;
-	x = 1;
-	scanKeys();
-	u16 keys = keysDown();
-	if(keys & KEY_TOUCH) {	touchRead(&touch); }
-
-	while(x){
-
-		if(keys & KEY_TOUCH) {	touchRead(&touch); }
-
-		if((keys & KEY_TOUCH) &&
-		   (touch.px > 0) &&
-		   (touch.py > 0)) {
-			// Initialize random number generation
-			srand(touch.px + touch.py);
-			x = 0;
-		}
-		else {
-			scanKeys();
-			keys = keysDown();
-		}
-	}
-
-	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
-
-	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
-	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen);
-
-	// Set up palette colors
-	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[5] = BLACKVAL;
-	BG_PALETTE_SUB[6] = GREYVAL;
-
-	BG_PALETTE_SUB[17] = YELLOWVAL;
-	BG_PALETTE_SUB[21] = BLACKVAL;
-	BG_PALETTE_SUB[22] = GREYVAL;
-
-	brainwars_main_draw();
-
-}
-
 void brainwars_main_draw(){
 	int x, y;
 	int ystart = 2;
-	int height = 4;
+	int height = 12;
 	int L = 32;			// length of the image
 
 	for(x=0; x<32; x++){
@@ -273,10 +268,6 @@ void brainwars_main_draw(){
 			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
 		}
 	}
-}
-
-void brainwars_1p(){
-
 }
 
 void brainwars_train_init(){
@@ -481,7 +472,7 @@ void brainwars_train_select(){
 	}
 
 	// Check if start key pressed
-	if(keys & KEY_START){
+	if(keys & KEY_A){
 		// Update game state
 		game = selectTrain;
 		gameChange = true;

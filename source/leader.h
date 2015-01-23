@@ -18,5 +18,4 @@ void leader_correct(void);
 void leader_wrong(void);
 void leader_reset(void);
 
-
 #endif /* LEADER_H_ */

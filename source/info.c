@@ -165,13 +165,14 @@ void info_init(){
 
 	// Draw score and time titles
 	int x, y;
+	int xstart = 1;
 	int ystart = 17;
 	int ymid = 20;
 	int H = 3;			// Height at which the titles are in image
 
-	for(x=0; x<32;x++){
+	for(x=xstart; x<31;x++){
 		for(y=ystart; y<ymid;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+x]|(15<<12);
+			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+(x-xstart)]|(15<<12);
 		}
 	}
 
@@ -191,7 +192,7 @@ void info_init(){
 
 void info_update(int score){
 	int x, y;
-	int xstart = 1;
+	int xstart = 2;
 	int ystart = 20;
 	int length = 2;
 	int H = 9;		// height above numbers in image score
@@ -206,29 +207,30 @@ void info_update(int score){
 
 	for(x=xstart; x<xstart+length;x++){
 		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig1*length+x]|(15<<12);
+			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+1+dig1*length+(x-xstart)]|(15<<12);
 		}
 	}
 
 	for(x=xstart+length; x<xstart+2*length;x++){
 		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig2*length+(x-length)]|(15<<12);
+			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+1+dig2*length+(x-xstart-length)]|(15<<12);
 		}
 	}
 
 	for(x=xstart+2*length; x<xstart+3*length;x++){
 		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig3*length+(x-2*length)]|(15<<12);
+			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+1+dig3*length+(x-xstart-2*length)]|(15<<12);
 		}
 	}
 
 	for(x=xstart+3*length; x<xstart+4*length;x++){
 		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig4*length+(x-3*length)]|(15<<12);
+			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+1+dig4*length+(x-xstart-3*length)]|(15<<12);
 		}
 	}
 
 	// Draw time
+	xstart = 1;
 	int dot = 1;
 	int W = 20;
 

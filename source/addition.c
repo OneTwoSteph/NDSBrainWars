@@ -202,9 +202,6 @@ void addition_correct() {
 }
 
 void addition_wrong() {
-
-	if(add_score > 0)	{ add_score--; }
-
 	int old_color = BG_PALETTE_SUB[1];
 
 	BG_PALETTE_SUB[1] = REDVAL;

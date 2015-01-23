@@ -320,6 +320,10 @@ void musical_reset(){
 	// Suppress infos
 	info_finish(score, MUSICAL);
 
+	// Stop timers
+	TIMER0_CR &= ~(TIMER_ENABLE);
+	TIMER1_CR &= ~(TIMER_ENABLE);
+
 	// Reset all global variables
 	score = 0;
 	wrong = 0;

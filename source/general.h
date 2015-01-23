@@ -6,6 +6,9 @@
  *
  */
 
+#ifndef GENERAL_H_
+#define GENERAL_H_
+
 #include <nds.h>
 #include <maxmod9.h>
 #include "soundbank.h"
@@ -28,14 +31,14 @@
 #define GREENVAL 	ARGB16(1,7,22,14)
 #define YELLOWVAL 	ARGB16(1,31,26,0)
 
-#define PATHMEDIUM 5
-#define PATHHARD 10
+#define PATHMEDIUM 10
+#define PATHHARD 20
 
 #define MUSICALMEDIUM 5
 #define MUSICALHARD 10
 
-#define JANKENPONMEDIUM 10
-#define JANKENPONHARD 20
+#define JANKENPONMEDIUM 5
+#define JANKENPONHARD 10
 
 #define LEADEREASY 10
 #define LEADERMEDIUM 15
@@ -46,10 +49,7 @@ enum STATE
 {
     MAIN = 0,
     TRAIN = 1,
-    ONEP = 2,
-    TWOP = 3,
-    SCORE = 4,
-    CREDITS = 5
+    CREDITS = 2
 
 };
 
@@ -137,4 +137,4 @@ enum LEVEL
     HARD = 3
 };
 
-
+#endif /* GENERAL_H_ */

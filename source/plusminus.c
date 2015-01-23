@@ -249,10 +249,6 @@ void plusminus_correct(void) {
 
 }
 void plusminus_wrong(void) {
-
-	if(pm_score > 0)	{ pm_score--; }
-	// Remove points
-	
 	// Generate WRONG condition
 	int old_color = BG_PALETTE_SUB[1];
 
