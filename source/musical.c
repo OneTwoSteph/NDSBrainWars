@@ -7,6 +7,7 @@
  */
 
 #include "general.h"
+#include "info.h"
 #include "musical.h"
 #include "musical_tone.h"
 
@@ -120,6 +121,9 @@ void musical_init(){
 
 	// Launch first music
 	musical_next();
+
+	// Draw infos
+	info_init();
 }
 
 bool musical_game(){
@@ -204,6 +208,9 @@ bool musical_game(){
 			}
 		}
 	}
+
+	// Update infos
+	info_update(score);
 
 	// Return false (the game is note finished)
 	return false;
@@ -314,4 +321,7 @@ void musical_reset(){
 	score = 0;
 	wrong = 0;
 	level = EASY;
+
+	// Suppress infos
+	info_finish();
 }

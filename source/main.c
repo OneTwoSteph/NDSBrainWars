@@ -12,7 +12,7 @@
 
 int main(void) {
 	// Initialize console
-    consoleDemoInit();
+    //consoleDemoInit();
 
     // Initialize game
     brainwars_init();

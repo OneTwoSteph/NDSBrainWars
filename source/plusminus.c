@@ -6,6 +6,7 @@
  */
 
 #include "general.h"
+#include "info.h"
 #include "plusminus.h"
 #include "plusminus_im.h"
 #include "numbers.h"
@@ -22,10 +23,6 @@ void plusminus_timer_ISR(){
 }
 
 void plusminus_init() {
-
-	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
-	BGCTRL_SUB[1] = BG_TILE_BASE(3) | BG_MAP_BASE(16) | BG_32x32 | BG_COLOR_16;
-
 	// Copy tiles to memory. Number tiles in BG0 and game BG in BG1
 	swiCopy(numbersTiles, BG_TILE_RAM_SUB(1), numbersTilesLen/2);
 	swiCopy(plusminus_imTiles, BG_TILE_RAM_SUB(3), plusminus_imTilesLen/2);
@@ -64,8 +61,8 @@ void plusminus_init() {
 
 	plusminus_draw();
 
-
-
+	// Draw infos
+	info_init();
 }
 
 void plusminus_new_number() {
@@ -204,9 +201,12 @@ bool plusminus_game(void) {
 			break;
 
 		}
-
-	return false;
 	}
+
+	// Update infos
+	info_update(pm_score);
+
+	// Return game not ended
 	return false;
 }
 
@@ -265,4 +265,6 @@ void plusminus_reset(void) {
 	pm_score = 0;
 	compare = 1;
 
+	// Suppress infos
+	info_finish();
 }

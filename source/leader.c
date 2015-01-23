@@ -6,6 +6,7 @@
  */
 
 #include "general.h"
+#include "info.h"
 #include "leader.h"
 
 u8 emptyTile[64] = {
@@ -57,8 +58,7 @@ void leader_timer_ISR(){
 
 void leader_init() {
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_256;
-	BGCTRL_SUB[1] = 0;
-	
+
 	// Load tiles in RAM
 	dmaCopy(emptyTile, &BG_TILE_RAM_SUB(1)[0], 64);
 	dmaCopy(fullTile, &BG_TILE_RAM_SUB(1)[32], 64);
@@ -80,9 +80,11 @@ void leader_init() {
 	wrong = 0;
 	level = VERYEASY;
 
+	// Draw infos
+	info_init();
+
 	leader_new_order();
 	leader_draw();
-
 }
 
 void leader_new_order() {
@@ -305,14 +307,13 @@ bool leader_game() {
 		default:
 			break;
 		}
-
-	return false;
-
 	}
 
+	// Update infos
+	info_update(leader_score);
+
+	// Return false because game not ended
 	return false;
-
-
 }
 
 void leader_correct(){
@@ -350,7 +351,7 @@ void leader_correct(){
 void leader_wrong() {
 
 	// If mistake, generate WRONG flash and redraw new tiles
-	BG_PALETTE_SUB[0] = TRUERED;
+	BG_PALETTE_SUB[0] = REDVAL;
 
 	leader_step = 0;
 	wrong++;
@@ -376,17 +377,14 @@ void leader_wrong() {
 }
 
 void leader_reset() {
+	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 
-	int row,col;
-
-	for(row = 0; row < 32; row++){
-		for(col = 0; col < 32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
-		}
-	}
 	leader_score = 0;
 	leader_step = 0;
 	draw_timer = 0;
 	wrong = 0;
 	level = VERYEASY;
+
+	// Suppress infos
+	info_finish();
 }

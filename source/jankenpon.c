@@ -7,6 +7,7 @@
  */
 
 #include "general.h"
+#include "info.h"
 #include "jankenpon.h"
 #include "jankenpon_hand.h"
 
@@ -74,6 +75,9 @@ void jankenpon_init(){
 	score = 0;
 	wrong = 0;
 	level = EASY;
+
+	// Draw infos
+	info_init();
 }
 
 void jankenpon_draw(){
@@ -189,10 +193,13 @@ bool jankenpon_game(){
 			default: break;
 			}
 		}
-
-		// Return true for the game to continue
-		return false;
 	}
+
+	// Update infos
+	info_update(score);
+
+	// Return true for the game to continue
+	return false;
 }
 
 void jankenpon_next(){
@@ -250,4 +257,7 @@ void jankenpon_reset(){
 	// Reset all global variables
 	score = 0;
 	wrong = 0;
+
+	// Suppress infos
+	info_finish();
 }

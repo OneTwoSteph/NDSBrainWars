@@ -7,6 +7,7 @@
  */
 
 #include "general.h"
+#include "info.h"
 #include "eatit.h"
 #include "eatit_pacman.h"
 
@@ -76,6 +77,9 @@ void eatit_init(){
 	// Set global variables
 	score = 0;
 	wrong = 0;
+
+	// Draw infos
+	info_init();
 }
 
 void eatit_draw(){
@@ -173,10 +177,13 @@ bool eatit_game(void){
 			else
 				eatit_wrong();
 		}
-
-		// Return true for the game to continue
-		return false;
 	}
+
+	// Update infos
+	info_update(score);
+
+	// Return true for the game to continue
+	return false;
 }
 
 void eatit_next(void){
@@ -216,4 +223,7 @@ void eatit_reset(){
 	// Reset all global variables
 	score = 0;
 	wrong = 0;
+
+	// Suppress infos
+	info_finish();
 }

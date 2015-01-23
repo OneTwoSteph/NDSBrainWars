@@ -7,6 +7,7 @@
  */
 
 #include "general.h"
+#include "info.h"
 #include "path.h"
 #include "path_arrow.h"
 
@@ -33,10 +34,6 @@ void path_wrong(){
 }
 
 void path_init(){
-	// Configure Background
-	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
-	BGCTRL_SUB[1] = 0;
-
 	// Copy tiles to memory
 	swiCopy(path_arrowTiles, BG_TILE_RAM_SUB(1), path_arrowTilesLen/2);
 
@@ -80,6 +77,9 @@ void path_init(){
 	score = 0;
 	wrong = 0;
 	level = EASY;
+
+	// Draw infos
+	info_init();
 }
 
 void path_draw(){
@@ -227,9 +227,15 @@ bool path_game(){
 		default:
 			break;
 		}
-		return false;
 	}
+
+	// Update infos
+	info_update(score);
+
+	// Return with game not ended
+	return false;
 }
+
 
 void path_next(){
 	// Increment score
@@ -263,4 +269,7 @@ void path_reset(){
 	// Reset all global variables
 	score = 0;
 	wrong = 0;
+
+	// Suppress infos
+	info_finish();
 }

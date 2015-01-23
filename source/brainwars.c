@@ -13,7 +13,10 @@
 #include "brainwars_train.h"
 
 #include "title.h"
+
 #include "credits.h"
+
+#include "score.h"
 #include "exp_leader.h"
 #include "exp_eatit.h"
 #include "exp_path.h"
@@ -52,36 +55,53 @@ void brainwars_init(){
 }
 
 void brainwars_configMain(){
+	// General
 	VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
-	REG_DISPCNT = MODE_5_2D | DISPLAY_BG2_ACTIVE ;
-}
+	REG_DISPCNT = MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG0_ACTIVE;
 
-void brainwars_configSub(){
-	VRAM_C_CR = VRAM_ENABLE| VRAM_C_SUB_BG;
-	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE | DISPLAY_BG2_ACTIVE;
-}
+	// Background 0 will always be used with same image
+	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(5) | BG_MAP_BASE(25);
+	swiCopy(scoreTiles, BG_TILE_RAM(5), scoreTilesLen/2);
+	swiCopy(scorePal, BG_PALETTE, scorePalLen/2);
 
-void brainwars_main_init(){
-	// Configure background
+	int x, y;
+	for(x=0;x<32;x++){
+		for(y=0;y<24;y++){
+			BG_MAP_RAM(25)[y*32 + x] = 0;
+		}
+	}
+
+	// Background 2 mode
 	BGCTRL[2] = BG_MAP_BASE(0) | BgSize_B8_256x256;
-	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 
-	// Main affine matrix
 	REG_BG2PA = 256;
 	REG_BG2PC = 0;
 	REG_BG2PB = 0;
 	REG_BG2PD = 256;
+}
 
-	// Copy bitmap and tiles to memory
-	swiCopy(titleBitmap, BG_GFX, titleBitmapLen);
+void brainwars_configSub(){
+	// Memory, mode and active background
+	VRAM_C_CR = VRAM_ENABLE| VRAM_C_SUB_BG;
+	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
+
+	// Background 0 configuration
+	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
+
+	// Background 1
+	BGCTRL_SUB[1] = BG_TILE_BASE(3) | BG_MAP_BASE(16) | BG_32x32 | BG_COLOR_16;
+}
+
+void brainwars_main_init(){
+	// Copy bitmap and its palette for BG2 in main
+	swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+	swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
+
+	// Copy tiles and palette for BG0 in sub
 	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
-
-	// Copy palettes
-	swiCopy(titlePal, BG_PALETTE, titlePalLen);
 	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
-	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen);
+	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen/2);
 
-	// Set up palette colors
 	BG_PALETTE_SUB[1] = WHITEVAL;
 	BG_PALETTE_SUB[5] = BLACKVAL;
 	BG_PALETTE_SUB[6] = GREYVAL;
@@ -180,7 +200,7 @@ void brainwars_main_draw(){
 	int x, y;
 	int ystart = 2;
 	int height = 4;
-	int L = 32;	// length of the image
+	int L = 32;			// length of the image
 
 	// Draw main menu
 	for(x=0; x<32; x++){
@@ -202,26 +222,15 @@ void brainwars_1p(){
 }
 
 void brainwars_train_init(){
-	// Configure backgrounds
-	BGCTRL[2] = BG_MAP_BASE(0) | BgSize_B8_256x256;
-	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
-
-	// Main affine matrix
-	REG_BG2PA = 256;
-	REG_BG2PC = 0;
-	REG_BG2PB = 0;
-	REG_BG2PD = 256;
-
-	// Copy bitmap and tiles to memory
+	// Copy bitmap and palette for BG2 in main
 	swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
-	swiCopy(brainwars_trainTiles, BG_TILE_RAM_SUB(1), brainwars_trainTilesLen/2);
-
-	// Copy palettes
 	swiCopy(exp_leaderPal, BG_PALETTE, exp_leaderPalLen/2);
-	swiCopy(brainwars_trainPal, BG_PALETTE_SUB, brainwars_trainPalLen/2);
-	swiCopy(brainwars_trainPal, &BG_PALETTE_SUB[16], brainwars_trainPalLen);
 
-	// Set up sub palette colors
+	// Copy tiles and palette for BG0 in sub
+	swiCopy(brainwars_trainTiles, BG_TILE_RAM_SUB(1), brainwars_trainTilesLen/2);
+	swiCopy(brainwars_trainPal, BG_PALETTE_SUB, brainwars_trainPalLen/2);
+	swiCopy(brainwars_trainPal, &BG_PALETTE_SUB[16], brainwars_trainPalLen/2);
+
 	BG_PALETTE_SUB[1] = WHITEVAL;
 	BG_PALETTE_SUB[5] = REDVAL;
 	BG_PALETTE_SUB[6] = BLUEVAL;
@@ -236,13 +245,14 @@ void brainwars_train_init(){
 	BG_PALETTE_SUB[24] = BLACKVAL;
 	BG_PALETTE_SUB[25] = GREYVAL;
 
-	// Initialize variable
+	// Initialize variables
 	game = NOGAME;
 	selectTrain = NOGAME;
 	gameChange = false;
 
 	// Draw training menu
 	brainwars_train_draw();
+
 }
 
 void brainwars_train(){
