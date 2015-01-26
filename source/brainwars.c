@@ -39,10 +39,15 @@ STATE selectMain;
 bool stateChange;
 
 static volatile int gameCounter;
+static volatile int timeCounter;
 
 GAME game;
 GAME selectTrain;
 bool gameChange;
+
+void brainwars_timer_ISR(){
+	timeCounter--;
+}
 
 void brainwars_init(){
 	// Initialize game state
@@ -300,10 +305,32 @@ void brainwars_1p_next_game(){
 	int next_game;
 
 	next_game = rand()%7;
-
 	while(game == next_game) {	next_game = rand()%7; }
 
 	game = next_game;
+
+}
+
+void brainwars_1p_wait_next(){
+
+	timeCounter = 3;
+
+	TIMER3_DATA = TIMER_FREQ_1024(1);
+	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
+	irqSet(IRQ_TIMER3, &brainwars_timer_ISR);
+	irqEnable(IRQ_TIMER3);
+	//while(timeCounter > 8);
+	//while(timeCounter > 7);
+	//while(timeCounter > 6);
+	//while(timeCounter > 5);
+	//while(timeCounter > 4);
+	//while(timeCounter > 3);
+	while(timeCounter > 2);
+	while(timeCounter > 1);
+	while(timeCounter > 0);
+	irqDisable(IRQ_TIMER3);
+	irqClear(IRQ_TIMER3);
+	TIMER3_CR = 0;
 
 }
 
@@ -316,6 +343,7 @@ void brainwars_1p(){
 			gameChange = false;
 			swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
 			swiCopy(exp_leaderPal, BG_PALETTE, exp_leaderPalLen/2);
+			brainwars_1p_wait_next();
 			leader_init();
 		}
 
@@ -335,6 +363,7 @@ void brainwars_1p(){
 			gameChange = false;
 			swiCopy(exp_eatitBitmap, BG_GFX, exp_eatitBitmapLen/2);
 			swiCopy(exp_eatitPal, BG_PALETTE, exp_eatitPalLen/2);
+			brainwars_1p_wait_next();
 			eatit_init();
 		}
 
@@ -354,6 +383,7 @@ void brainwars_1p(){
 			gameChange = false;
 			swiCopy(exp_musicalBitmap, BG_GFX, exp_musicalBitmapLen/2);
 			swiCopy(exp_musicalPal, BG_PALETTE, exp_musicalPalLen/2);
+			brainwars_1p_wait_next();
 			musical_init();
 		}
 
@@ -373,6 +403,7 @@ void brainwars_1p(){
 			gameChange = false;
 			swiCopy(exp_pathBitmap, BG_GFX, exp_pathBitmapLen/2);
 			swiCopy(exp_pathPal, BG_PALETTE, exp_pathPalLen/2);
+			brainwars_1p_wait_next();
 			path_init();
 		}
 
@@ -392,6 +423,7 @@ void brainwars_1p(){
 			gameChange = false;
 			swiCopy(exp_additionBitmap, BG_GFX, exp_additionBitmapLen/2);
 			swiCopy(exp_additionPal, BG_PALETTE, exp_additionPalLen/2);
+			brainwars_1p_wait_next();
 			addition_init();
 		}
 
@@ -411,6 +443,7 @@ void brainwars_1p(){
 			gameChange = false;
 			swiCopy(exp_plusminusBitmap, BG_GFX, exp_plusminusBitmapLen/2);
 			swiCopy(exp_plusminusPal, BG_PALETTE, exp_plusminusPalLen/2);
+			brainwars_1p_wait_next();
 			plusminus_init();
 		}
 
@@ -430,6 +463,7 @@ void brainwars_1p(){
 			gameChange = false;
 			swiCopy(exp_jankenponBitmap, BG_GFX, exp_jankenponBitmapLen/2);
 			swiCopy(exp_jankenponPal, BG_PALETTE, exp_jankenponPalLen/2);
+			brainwars_1p_wait_next();
 			jankenpon_init();
 		}
 

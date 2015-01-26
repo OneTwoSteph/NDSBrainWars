@@ -43,6 +43,7 @@ u8 correctTile[64] = {
 	2,2,2,2,2,2,2,2
 };
 
+
 static volatile int leader_score;
 static volatile int order[6];
 static volatile int draw_timer;
@@ -58,6 +59,7 @@ void leader_timer_ISR(){
 }
 
 void leader_init() {
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_256;
 
 	// Load tiles in RAM
@@ -381,7 +383,22 @@ void leader_reset() {
 	// Suppress infos
 	info_finish(leader_score, LEADER);
 
+	int row, col;
+
+	for(row = 0; row < 32; row++){
+		for(col = 0; col < 32; col++){
+			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
+		}
+	}
+
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
+
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+
+
+	irqDisable(IRQ_TIMER0);
+	irqClear(IRQ_TIMER0);
+	TIMER0_CR = 0;
 
 	leader_score = 0;
 	leader_step = 0;

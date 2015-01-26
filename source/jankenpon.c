@@ -126,7 +126,7 @@ void jankenpon_draw(){
 				}
 
 				// Color
-				BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(color<<12);
+				BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x] | (color<<12);
 			}
 		}
 	}
@@ -260,6 +260,10 @@ void jankenpon_reset(){
 	// Reset all global variables
 	score = 0;
 	wrong = 0;
+
+	irqDisable(IRQ_TIMER1);
+	irqClear(IRQ_TIMER1);
+	TIMER1_CR = 0;
 
 	// Suppress infos
 	info_finish(score, JANKENPON);

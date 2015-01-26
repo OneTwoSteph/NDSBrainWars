@@ -19,6 +19,7 @@ void brainwars_main_draw(void);
 
 void brainwars_1p_init(void);
 void brainwars_1p_next_game(void);
+void brainwars_1p_wait_next(void);
 void brainwars_1p(void);
 
 

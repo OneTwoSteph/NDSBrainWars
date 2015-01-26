@@ -320,6 +320,13 @@ void musical_reset(){
 	// Suppress infos
 	info_finish(score, MUSICAL);
 
+	irqDisable(IRQ_TIMER0);
+	irqDisable(IRQ_TIMER1);
+	irqClear(IRQ_TIMER0);
+	irqClear(IRQ_TIMER1);
+	TIMER0_CR = 0;
+	TIMER1_CR = 0;
+
 	// Reset all global variables
 	score = 0;
 	wrong = 0;
