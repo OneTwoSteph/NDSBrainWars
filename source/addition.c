@@ -25,7 +25,6 @@ void addition_timer_ISR(){
 
 void addition_init() {
 	// Add BG1 and configure
-	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 	BGCTRL_SUB[1] = BG_TILE_BASE(4) | BG_MAP_BASE(17) | BG_32x32 | BG_COLOR_16;
 
 	// Copy tiles to memory
@@ -228,7 +227,14 @@ void addition_reset() {
 	add_score = 0;
 	counter = 0;
 
-	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+	int row, col;
+
+	for(row=0; row<32; row++){
+		for(col=0; col<32; col++){
+			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
+			BG_MAP_RAM_SUB(17)[row*32+col] = addition_imMap[2];
+		}
+	}
 
 	// Suppress infos
 	info_finish(add_score, ADDITION);
