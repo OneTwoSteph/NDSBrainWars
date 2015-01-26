@@ -223,6 +223,10 @@ void eatit_reset(){
 	wrong = 1;
 	eatit_draw();
 
+	irqDisable(IRQ_TIMER1);
+	irqClear(IRQ_TIMER1);
+	TIMER1_CR = 0;
+
 	// Reset all global variables
 	score = 0;
 	wrong = 0;

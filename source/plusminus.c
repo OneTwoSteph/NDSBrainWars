@@ -283,6 +283,10 @@ void plusminus_reset(void) {
 		}
 	}
 
+	irqDisable(IRQ_TIMER0);
+	irqClear(IRQ_TIMER0);
+	TIMER0_CR = 0;
+
 	draw_timer = 0;
 	pm_score = 0;
 	compare = 1;

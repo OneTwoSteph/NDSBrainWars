@@ -236,6 +236,10 @@ void addition_reset() {
 		}
 	}
 
+	irqDisable(IRQ_TIMER0);
+	irqClear(IRQ_TIMER0);
+	TIMER0_CR = 0;
+
 	// Suppress infos
 	info_finish(add_score, ADDITION);
 }

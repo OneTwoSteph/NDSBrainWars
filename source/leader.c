@@ -395,6 +395,11 @@ void leader_reset() {
 
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 
+
+	irqDisable(IRQ_TIMER0);
+	irqClear(IRQ_TIMER0);
+	TIMER0_CR = 0;
+
 	leader_score = 0;
 	leader_step = 0;
 	draw_timer = 0;
