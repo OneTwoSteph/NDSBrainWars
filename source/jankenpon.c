@@ -264,7 +264,4 @@ void jankenpon_reset(){
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER1);
 	TIMER1_CR = 0;
-
-	// Suppress infos
-	info_finish(score, JANKENPON);
 }
