@@ -8,14 +8,13 @@
 
 #include "general.h"
 #include "brainwars.h"
+#include "info.h"
 
 #include "brainwars_main.h"
 #include "brainwars_train.h"
 #include "start.h"
 
 #include "title.h"
-
-#include "credits.h"
 
 #include "score.h"
 #include "exp_leader.h"
@@ -36,6 +35,10 @@
 #include "plusminus.h"
 #include "jankenpon.h"
 
+#include "bestscores.h"
+
+#include "credits.h"
+
 STATE state;
 STATE selectMain;
 bool stateChange;
@@ -47,11 +50,25 @@ GAME game;
 GAME selectTrain;
 bool gameChange;
 
+int scores[7];
+
 void brainwars_timer_ISR(){
 	timeCounter--;
 }
 
 void brainwars_init(){
+	// Init score saving
+	fatInitDefault();
+
+	// Read initial best scores
+	scores[0] = info_get_score("leader");
+	scores[1] = info_get_score("eatit");
+	scores[2] = info_get_score("musical");
+	scores[3] = info_get_score("path");
+	scores[4] = info_get_score("addition");
+	scores[5] = info_get_score("plusminus");
+	scores[6] = info_get_score("jankenpon");
+
 	// Initialize game state
 	state = MAIN;
 	stateChange = false;
@@ -122,9 +139,6 @@ void brainwars_main_init(){
 
 	// Draw main menu
 	brainwars_main_draw();
-
-	// Init score saving
-	fatInitDefault();
 }
 
 void brainwars_main(){
@@ -162,6 +176,16 @@ void brainwars_main(){
 		// Execute action of state
 		brainwars_1p();
 
+		break;
+	case SCORE:
+		// Check if state just changed
+		if(stateChange){
+			stateChange = false;
+			brainwars_score_init();
+		}
+
+		// Execute action of state
+		brainwars_score();
 
 		break;
 	case CREDITS:
@@ -506,11 +530,7 @@ void brainwars_1p(){
 		break;
 	default:
 		break;
-
-}
-
-
-
+	}
 }
 
 void brainwars_train_init(){
@@ -794,10 +814,114 @@ void brainwars_train_draw(){
 	}
 }
 
-void brainwars_credits_init(){
-	// Configure backgrounds
-	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
+void brainwars_score_init(void){
+	// Copy map
+	swiCopy(bestscoresMap, BG_MAP_RAM_SUB(0), bestscoresMapLen/2);
 
+	// Copy tiles
+	swiCopy(bestscoresTiles, BG_TILE_RAM_SUB(1), bestscoresTilesLen/2);
+
+	// Copy palette
+	swiCopy(bestscoresPal, BG_PALETTE_SUB, bestscoresPalLen/2);
+
+	// Put correct colors in palettes
+	BG_PALETTE_SUB[5] = REDVAL;
+	BG_PALETTE_SUB[6] = BLUEVAL;
+	BG_PALETTE_SUB[7] = GREENVAL;
+	BG_PALETTE_SUB[8] = BLACKVAL;
+	BG_PALETTE_SUB[9] = GREYVAL;
+	BG_PALETTE_SUB[11] = GREENVAL;
+
+	BG_PALETTE_SUB[21] = REDVAL;
+	BG_PALETTE_SUB[22] = BLUEVAL;
+	BG_PALETTE_SUB[23] = GREENVAL;
+	BG_PALETTE_SUB[24] = BLACKVAL;
+	BG_PALETTE_SUB[25] = GREYVAL;
+	BG_PALETTE_SUB[27] = YELLOWVAL;
+
+	// Draw score of each game
+	int i, j;
+
+	int score;
+	int color = YELLOW;
+
+	int digit[4];
+
+	int x, y;
+	int row, col;
+	int xstart = 7;		// x start on screen
+	int ystart = 2;		// y start on screen
+	int ystim = 24;		// y start in image
+	int D = 15;			// distance between scores of the two columns
+	int l = 2;			// length of one number
+	int h = 5;			// height of one number
+
+	int xinit, yinit;
+
+	for(i=0; i<7; i++){
+		row = i/2;
+		col = i%2;
+
+		// Get new score
+		switch(i){
+		case 0: score = info_get_score("leader"); break;
+		case 1: score = info_get_score("eatit"); break;
+		case 2: score = info_get_score("musical"); break;
+		case 3: score = info_get_score("path"); break;
+		case 4: score = info_get_score("addition"); break;
+		case 5: score = info_get_score("plusminus"); break;
+		case 6: score = info_get_score("jankenpon"); break;
+		}
+
+		scores[0] = info_get_score("leader");
+		scores[1] = info_get_score("eatit");
+		scores[2] = info_get_score("musical");
+		scores[3] = info_get_score("path");
+		scores[4] = info_get_score("addition");
+		scores[5] = info_get_score("plusminus");
+		scores[6] = info_get_score("jankenpon");
+
+		// Check if higher then old score
+		if(score>scores[i]){
+			scores[i] = score;
+			color = GREEN;
+		}
+		else color = YELLOW;
+
+		// Compute digits of number
+		digit[0] = score/1000;
+		digit[1] = (score-1000*digit[0])/100;
+		digit[2] = (score-1000*digit[0]-100*digit[1])/10;
+		digit[3] = (score-1000*digit[0]-100*digit[1]-10*digit[2]);
+
+		// Display digits
+		yinit = ystart+row*h;
+
+		for(j=0;j<4;j++){
+			xinit = xstart+col*D+j*l;
+
+			for(x=xinit; x<xinit+l; x++){
+				for(y=yinit; y<yinit+1*h; y++){
+					BG_MAP_RAM_SUB(0)[y*32 + x] = bestscoresMap[(y-yinit+ystim)*32+(x-xinit)+digit[j]*l]|((color-2)<<12);
+				}
+			}
+		}
+	}
+}
+
+void brainwars_score(void){
+	// Scan keys
+	scanKeys();
+	u16 keys = (u16) keysDown();
+
+	// Scan if exit asked
+	if((keys & KEY_TOUCH) | (keys & KEY_A) | (keys & KEY_START)){
+		state = MAIN;
+		stateChange = true;
+	}
+}
+
+void brainwars_credits_init(){
 	// Copy map
 	swiCopy(creditsMap, BG_MAP_RAM_SUB(0), creditsMapLen/2);
 

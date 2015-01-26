@@ -381,7 +381,7 @@ void leader_wrong() {
 
 void leader_reset() {
 	// Suppress infos
-	info_finish(leader_score, LEADER);
+	info_finish(leader_score, "leader");
 
 	int row, col;
 

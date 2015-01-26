@@ -23,142 +23,6 @@ void info_time_ISR(){
 	}
 }
 
-void info_finish(int score, int game){
-	// Put transparent tiles on BGO of sub since no score has to be shown for now
-	int x, y;
-	for(x=0;x<32;x++){
-		for(y=0;y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = 0;
-		}
-	}
-
-	// Disable timer
-	TIMER2_CR &= ~(TIMER_ENABLE);
-
-	// Read into file to find if best score beated
-	FILE* file;
-	int max_score;
-
-	switch(game){
-	case LEADER:
-		file = fopen("/leader.txt", "r");
-		if(file==NULL){
-			file = fopen("/leader.txt","w+");
-			fprintf(file,"%i\n", score);
-		}
-		else{
-			fscanf(file,"%i\n",&max_score);
-
-			if(score > max_score){
-				fclose(file);
-				file = fopen("/leader.txt","w+");
-				fprintf(file,"%i\n", score);
-			}
-		}
-
-		break;
-	case EATIT:
-		file = fopen("/eatit.txt", "r");
-		if(file==NULL){
-			file = fopen("/eatit.txt","w+");
-			fprintf(file,"%i\n", score);
-		}
-		else{
-			fscanf(file,"%i\n",&max_score);
-
-			if(score > max_score){
-				fclose(file);
-				file = fopen("/eatit.txt","w+");
-				fprintf(file,"%i\n", score);
-			}
-		}
-		break;
-	case MUSICAL:
-		file = fopen("/musical.txt", "r");
-		if(file==NULL){
-			file = fopen("/musical.txt","w+");
-			fprintf(file,"%i\n", score);
-		}
-		else{
-			fscanf(file,"%i\n",&max_score);
-
-			if(score > max_score){
-				fclose(file);
-				file = fopen("/musical.txt","w+");
-				fprintf(file,"%i\n", score);
-			}
-		}
-		break;
-	case PATH:
-		file = fopen("/path.txt", "r");
-		if(file==NULL){
-			file = fopen("/path.txt","w+");
-			fprintf(file,"%i\n", score);
-		}
-		else{
-			fscanf(file,"%i\n",&max_score);
-
-			if(score > max_score){
-				fclose(file);
-				file = fopen("/path.txt","w+");
-				fprintf(file,"%i\n", score);
-			}
-		}
-		break;
-	case ADDITION:
-		file = fopen("/addition.txt", "r");
-		if(file==NULL){
-			file = fopen("/addition.txt","w+");
-			fprintf(file,"%i\n", score);
-		}
-		else{
-			fscanf(file,"%i\n",&max_score);
-
-			if(score > max_score){
-				fclose(file);
-				file = fopen("/addition.txt","w+");
-				fprintf(file,"%i\n", score);
-			}
-		}
-		break;
-	case PLUSMINUS:
-		file = fopen("/plusminus.txt", "r");
-		if(file==NULL){
-			file = fopen("/plusminus.txt","w+");
-			fprintf(file,"%i\n", score);
-		}
-		else{
-			fscanf(file,"%i\n",&max_score);
-
-			if(score > max_score){
-				fclose(file);
-				file = fopen("/plusminus.txt","w+");
-				fprintf(file,"%i\n", score);
-			}
-		}
-		break;
-	case JANKENPON:
-		file = fopen("/jankenpon.txt", "r");
-		if(file==NULL){
-			file = fopen("/jankenpon.txt","w+");
-			fprintf(file,"%i\n", score);
-		}
-		else{
-			fscanf(file,"%i\n",&max_score);
-
-			if(score > max_score){
-				fclose(file);
-				file = fopen("/jankenpon.txt","w+");
-				fprintf(file,"%i\n", score);
-			}
-		}
-	case NOGAME:
-		break;
-	}
-
-	fclose(file);
-}
-
 void info_init(){
 	// Put correct colors in end of bitmap palette for the tiles
 	swiCopy(scorePal, &BG_PALETTE[16*15], scorePalLen/2);
@@ -260,4 +124,69 @@ void info_update(int score){
 			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig4*length+(x-3*length-W-dot)]|(15<<12);
 		}
 	}
+}
+
+void info_finish(int score, char* game){
+	// Put transparent tiles on BGO of sub since no score has to be shown for now
+	int x, y;
+	for(x=0;x<32;x++){
+		for(y=0;y<24;y++){
+			BG_MAP_RAM(25)[y*32 + x] = 0;
+		}
+	}
+
+	// Disable timer
+	TIMER2_CR &= ~(TIMER_ENABLE);
+
+	// Read into file to find if best score beated
+	info_save_score(score, game);
+}
+
+void info_save_score(int score, char* game){
+	FILE* file;
+	char name[20] = "/";
+	int max_score;
+	bool write = false;
+
+	// Open file
+	strcat(name, game);
+	strcat(name, ".txt");
+	file = fopen(name, "r");
+
+	// Read score and check if new score better or not to write new one
+	if(file==NULL) write = true;
+	else{
+		fscanf(file,"%i\n",&max_score);
+
+		if(score > max_score) write = true;
+	}
+
+	if(write){
+		fclose(file);
+		file = fopen(name, "w");
+		fprintf(file,"%i\n", score);
+		fclose(file);
+	}
+	else fclose(file);
+}
+
+int info_get_score(char* game){
+	FILE* file;
+	char name[20] = "/";
+	int score;
+
+	// Open correct file corresponding to the
+	strcat(name, game);
+	strcat(name, ".txt");
+	file = fopen(name, "r");
+
+	// Read score or put 0 if no file exists
+	if(file==NULL) score = 0;
+	else fscanf(file,"%i\n",&score);
+
+	// Close file
+	fclose(file);
+
+	// Return score
+	return score;
 }

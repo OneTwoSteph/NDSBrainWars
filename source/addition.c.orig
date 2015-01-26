@@ -295,6 +295,7 @@ void addition_reset() {
 	add_score = 0;
 	counter = 0;
 
+<<<<<<< HEAD
 	int row, col;
 
 	for(row=0; row<32; row++){
@@ -310,4 +311,7 @@ void addition_reset() {
 
 	// Suppress infos
 	info_finish(add_score, ADDITION);
+=======
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+>>>>>>> scoreDisp
 }

@@ -260,6 +260,7 @@ void jankenpon_reset(){
 	// Reset all global variables
 	score = 0;
 	wrong = 0;
+<<<<<<< HEAD
 
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER1);
@@ -267,4 +268,6 @@ void jankenpon_reset(){
 
 	// Suppress infos
 	info_finish(score, JANKENPON);
+=======
+>>>>>>> scoreDisp
 }

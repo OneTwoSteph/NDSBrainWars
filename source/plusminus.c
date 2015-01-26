@@ -272,7 +272,7 @@ void plusminus_wrong(void) {
 
 void plusminus_reset(void) {
 	// Suppress infos
-	info_finish(pm_score, PLUSMINUS);
+	info_finish(pm_score, "plusminus");
 
 	int row, col;
 
