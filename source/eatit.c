@@ -217,7 +217,7 @@ void eatit_next(void){
 
 void eatit_reset(){
 	// Suppress infos
-	info_finish(score, EATIT);
+	info_finish(score, "eatit");
 
 	// Draw nothing
 	wrong = 1;

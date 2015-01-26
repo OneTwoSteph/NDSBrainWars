@@ -379,7 +379,7 @@ void leader_wrong() {
 
 void leader_reset() {
 	// Suppress infos
-	info_finish(leader_score, LEADER);
+	info_finish(leader_score, "leader");
 
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 

@@ -251,7 +251,7 @@ void jankenpon_next(){
 
 void jankenpon_reset(){
 	// Suppress infos
-	info_finish(score, JANKENPON);
+	info_finish(score, "jankenpon");
 
 	// Draw nothing
 	wrong = 1;
@@ -260,7 +260,4 @@ void jankenpon_reset(){
 	// Reset all global variables
 	score = 0;
 	wrong = 0;
-
-	// Suppress infos
-	info_finish(score, JANKENPON);
 }

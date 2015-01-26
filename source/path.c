@@ -263,7 +263,7 @@ void path_next(){
 
 void path_reset(){
 	// Suppress infos
-	info_finish(score, PATH);
+	info_finish(score, "path");
 
 	// Draw nothing
 	wrong = 1;

@@ -202,7 +202,6 @@ void addition_correct() {
 }
 
 void addition_wrong() {
-
 	if(add_score > 0)	{ add_score--; }
 
 	int old_color = BG_PALETTE_SUB[1];
@@ -224,12 +223,12 @@ void addition_wrong() {
 }
 
 void addition_reset() {
+	// Suppress infos
+	info_finish(add_score, "addition");
+
 	draw_timer = 0;
 	add_score = 0;
 	counter = 0;
 
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
-
-	// Suppress infos
-	info_finish(add_score, ADDITION);
 }

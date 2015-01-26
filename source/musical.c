@@ -318,7 +318,7 @@ void musical_draw(){
 
 void musical_reset(){
 	// Suppress infos
-	info_finish(score, MUSICAL);
+	info_finish(score, "musical");
 
 	// Reset all global variables
 	score = 0;

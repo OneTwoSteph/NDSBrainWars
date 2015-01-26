@@ -21,6 +21,8 @@ void brainwars_1p_init(void);
 void brainwars_1p_next_game(void);
 void brainwars_1p(void);
 
+void brainwars_score_init(void);
+void brainwars_score(void);
 
 void brainwars_train_init(void);
 void brainwars_train(void);
