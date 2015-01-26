@@ -823,6 +823,7 @@ void brainwars_score_init(void){
 
 	// Copy palette
 	swiCopy(bestscoresPal, BG_PALETTE_SUB, bestscoresPalLen/2);
+<<<<<<< HEAD
 
 	// Put correct colors in palettes
 	BG_PALETTE_SUB[5] = REDVAL;
@@ -839,6 +840,24 @@ void brainwars_score_init(void){
 	BG_PALETTE_SUB[25] = GREYVAL;
 	BG_PALETTE_SUB[27] = YELLOWVAL;
 
+=======
+
+	// Put correct colors in palettes
+	BG_PALETTE_SUB[5] = REDVAL;
+	BG_PALETTE_SUB[6] = BLUEVAL;
+	BG_PALETTE_SUB[7] = GREENVAL;
+	BG_PALETTE_SUB[8] = BLACKVAL;
+	BG_PALETTE_SUB[9] = GREYVAL;
+	BG_PALETTE_SUB[11] = GREENVAL;
+
+	BG_PALETTE_SUB[21] = REDVAL;
+	BG_PALETTE_SUB[22] = BLUEVAL;
+	BG_PALETTE_SUB[23] = GREENVAL;
+	BG_PALETTE_SUB[24] = BLACKVAL;
+	BG_PALETTE_SUB[25] = GREYVAL;
+	BG_PALETTE_SUB[27] = YELLOWVAL;
+
+>>>>>>> scoreDisp
 	// Draw score of each game
 	int i, j;
 
