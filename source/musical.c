@@ -327,6 +327,14 @@ void musical_reset(){
 	TIMER0_CR = 0;
 	TIMER1_CR = 0;
 
+	int x,y;
+
+	for(x=0; x<32; x++){
+		for(y=0; y<24; y++){
+			BG_MAP_RAM_SUB(0)[y*32+x] = musical_toneMap[0];
+		}
+	}
+
 	// Reset all global variables
 	score = 0;
 	wrong = 0;

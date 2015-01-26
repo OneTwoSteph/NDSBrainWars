@@ -34,27 +34,22 @@ void addition_init() {
 	// Copy palette
 	swiCopy(numbersPal, BG_PALETTE_SUB, numbersPalLen/2);
 	swiCopy(addition_imPal, &BG_PALETTE_SUB[16], addition_imPalLen/2);
+	swiCopy(addition_imPal, &BG_PALETTE_SUB[32], addition_imPalLen/2);
 
-	BG_PALETTE_SUB[1] = GREYVAL;
-	BG_PALETTE_SUB[5] = BLACKVAL;
+	BG_PALETTE_SUB[0x01] = GREYVAL;
+	BG_PALETTE_SUB[0x05] = BLACKVAL;
 
-	BG_PALETTE_SUB[21] = GREYVAL;
-	BG_PALETTE_SUB[22] = GREYVAL;
-	BG_PALETTE_SUB[24] = BLUEVAL;
+	BG_PALETTE_SUB[0x15] = GREYVAL;
+	BG_PALETTE_SUB[0x16] = GREYVAL;
+	BG_PALETTE_SUB[0x18] = BLUEVAL;
+
+	BG_PALETTE_SUB[0x25] = GREENVAL;
+	BG_PALETTE_SUB[0x26] = GREYVAL;
+	BG_PALETTE_SUB[0x28] = GREYVAL;
 
 	TIMER0_DATA = TIMER_FREQ_1024(4);
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
 	irqSet(IRQ_TIMER0, &addition_timer_ISR);
-
-	int row, col;
-
-	// Draw Initial Field
-	for(row=0; row<32; row++){
-		for(col=0; col<32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
-			BG_MAP_RAM_SUB(17)[row*32+col] = addition_imMap[row*32+col] | (1<<12);
-		}
-	}
 
 	add_score = 0;
 	counter = 0;
@@ -91,6 +86,14 @@ void addition_new_number() {
 void addition_draw() {
 
 	int row, col;
+
+	// Draw Initial Field
+	for(row=0; row<32; row++){
+		for(col=0; col<32; col++){
+			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
+			BG_MAP_RAM_SUB(17)[row*32+col] = addition_imMap[row*32+col] | (1<<12);
+		}
+	}
 
 	//First number
 	for(row = 2; row < 12; row++) {
@@ -155,13 +158,76 @@ bool addition_game() {
 
 void addition_add_num(int num) {
 
+	bool draw = true;
+
 	if (counter == 0) 					{ total_number[0] = num; }
 	else if ((counter == 1) &&
 			 (num != total_number[0])) 	{ total_number[1] = num; }
 	else if ((counter == 2) &&
 			 (num != total_number[0]) &&
 			 (num != total_number[1]))  { total_number[2] = num; }
-    else 								{ counter--; }
+    else 								{ counter--;
+    									  draw = false;			 }
+
+	if(draw) {
+
+		int x, x_start, y, y_start, Lx;
+		Lx = 6;
+
+		switch(total_number[counter]){
+
+		case 0:
+			x_start = 18;
+			y_start = 16;
+			Lx = 14;
+			break;
+		case 1:
+			x_start = 0;
+			y_start = 0;
+			break;
+		case 2:
+			x_start = 6;
+			y_start = 0;
+			break;
+		case 3:
+			x_start = 12;
+			y_start = 0;
+			break;
+		case 4:
+			x_start = 0;
+			y_start = 8;
+			break;
+		case 5:
+			x_start = 6;
+			y_start = 8;
+			break;
+		case 6:
+			x_start = 12;
+			y_start = 8;
+			break;
+		case 7:
+			x_start = 0;
+			y_start = 16;
+			break;
+		case 8:
+			x_start = 6;
+			y_start = 16;
+			break;
+		case 9:
+			x_start = 12;
+			y_start = 16;
+			break;
+		default:
+			break;
+
+		}
+
+		for(x=x_start; x<(x_start + Lx); x++){
+			for(y=y_start; y<(y_start + 8); y++){
+				BG_MAP_RAM_SUB(17)[y*32+x] = addition_imMap[y*32+x] | (2<<12);
+			}
+		}
+	}
 
 	counter++;
 
@@ -231,7 +297,7 @@ void addition_reset() {
 
 	for(row=0; row<32; row++){
 		for(col=0; col<32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
+			BG_MAP_RAM_SUB(0)[row*32+col] = 1;
 			BG_MAP_RAM_SUB(17)[row*32+col] = addition_imMap[2];
 		}
 	}

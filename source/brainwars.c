@@ -26,6 +26,8 @@
 #include "exp_addition.h"
 #include "exp_plusminus.h"
 
+#include "oneplayer.h"
+
 #include "leader.h"
 #include "eatit.h"
 #include "musical.h"
@@ -313,21 +315,34 @@ void brainwars_1p_next_game(){
 
 void brainwars_1p_wait_next(){
 
-	timeCounter = 3;
+	swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
+	swiCopy(oneplayerPal, BG_PALETTE_SUB, oneplayerPalLen/2);
+
+	int x,y;
+
+	// Draw Initial Field
+	for(x=0; x<32; x++){
+		for(y=0; y<24; y++){
+			BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[y*80+x];
+		}
+	}
+
+	timeCounter = 5;
 
 	TIMER3_DATA = TIMER_FREQ_1024(1);
 	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
+
 	irqSet(IRQ_TIMER3, &brainwars_timer_ISR);
 	irqEnable(IRQ_TIMER3);
-	//while(timeCounter > 8);
-	//while(timeCounter > 7);
-	//while(timeCounter > 6);
-	//while(timeCounter > 5);
-	//while(timeCounter > 4);
-	//while(timeCounter > 3);
-	while(timeCounter > 2);
-	while(timeCounter > 1);
-	while(timeCounter > 0);
+
+	while(timeCounter > 0) {
+		for(x=12; x<20; x++){
+			for(y=10; y<21; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[(y-10+24)*80+(x-12+(timeCounter*8))];
+			}
+		}
+	}
+
 	irqDisable(IRQ_TIMER3);
 	irqClear(IRQ_TIMER3);
 	TIMER3_CR = 0;

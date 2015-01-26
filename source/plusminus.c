@@ -278,7 +278,7 @@ void plusminus_reset(void) {
 
 	for(row=0; row<32; row++){
 		for(col=0; col<32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
+			BG_MAP_RAM_SUB(0)[row*32+col] = 1;
 			BG_MAP_RAM_SUB(17)[row*32+col] = plusminus_imMap[0];
 		}
 	}
