@@ -125,7 +125,7 @@ void path_draw(){
 	}
 }
 
-bool path_game(bool player){
+bool path_game(bool player, int gameCounter){
 	// Scan keys to find pressed ones
 	scanKeys();
 	u16 keys = (u16) keysDown();
@@ -133,6 +133,8 @@ bool path_game(bool player){
 	// Stop game if START button pressed or time crossed 15 sec
 	int time;
 	time = info_get_time();
+
+	if(state != TRAIN) { info_store_temp_score(player, gameCounter, score); }
 
 	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
 	else{

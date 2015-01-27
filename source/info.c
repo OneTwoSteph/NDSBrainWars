@@ -10,7 +10,12 @@
 #include "info.h"
 #include "score.h"
 
+#include "oneplayer.h"
+
 int sec, min;
+
+static volatile int score_p1[3];
+static volatile int score_p2[3];
 
 void info_time_ISR(){
 	// Update sec
@@ -206,4 +211,88 @@ int info_get_score(char* game){
 
 	// Return score
 	return score;
+}
+
+void info_store_temp_score(bool player, int counter, int score){
+
+	if(player)	{ score_p2[counter-1] = score; }
+	else 		{ score_p1[counter-1] = score; }
+
+}
+
+void info_draw_final_score(STATE state){
+
+	int x,y;
+	int digits[4];
+	u16 keys;
+
+	switch(state){
+
+	case ONEP:
+
+		digits[0] = score_p1[2]/1000;
+		digits[1] = (score_p1[2]-1000*digits[0])/100;
+		digits[2] = (score_p1[2]-1000*digits[0]-100*digits[1])/10;
+		digits[3] = (score_p1[2]-1000*digits[0]-100*digits[1]-10*digits[2]);
+
+		// Copy image to memory
+		swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
+		swiCopy(oneplayerPal, BG_PALETTE_SUB, oneplayerPalLen/2);
+
+		// Draw Initial Field
+		for(x=0; x<32; x++){
+			for(y=0; y<24; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[y*80+x];
+			}
+		}
+
+		scanKeys();
+		keys = keysDown();
+
+		while(!(keys & KEY_START)){
+			scanKeys();
+			keys = keysDown();
+		}
+
+		break;
+	case TWOP:
+
+		int final_p1 = 0;
+		int final_p2 = 0;
+
+		for(x=0; x<3; x++){
+			final_p1 = final_p1 + score_p1[x];
+			final_p2 = final_p2 + score_p2[x];
+		}
+
+		digits[0] = final_p1/1000;
+		digits[1] = (final_p1-1000*digits[0])/100;
+		digits[2] = (final_p1-1000*digits[0]-100*digits[1])/10;
+		digits[3] = (final_p1-1000*digits[0]-100*digits[1]-10*digits[2]);
+
+		// Copy image to memory
+		swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
+		swiCopy(oneplayerPal, BG_PALETTE_SUB, oneplayerPalLen/2);
+
+		// Draw Initial Field
+
+		for(x=0; x<32; x++){
+			for(y=0; y<24; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[y*80+x];
+			}
+		}
+
+		scanKeys();
+		keys = keysDown();
+
+		while(!(keys & KEY_START)){
+			scanKeys();
+			keys = keysDown();
+		}
+
+		break;
+	default:
+		break;
+	}
+
 }

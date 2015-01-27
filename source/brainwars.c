@@ -412,7 +412,7 @@ void brainwars_train(){
 		}
 
 		// Execute action of game
-		gameChange = leader_game(0);
+		gameChange = leader_game(0,0);
 
 		// Check if game ended
 		if(gameChange){
@@ -429,7 +429,7 @@ void brainwars_train(){
 		}
 
 		// Execute action of game
-		gameChange = eatit_game(0);
+		gameChange = eatit_game(0,0);
 
 		// Check if game ended
 		if(gameChange){
@@ -446,7 +446,7 @@ void brainwars_train(){
 		}
 
 		// Execute action of game
-		gameChange = musical_game(0);
+		gameChange = musical_game(0,0);
 
 		// Check if game ended
 		if(gameChange){
@@ -463,7 +463,7 @@ void brainwars_train(){
 		}
 
 		// Execute action of game
-		gameChange = path_game(0);
+		gameChange = path_game(0,0);
 
 		// Check if game ended
 		if(gameChange){
@@ -480,7 +480,7 @@ void brainwars_train(){
 		}
 
 		// Execute action of game
-		gameChange = addition_game(0);
+		gameChange = addition_game(0,0);
 
 		// Check if game ended
 		if(gameChange){
@@ -497,7 +497,7 @@ void brainwars_train(){
 		}
 
 		// Execute action of game
-		gameChange = plusminus_game(0);
+		gameChange = plusminus_game(0,0);
 
 		// Check if game ended
 		if(gameChange){
@@ -514,7 +514,7 @@ void brainwars_train(){
 		}
 
 		// Execute action of game
-		gameChange = jankenpon_game(0);
+		gameChange = jankenpon_game(0,0);
 
 		// Check if game ended
 		if(gameChange){
@@ -770,14 +770,14 @@ void brainwars_play(){
 		}
 
 		// Execute action of game
-		gameChange = leader_game(gamePlayer);
+		gameChange = leader_game(gamePlayer, gameCounter);
 
 		// Check if game ended
 		if(gameChange){
 			leader_reset();
 			if(twoPlayers) {
 				if(gamePlayer) 	{ game = NOGAME; }
-				else			{ gamePlayer = 1;}
+				else			{ gamePlayer = PLAYERTWO;}
 			}
 			else				{ game = NOGAME; }
 		}
@@ -794,14 +794,14 @@ void brainwars_play(){
 		}
 
 		// Execute action of game
-		gameChange = eatit_game(gamePlayer);
+		gameChange = eatit_game(gamePlayer, gameCounter);
 
 		// Check if game ended
 		if(gameChange){
 			eatit_reset();
 			if(twoPlayers) {
 				if(gamePlayer) 	{ game = NOGAME; }
-				else			{ gamePlayer = 1;}
+				else			{ gamePlayer = PLAYERTWO;}
 			}
 			else				{ game = NOGAME; }
 		}
@@ -818,14 +818,14 @@ void brainwars_play(){
 		}
 
 		// Execute action of game
-		gameChange = musical_game(gamePlayer);
+		gameChange = musical_game(gamePlayer, gameCounter);
 
 		// Check if game ended
 		if(gameChange){
 			musical_reset();
 			if(twoPlayers) {
 				if(gamePlayer) 	{ game = NOGAME; }
-				else			{ gamePlayer = 1;}
+				else			{ gamePlayer = PLAYERTWO;}
 			}
 			else				{ game = NOGAME; }
 		}
@@ -842,14 +842,14 @@ void brainwars_play(){
 		}
 
 		// Execute action of game
-		gameChange = path_game(gamePlayer);
+		gameChange = path_game(gamePlayer, gameCounter);
 
 		// Check if game ended
 		if(gameChange){
 			path_reset();
 			if(twoPlayers) {
 				if(gamePlayer) 	{ game = NOGAME; }
-				else			{ gamePlayer = 1;}
+				else			{ gamePlayer = PLAYERTWO;}
 			}
 			else				{ game = NOGAME; }
 		}
@@ -866,14 +866,14 @@ void brainwars_play(){
 		}
 
 		// Execute action of game
-		gameChange = addition_game(gamePlayer);
+		gameChange = addition_game(gamePlayer, gameCounter);
 
 		// Check if game ended
 		if(gameChange){
 			addition_reset();
 			if(twoPlayers) {
 				if(gamePlayer) 	{ game = NOGAME; }
-				else			{ gamePlayer = 1;}
+				else			{ gamePlayer = PLAYERTWO;}
 			}
 			else				{ game = NOGAME; }
 		}
@@ -890,14 +890,14 @@ void brainwars_play(){
 		}
 
 		// Execute action of game
-		gameChange = plusminus_game(gamePlayer);
+		gameChange = plusminus_game(gamePlayer, gameCounter);
 
 		// Check if game ended
 		if(gameChange){
 			plusminus_reset();
 			if(twoPlayers) {
 				if(gamePlayer) 	{ game = NOGAME; }
-				else			{ gamePlayer = 1;}
+				else			{ gamePlayer = PLAYERTWO;}
 			}
 			else				{ game = NOGAME; }
 		}
@@ -914,14 +914,14 @@ void brainwars_play(){
 		}
 
 		// Execute action of game
-		gameChange = jankenpon_game(gamePlayer);
+		gameChange = jankenpon_game(gamePlayer, gameCounter);
 
 		// Check if game ended
 		if(gameChange){
 			jankenpon_reset();
 			if(twoPlayers) {
 				if(gamePlayer) 	{ game = NOGAME; }
-				else			{ gamePlayer = 1;}
+				else			{ gamePlayer = PLAYERTWO;}
 			}
 			else				{ game = NOGAME; }
 		}
@@ -929,9 +929,11 @@ void brainwars_play(){
 		break;
 	case NOGAME:
 		// Check if game just changed
-		gamePlayer = 0;
+		gamePlayer = PLAYERONE;
 
 		if(gameCounter >= 3){
+
+			info_draw_final_score(state);
 			state = MAIN;
 			stateChange = true;
 		}

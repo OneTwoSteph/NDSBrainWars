@@ -112,7 +112,7 @@ void addition_draw() {
 	}
 }
 
-bool addition_game(bool player) {
+bool addition_game(bool player, int gameCounter) {
 
 	scanKeys();
 	u16 keys = (u16) keysDown();
@@ -120,6 +120,8 @@ bool addition_game(bool player) {
 	// Stop game if START button pressed or time crossed 15 sec
 	int time;
 	time = info_get_time();
+
+	if(state != TRAIN) { info_store_temp_score(player, gameCounter, add_score); }
 
 	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
 	else if(keys & KEY_TOUCH) {

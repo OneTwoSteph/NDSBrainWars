@@ -9,6 +9,6 @@
 void path_wrong(void);
 void path_init(int gameState);
 void path_draw(void);
-bool path_game(bool player);
+bool path_game(bool player, int gameCounter);
 void path_next(void);
 void path_reset(void);
