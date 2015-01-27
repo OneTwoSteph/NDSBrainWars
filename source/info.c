@@ -10,7 +10,7 @@
 #include "info.h"
 #include "score.h"
 
-#include "oneplayer.h"
+#include "result.h"
 
 int sec, min;
 
@@ -222,30 +222,48 @@ void info_store_temp_score(bool player, int counter, int score){
 
 void info_draw_final_score(STATE state){
 
-	int x,y;
+	int x,y,j;
 	int digits[4];
 	u16 keys;
+
+	int final_p1 = 0;
+	int final_p2 = 0;
 
 	switch(state){
 
 	case ONEP:
 
-		digits[0] = score_p1[2]/1000;
-		digits[1] = (score_p1[2]-1000*digits[0])/100;
-		digits[2] = (score_p1[2]-1000*digits[0]-100*digits[1])/10;
-		digits[3] = (score_p1[2]-1000*digits[0]-100*digits[1]-10*digits[2]);
+		final_p1 = score_p1[2];
+
+		digits[0] = final_p1/1000;
+		digits[1] = (final_p1-1000*digits[0])/100;
+		digits[2] = (final_p1-1000*digits[0]-100*digits[1])/10;
+		digits[3] = (final_p1-1000*digits[0]-100*digits[1]-10*digits[2]);
 
 		// Copy image to memory
-		swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
-		swiCopy(oneplayerPal, BG_PALETTE_SUB, oneplayerPalLen/2);
+		swiCopy(resultTiles, BG_TILE_RAM_SUB(1), resultTilesLen/2);
+		swiCopy(resultPal, BG_PALETTE_SUB, resultPalLen/2);
 
 		// Draw Initial Field
 		for(x=0; x<32; x++){
 			for(y=0; y<24; y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[y*80+x];
+				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[1];
 			}
 		}
 
+		for(x=0; x<32; x++){
+			for(y=5; y<10; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[y*32+x];
+			}
+		}
+
+		for(j=0;j<4;j++){
+			for(x=18; x<20; x++){
+				for(y=5; y<10; y++){
+					BG_MAP_RAM_SUB(0)[y*32+(x+2*j)] = resultMap[(y-5+15)*32 + (x-18)+2*digits[j]];
+				}
+			}
+		}
 		scanKeys();
 		keys = keysDown();
 
@@ -255,10 +273,8 @@ void info_draw_final_score(STATE state){
 		}
 
 		break;
-	case TWOP:
 
-		int final_p1 = 0;
-		int final_p2 = 0;
+	case TWOP:
 
 		for(x=0; x<3; x++){
 			final_p1 = final_p1 + score_p1[x];
@@ -271,16 +287,77 @@ void info_draw_final_score(STATE state){
 		digits[3] = (final_p1-1000*digits[0]-100*digits[1]-10*digits[2]);
 
 		// Copy image to memory
-		swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
-		swiCopy(oneplayerPal, BG_PALETTE_SUB, oneplayerPalLen/2);
+		swiCopy(resultTiles, BG_TILE_RAM_SUB(1), resultTilesLen/2);
+		swiCopy(resultPal, BG_PALETTE_SUB, resultPalLen/2);
+		swiCopy(resultPal, &BG_PALETTE_SUB[16], resultPalLen/2);
+		swiCopy(resultPal, &BG_PALETTE_SUB[32], resultPalLen/2);
+
+		BG_PALETTE_SUB[0x18] = BLUEVAL;
+		BG_PALETTE_SUB[0x28] = REDVAL;
 
 		// Draw Initial Field
 
 		for(x=0; x<32; x++){
 			for(y=0; y<24; y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[y*80+x];
+				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[1];
 			}
 		}
+
+		for(x=0; x<32; x++){
+			for(y=0; y<5; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[y*32+x];
+			}
+			for(y=10; y<15; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[y*32+x];
+			}
+		}
+
+		for(j=0;j<4;j++){
+			for(x=6; x<8; x++){
+				for(y=5; y<10; y++){
+					BG_MAP_RAM_SUB(0)[y*32+(x+2*j)] = resultMap[(y-5+15)*32 + (x-6)+2*digits[j]] | (1 << 12);
+				}
+			}
+		}
+
+		digits[0] = final_p2/1000;
+		digits[1] = (final_p2-1000*digits[0])/100;
+		digits[2] = (final_p2-1000*digits[0]-100*digits[1])/10;
+		digits[3] = (final_p2-1000*digits[0]-100*digits[1]-10*digits[2]);
+
+
+		for(j=0;j<4;j++){
+			for(x=18; x<20; x++){
+				for(y=5; y<10; y++){
+					BG_MAP_RAM_SUB(0)[y*32+(x+2*j)] = resultMap[(y-5+15)*32 + (x-18)+2*digits[j]] | (2 << 12);
+				}
+			}
+		}
+
+
+		if(final_p1 > final_p2){
+			for(x=15;x<17;x++){
+				for(y=10; y<15; y++){
+					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-10+15)*32 + (x-15)+2] | (1 << 12);
+				}
+			}
+		}
+		else if (final_p1 < final_p2){
+			for(x=15;x<17;x++){
+				for(y=10; y<15; y++){
+					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-10+15)*32 + (x-15)+4] | (2 << 12);
+				}
+			}
+		}
+		else	{
+			for(x=0; x<32; x++){
+				for(y=10; y<15; y++){
+					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[1];
+				}
+			}
+		}
+
+
 
 		scanKeys();
 		keys = keysDown();

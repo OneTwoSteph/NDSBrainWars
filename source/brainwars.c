@@ -733,7 +733,7 @@ void brainwars_wait_next(){
 	}
 
 	// Initiate timer for game start
-	timeCounter = 5;
+	timeCounter = 1;
 
 	TIMER3_DATA = TIMER_FREQ_1024(1);
 	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
