@@ -220,25 +220,20 @@ void info_store_temp_score(bool player, int counter, int score){
 
 }
 
-int info_get_temp_score(bool player, int counter){
-
-	int return_score;
-
-	if(player)	{ return_score = score_p2[counter]; }
-	else 		{ return_score = score_p1[counter]; }
-
-	return return_score;
-
-}
-
 void info_draw_final_score(STATE state){
 
 	int x,y;
+	int digits[4];
 	u16 keys;
 
 	switch(state){
 
 	case ONEP:
+
+		digits[0] = score_p1[2]/1000;
+		digits[1] = (score_p1[2]-1000*digits[0])/100;
+		digits[2] = (score_p1[2]-1000*digits[0]-100*digits[1])/10;
+		digits[3] = (score_p1[2]-1000*digits[0]-100*digits[1]-10*digits[2]);
 
 		// Copy image to memory
 		swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
@@ -261,6 +256,19 @@ void info_draw_final_score(STATE state){
 
 		break;
 	case TWOP:
+
+		int final_p1 = 0;
+		int final_p2 = 0;
+
+		for(x=0; x<3; x++){
+			final_p1 = final_p1 + score_p1[x];
+			final_p2 = final_p2 + score_p2[x];
+		}
+
+		digits[0] = final_p1/1000;
+		digits[1] = (final_p1-1000*digits[0])/100;
+		digits[2] = (final_p1-1000*digits[0]-100*digits[1])/10;
+		digits[3] = (final_p1-1000*digits[0]-100*digits[1]-10*digits[2]);
 
 		// Copy image to memory
 		swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
