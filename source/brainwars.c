@@ -908,6 +908,8 @@ void brainwars_play(){
 		gamePlayer = PLAYERONE;
 
 		if(gameCounter >= 3){
+
+			info_draw_final_score(state);
 			state = MAIN;
 			stateChange = true;
 		}

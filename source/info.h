@@ -19,4 +19,6 @@ int info_get_score(char* game);
 void info_store_temp_score(bool player, int counter, int score);
 int info_get_temp_score(bool player, int counter);
 
+void info_draw_final_score(STATE state);
+
 #endif /* SCORE_H_ */

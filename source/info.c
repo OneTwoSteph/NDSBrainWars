@@ -10,6 +10,8 @@
 #include "info.h"
 #include "score.h"
 
+#include "oneplayer.h"
+
 int sec, min;
 
 static volatile int score_p1[3];
@@ -217,6 +219,7 @@ void info_store_temp_score(bool player, int counter, int score){
 	else 		{ score_p1[counter-1] = score; }
 
 }
+
 int info_get_temp_score(bool player, int counter){
 
 	int return_score;
@@ -225,5 +228,63 @@ int info_get_temp_score(bool player, int counter){
 	else 		{ return_score = score_p1[counter]; }
 
 	return return_score;
+
+}
+
+void info_draw_final_score(STATE state){
+
+	int x,y;
+	u16 keys;
+
+	switch(state){
+
+	case ONEP:
+
+		// Copy image to memory
+		swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
+		swiCopy(oneplayerPal, BG_PALETTE_SUB, oneplayerPalLen/2);
+
+		// Draw Initial Field
+		for(x=0; x<32; x++){
+			for(y=0; y<24; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[y*80+x];
+			}
+		}
+
+		scanKeys();
+		keys = keysDown();
+
+		while(!(keys & KEY_START)){
+			scanKeys();
+			keys = keysDown();
+		}
+
+		break;
+	case TWOP:
+
+		// Copy image to memory
+		swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
+		swiCopy(oneplayerPal, BG_PALETTE_SUB, oneplayerPalLen/2);
+
+		// Draw Initial Field
+
+		for(x=0; x<32; x++){
+			for(y=0; y<24; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[y*80+x];
+			}
+		}
+
+		scanKeys();
+		keys = keysDown();
+
+		while(!(keys & KEY_START)){
+			scanKeys();
+			keys = keysDown();
+		}
+
+		break;
+	default:
+		break;
+	}
 
 }
