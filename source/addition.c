@@ -110,7 +110,6 @@ void addition_draw() {
 			BG_MAP_RAM_SUB(0)[row*32+col] = numbersMap[((row-3)*60) + ((col-19)+numbers[1]*6)];
 		}
 	}
-
 }
 
 bool addition_game(bool player) {

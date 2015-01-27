@@ -24,6 +24,8 @@
 #include "exp_musical.h"
 #include "exp_addition.h"
 #include "exp_plusminus.h"
+#include "exp_onep.h"
+#include "exp_twop.h"
 
 #include "oneplayer.h"
 
@@ -82,6 +84,61 @@ void brainwars_init(){
 
 	// Initialize main menu
 	brainwars_main_init();
+}
+
+void brainwars_start_draw(){
+	int x, y;
+	int L = 32;	// length of the image
+
+	swiCopy(startTiles, BG_TILE_RAM_SUB(1), startTilesLen/2);
+	swiCopy(startPal, BG_PALETTE_SUB, startPalLen/2);
+
+
+	// Draw start screen
+	for(x=0; x<32; x++){
+		for(y=0; y<24; y++){
+			BG_MAP_RAM_SUB(0)[y*L+x] = startMap[y*L+x];
+		}
+	}
+
+	touchPosition touch;
+	x = 1;
+	scanKeys();
+	u16 keys = keysDown();
+	if(keys & KEY_TOUCH) {	touchRead(&touch); }
+
+	while(x){
+
+		if(keys & KEY_TOUCH) {	touchRead(&touch); }
+
+		if((keys & KEY_TOUCH) &&
+		   (touch.px > 0) &&
+		   (touch.py > 0)) {
+			// Initialize random number generation
+			srand(touch.px + touch.py);
+			x = 0;
+		}
+		else {
+			scanKeys();
+			keys = keysDown();
+		}
+	}
+
+	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
+
+	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
+	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen);
+
+	// Set up palette colors
+	BG_PALETTE_SUB[1] = WHITEVAL;
+	BG_PALETTE_SUB[5] = BLACKVAL;
+	BG_PALETTE_SUB[6] = GREYVAL;
+
+	BG_PALETTE_SUB[17] = YELLOWVAL;
+	BG_PALETTE_SUB[21] = BLACKVAL;
+	BG_PALETTE_SUB[22] = GREYVAL;
+
+	brainwars_main_draw();
 }
 
 void brainwars_configMain(){
@@ -273,64 +330,24 @@ void brainwars_main_select(){
 	brainwars_main_draw();
 }
 
-void brainwars_start_draw(){
-
-	int x, y;
-	int L = 32;	// length of the image
-
-	swiCopy(startTiles, BG_TILE_RAM_SUB(1), startTilesLen/2);
-
-	swiCopy(startPal, BG_PALETTE_SUB, startPalLen/2);
-
-
-	// Draw start screen
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = startMap[y*L+x];
-		}
-	}
-
-	touchPosition touch;
-	x = 1;
-	scanKeys();
-	u16 keys = keysDown();
-	if(keys & KEY_TOUCH) {	touchRead(&touch); }
-
-	while(x){
-
-		if(keys & KEY_TOUCH) {	touchRead(&touch); }
-
-		if((keys & KEY_TOUCH) &&
-		   (touch.px > 0) &&
-		   (touch.py > 0)) {
-			// Initialize random number generation
-			srand(touch.px + touch.py);
-			x = 0;
-		}
-		else {
-			scanKeys();
-			keys = keysDown();
-		}
-	}
-
-	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
-
-	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
-	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen);
-
-	// Set up palette colors
-	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[5] = BLACKVAL;
-	BG_PALETTE_SUB[6] = GREYVAL;
-
-	BG_PALETTE_SUB[17] = YELLOWVAL;
-	BG_PALETTE_SUB[21] = BLACKVAL;
-	BG_PALETTE_SUB[22] = GREYVAL;
-
-	brainwars_main_draw();
-}
-
 void brainwars_main_draw(){
+	// Put mode instructions on MAIN screen
+	switch(selectMain){
+	case ONEP:
+		swiCopy(exp_onepBitmap, BG_GFX, exp_onepBitmapLen/2);
+		swiCopy(exp_onepPal, BG_PALETTE, exp_onepPalLen/2);
+		break;
+	case TWOP:
+		swiCopy(exp_twopBitmap, BG_GFX, exp_twopBitmapLen/2);
+		swiCopy(exp_twopPal, BG_PALETTE, exp_twopPalLen/2);
+		break;
+	default:
+		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
+		break;
+	}
+
+	// Draw menu
 	int x, y;
 	int ystart = 2;
 	int height = 4;
@@ -603,13 +620,6 @@ void brainwars_train_select(){
 }
 
 void brainwars_train_draw(){
-	int x, y;
-	int xstart = 4;
-	int ystart = 2;
-	int length = 8;
-	int height = 7;
-	int L = 32;			// length of the image
-
 	// Draw instructions on main
 	switch(selectTrain){
 	case LEADER:
@@ -647,20 +657,34 @@ void brainwars_train_draw(){
 	}
 
 	// Draw training menu
+	int x, y;
+
 	for(x=0; x<32; x++){
 		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = brainwars_trainMap[y*L+x];
+			BG_MAP_RAM_SUB(0)[y*32+x] = brainwars_trainMap[y*32+x];
 		}
 	}
 
 	// Change color of the selected button
+	int xstart = 6;
+	int ystart = 2;
+	int inter = 1;
+	int side = 6;
+
 	int row, col;
+	int x1, x2, y1, y2;
+
 	row = selectTrain/3;
 	col = selectTrain%3;
 
-	for(x=xstart+col*length; x<xstart+(col+1)*length; x++){
-		for(y=ystart+row*height; y<ystart+(row+1)*height; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
+	x1 = xstart + col*side + col*inter;
+	x2 = x1 + side;
+	y1 = ystart + row*side + row*inter;
+	y2 = y1 + side;
+
+	for(x=x1; x<x2; x++){
+		for(y=y1; y<y2; y++){
+			BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(1<<12);
 		}
 	}
 }
