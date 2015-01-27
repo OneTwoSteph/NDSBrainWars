@@ -97,37 +97,47 @@ void info_update(int score, int state){
 	// Draw time only if state not TRAIN
 	if(state!=TRAIN){
 		int dot = 1;
-		int W = 20;
+		int xstart = 22;
 
 		dig1 = min/10;
 		dig2 = min-10*dig1;
 		dig3 = sec/10;
 		dig4 = sec-10*dig3;
 
-		for(x=xstart+W; x<xstart+length+W;x++){
+		for(x=xstart; x<xstart+length;x++){
 			for(y=ystart; y<24;y++){
-				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig1*length+(x-W)]|(15<<12);
+				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig1*length+(x-xstart+1)]|(15<<12);
 			}
 		}
 
-		for(x=xstart+length+W; x<xstart+2*length+W;x++){
+		for(x=xstart+length; x<xstart+2*length;x++){
 			for(y=ystart; y<24;y++){
-				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig2*length+(x-length-W)]|(15<<12);
+				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig2*length+(x-length-xstart+1)]|(15<<12);
 			}
 		}
 
-		for(x=xstart+2*length+W+dot; x<xstart+3*length+W+dot;x++){
+		for(x=xstart+2*length; x<xstart+2*length+dot;x++){
 			for(y=ystart; y<24;y++){
-				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig3*length+(x-2*length-W-dot)]|(15<<12);
+				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+10*length+(x-2*length-xstart+1)]|(15<<12);
 			}
 		}
 
-		for(x=xstart+3*length+W+dot; x<xstart+4*length+W+dot;x++){
+		for(x=xstart+2*length+dot; x<xstart+3*length+dot;x++){
 			for(y=ystart; y<24;y++){
-				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig4*length+(x-3*length-W-dot)]|(15<<12);
+				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig3*length+(x-2*length-xstart-dot+1)]|(15<<12);
+			}
+		}
+
+		for(x=xstart+3*length+dot; x<xstart+4*length+dot;x++){
+			for(y=ystart; y<24;y++){
+				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig4*length+(x-3*length-xstart-dot+1)]|(15<<12);
 			}
 		}
 	}
+}
+
+int info_get_time(){
+	return 60*min+sec;
 }
 
 void info_finish(int score, char* game, int state){
@@ -140,7 +150,9 @@ void info_finish(int score, char* game, int state){
 	}
 
 	// Disable timer
-	TIMER2_CR &= ~(TIMER_ENABLE);
+	irqDisable(IRQ_TIMER2);
+	irqClear(IRQ_TIMER2);
+	TIMER2_CR = 0;
 
 	// Read into file to find if best score beated only if state not TRAIN
 	if(state!=TRAIN) info_save_score(score, game);
