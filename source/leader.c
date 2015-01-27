@@ -320,7 +320,7 @@ bool leader_game(bool player, int gameCounter) {
 	}
 
 	// Update infos
-	info_update(leader_score, state);
+	info_update(leader_score, state, player);
 
 	// Return false because game not ended
 	return false;

@@ -214,7 +214,7 @@ bool musical_game(bool player, int gameCounter){
 	}
 
 	// Update infos
-	info_update(score, state);
+	info_update(score, state, player);
 
 	// Return false (the game is note finished)
 	return false;

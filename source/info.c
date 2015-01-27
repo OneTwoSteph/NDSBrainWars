@@ -17,6 +17,8 @@ int sec, min;
 static volatile int score_p1[3];
 static volatile int score_p2[3];
 
+int counter = 0;
+
 void info_time_ISR(){
 	// Update sec
 	sec++;
@@ -58,15 +60,31 @@ void info_init(state){
 	}
 
 	// Draw empty initial values
-	info_update(0, state);
+	int player;
+	if(state==TWOP){
+		player = counter%2;
+		if(player==0){
+			info_update(score_p1[counter/2], state, false);
+			info_update(0, state, true);
+		}
+		else{
+			info_update(score_p1[counter/2], state, false);
+			info_update(0, state, true);
+		}
+	}
+	else info_update(0, state, false);
+
+	// Update game counter if two player mode
+	if(state==TWOP) counter++;
 }
 
-void info_update(int score, int state){
+void info_update(int score, int state, bool player){
 	int x, y;
 	int xstart = 1;
 	int ystart = 20;
 	int length = 2;
 	int H = 9;		// height above numbers in image score
+	if(player) xstart = 11;
 
 	// Draw score
 	int dig1, dig2, dig3, dig4;
@@ -78,25 +96,25 @@ void info_update(int score, int state){
 
 	for(x=xstart; x<xstart+length;x++){
 		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig1*length+x]|(15<<12);
+			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig1*length+x-xstart+1]|(15<<12);
 		}
 	}
 
 	for(x=xstart+length; x<xstart+2*length;x++){
 		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig2*length+(x-length)]|(15<<12);
+			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig2*length+(x-xstart-length+1)]|(15<<12);
 		}
 	}
 
 	for(x=xstart+2*length; x<xstart+3*length;x++){
 		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig3*length+(x-2*length)]|(15<<12);
+			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig3*length+(x-xstart-2*length+1)]|(15<<12);
 		}
 	}
 
 	for(x=xstart+3*length; x<xstart+4*length;x++){
 		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig4*length+(x-3*length)]|(15<<12);
+			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig4*length+(x-xstart-3*length+1)]|(15<<12);
 		}
 	}
 
@@ -221,15 +239,16 @@ void info_store_temp_score(bool player, int counter, int score){
 }
 
 void info_draw_final_score(STATE state){
-
 	int x,y;
 	int digits[4];
 	u16 keys;
 
+	int final_p1 = 0;
+	int final_p2 = 0;
+
 	switch(state){
 
 	case ONEP:
-
 		digits[0] = score_p1[2]/1000;
 		digits[1] = (score_p1[2]-1000*digits[0])/100;
 		digits[2] = (score_p1[2]-1000*digits[0]-100*digits[1])/10;
@@ -256,10 +275,6 @@ void info_draw_final_score(STATE state){
 
 		break;
 	case TWOP:
-
-		int final_p1 = 0;
-		int final_p2 = 0;
-
 		for(x=0; x<3; x++){
 			final_p1 = final_p1 + score_p1[x];
 			final_p2 = final_p2 + score_p2[x];
@@ -295,4 +310,5 @@ void info_draw_final_score(STATE state){
 		break;
 	}
 
+	counter = 0;
 }

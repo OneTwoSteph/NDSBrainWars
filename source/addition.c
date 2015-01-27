@@ -155,7 +155,7 @@ bool addition_game(bool player, int gameCounter) {
 	}
 
 	// Update infos
-	info_update(add_score, state);
+	info_update(add_score, state, player);
 
 	// Return false because game did not end
 	return false;

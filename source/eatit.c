@@ -187,7 +187,7 @@ bool eatit_game(bool player, int gameCounter){
 	}
 
 	// Update infos
-	info_update(score, state);
+	info_update(score, state, player);
 
 	// Return true for the game to continue
 	return false;

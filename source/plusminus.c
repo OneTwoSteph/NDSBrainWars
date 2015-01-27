@@ -224,7 +224,7 @@ bool plusminus_game(bool player, int gameCounter) {
 	}
 
 	// Update infos
-	info_update(pm_score, state);
+	info_update(pm_score, state, player);
 
 	// Return game not ended
 	return false;
