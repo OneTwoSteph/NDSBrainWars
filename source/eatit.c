@@ -148,8 +148,7 @@ void eatit_draw(){
 	}
 }
 
-
-bool eatit_game(void){
+bool eatit_game(bool player){
 	// Scan keys
 	scanKeys();
 	u16 keys = (u16) keysDown();

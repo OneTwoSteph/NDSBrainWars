@@ -12,7 +12,7 @@ void leader_init(int gameState);
 void leader_new_order(void);
 void leader_draw(void);
 
-bool leader_game(void);
+bool leader_game(bool player);
 
 void leader_correct(void);
 void leader_wrong(void);

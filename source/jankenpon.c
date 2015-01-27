@@ -135,7 +135,7 @@ void jankenpon_draw(){
 	}
 }
 
-bool jankenpon_game(){
+bool jankenpon_game(bool player){
 	// Scan keys
 	scanKeys();
 	u16 keys = (u16) keysDown();

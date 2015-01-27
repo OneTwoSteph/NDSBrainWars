@@ -12,7 +12,7 @@ void addition_init(int gameState);
 void addition_new_number(void);
 void addition_draw(void);
 
-bool addition_game(void);
+bool addition_game(bool player);
 
 void addition_add_num(int num);
 void addition_correct(void);

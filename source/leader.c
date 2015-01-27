@@ -205,7 +205,7 @@ void leader_draw() {
 	irqDisable(IRQ_TIMER0);
 }
 
-bool leader_game() {
+bool leader_game(bool player) {
 
 	scanKeys();
 	u16 keys = keysDown();

@@ -17,7 +17,7 @@ void plusminus_init(int gameState);
 void plusminus_new_number(void);
 void plusminus_draw(void);
 
-bool plusminus_game(void);
+bool plusminus_game(bool player);
 
 void plusminus_correct(void);
 void plusminus_wrong(void);
