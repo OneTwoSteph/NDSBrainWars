@@ -28,20 +28,20 @@
 #define GREENVAL 	ARGB16(1,7,22,14)
 #define YELLOWVAL 	ARGB16(1,31,26,0)
 
-#define PATHMEDIUM 		5
-#define PATHHARD 		10
+#define PATHMEDIUM 		4
+#define PATHHARD 		8
 
-#define MUSICALMEDIUM 	5
-#define MUSICALHARD 	10
+#define MUSICALMEDIUM 	4
+#define MUSICALHARD 	8
 
-#define JANKENPONMEDIUM 10
-#define JANKENPONHARD 	20
+#define JANKENPONMEDIUM 5
+#define JANKENPONHARD 	10
 
-#define LEADEREASY 		10
-#define LEADERMEDIUM 	15
-#define LEADERHARD 		30
+#define LEADEREASY 		4
+#define LEADERMEDIUM 	6
+#define LEADERHARD 		8
 
-#define GAMETIME		15
+#define GAMETIME		20
 
 #define PLAYERONE		0
 #define PLAYERTWO		1
