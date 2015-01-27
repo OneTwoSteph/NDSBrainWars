@@ -238,6 +238,39 @@ void brainwars_main_select(){
 		state = selectMain;
 		stateChange = true;
 	}
+
+	// Check if touchscreen was touched
+	STATE touched = -1;
+	touchPosition touch;
+	touchRead(&touch);
+
+	if(keys&KEY_TOUCH){
+		if((touch.px>=39)&&(touch.px<=215)){
+			int ystart = 19;
+			int inter = 11;
+			int h = 21;
+
+			if((touch.py>=ystart)&&(touch.py<=ystart+h)) touched = TRAIN;
+			if((touch.py>=ystart+inter+h)&&(touch.py<=ystart+inter+2*h)) touched = ONEP;
+			if((touch.py>=ystart+2*inter+2*h)&&(touch.py<=ystart+2*inter+3*h)) touched = TWOP;
+			if((touch.py>=ystart+3*inter+3*h)&&(touch.py<=ystart+3*inter+4*h)) touched = SCORE;
+			if((touch.py>=ystart+4*inter+4*h)&&(touch.py<=ystart+4*inter+5*h)) touched = CREDITS;
+
+			if(touched!=-1){
+				if(touched==selectMain){
+					// Update game state
+					state = selectMain;
+					stateChange = true;
+				}
+				else{
+					selectMain = touched;
+
+					// Draw updates
+					brainwars_main_draw();
+				}
+			}
+		}
+	}
 }
 
 void brainwars_start_draw(){
