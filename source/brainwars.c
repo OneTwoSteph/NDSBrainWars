@@ -223,25 +223,15 @@ void brainwars_main_select(){
 	// Check if up key pressed
 	if(keys & KEY_UP){
 		// Update selected button
-		if(selectMain==TRAIN)
-			selectMain = CREDITS;
-		else
-			selectMain--;
-
-		// Draw updates
-		brainwars_main_draw();
+		if(selectMain==TRAIN) selectMain = CREDITS;
+		else selectMain--;
 	}
 
 	// Check if down key pressed
 	if(keys & KEY_DOWN){
 		// Update selected button
-		if(selectMain==CREDITS)
-			selectMain = TRAIN;
-		else
-			selectMain++;
-
-		// Draw updates
-		brainwars_main_draw();
+		if(selectMain==CREDITS) selectMain = TRAIN;
+		else selectMain++;
 	}
 
 	// Check if start key pressed
@@ -258,7 +248,7 @@ void brainwars_main_select(){
 
 	if(keys&KEY_TOUCH){
 		if((touch.px>=39)&&(touch.px<=215)){
-			int ystart = 19;
+			int ystart = 21;
 			int inter = 11;
 			int h = 21;
 
@@ -274,15 +264,13 @@ void brainwars_main_select(){
 					state = selectMain;
 					stateChange = true;
 				}
-				else{
-					selectMain = touched;
-
-					// Draw updates
-					brainwars_main_draw();
-				}
+				else selectMain = touched;
 			}
 		}
 	}
+
+	// Draw updates
+	brainwars_main_draw();
 }
 
 void brainwars_start_draw(){
@@ -340,7 +328,6 @@ void brainwars_start_draw(){
 	BG_PALETTE_SUB[22] = GREYVAL;
 
 	brainwars_main_draw();
-
 }
 
 void brainwars_main_draw(){
@@ -562,6 +549,52 @@ void brainwars_train_select(){
 		if(game == NOGAME){
 			state = MAIN;
 			stateChange = true;
+		}
+	}
+
+	// Check if touchscreen was touched
+	GAME touched = -1;
+	touchPosition touch;
+	touchRead(&touch);
+
+	if(keys&KEY_TOUCH){
+		int xstart = 49;
+		int ystart = 22;
+		int interx = 18;
+		int intery = 15;
+		int side = 40;
+
+		int i;
+		int row, col;
+		int x1, x2, y1, y2;
+
+		// Loop on the games square position
+		for(i=0;i<8;i++){
+			row = floor(((float)i)/3);
+			col = i%3;
+
+			x1 = xstart + col*side + col*interx;
+			x2 = x1 + side;
+			y1 = ystart + row*side + row*intery;
+			y2 = y1 + side;
+
+			if((touch.px>=x1)&&(touch.px<=x2)&&(touch.py>=y1)&&(touch.py<=y2))
+				touched = i;
+		}
+
+		if(touched!=-1){
+			if(touched==selectTrain){
+				// Update game state
+				game = selectTrain;
+				gameChange = true;
+
+				// Exit case
+				if(game == NOGAME){
+					state = MAIN;
+					stateChange = true;
+				}
+			}
+			else selectTrain = touched;
 		}
 	}
 
