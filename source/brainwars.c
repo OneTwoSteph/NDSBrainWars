@@ -235,7 +235,7 @@ void brainwars_main_select(){
 	}
 
 	// Check if start key pressed
-	if(keys & KEY_START){
+	if(keys & KEY_A){
 		// Update game state
 		state = selectMain;
 		stateChange = true;
@@ -540,7 +540,7 @@ void brainwars_train_select(){
 	if(keys & KEY_UP) selectTrain = (selectTrain+5)%8;
 
 	// Check if start key pressed
-	if(keys & KEY_START){
+	if(keys & KEY_A){
 		// Update game state
 		game = selectTrain;
 		gameChange = true;
@@ -570,7 +570,7 @@ void brainwars_train_select(){
 
 		// Loop on the games square position
 		for(i=0;i<8;i++){
-			row = floor(((float)i)/3);
+			row = i/3;
 			col = i%3;
 
 			x1 = xstart + col*side + col*interx;

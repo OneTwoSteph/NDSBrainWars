@@ -98,14 +98,14 @@ void addition_draw() {
 	}
 
 	//First number
-	for(row = 2; row < 12; row++) {
+	for(row = 3; row < 12; row++) {
 		for(col = 25; col < 31; col++) {
 			BG_MAP_RAM_SUB(0)[row*32+col] = numbersMap[((row-3)*60) + ((col-25)+numbers[0]*6)];
 		}
 	}
 
 	//Second number
-	for(row = 2; row < 12; row++) {
+	for(row = 3; row < 12; row++) {
 		for(col = 19; col < 25; col++) {
 			BG_MAP_RAM_SUB(0)[row*32+col] = numbersMap[((row-3)*60) + ((col-19)+numbers[1]*6)];
 		}
