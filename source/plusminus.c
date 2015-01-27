@@ -174,7 +174,7 @@ void plusminus_draw(void) {
 	}
 }
 
-bool plusminus_game(bool player) {
+bool plusminus_game(bool player, int gameCounter) {
 
 	scanKeys();
 	u16 keys = (u16) keysDown();
@@ -184,6 +184,8 @@ bool plusminus_game(bool player) {
 
 	int time;
 	time = info_get_time();
+
+	if(state != TRAIN) { info_store_temp_score(player, gameCounter, pm_score); }
 
 	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
 	else if(keys & KEY_TOUCH) {

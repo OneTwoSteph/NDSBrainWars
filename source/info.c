@@ -12,6 +12,9 @@
 
 int sec, min;
 
+static volatile int score_p1[3];
+static volatile int score_p2[3];
+
 void info_time_ISR(){
 	// Update sec
 	sec++;
@@ -206,4 +209,21 @@ int info_get_score(char* game){
 
 	// Return score
 	return score;
+}
+
+void info_store_temp_score(bool player, int counter, int score){
+
+	if(player)	{ score_p2[counter-1] = score; }
+	else 		{ score_p1[counter-1] = score; }
+
+}
+int info_get_temp_score(bool player, int counter){
+
+	int return_score;
+
+	if(player)	{ return_score = score_p2[counter]; }
+	else 		{ return_score = score_p1[counter]; }
+
+	return return_score;
+
 }

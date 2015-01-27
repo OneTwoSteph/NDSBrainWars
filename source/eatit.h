@@ -9,6 +9,6 @@
 void eatit_wrong(void);
 void eatit_init(int gameState);
 void eatit_draw(void);
-bool eatit_game(bool player);
+bool eatit_game(bool player, int gameCounter);
 void eatit_next(void);
 void eatit_reset(void);

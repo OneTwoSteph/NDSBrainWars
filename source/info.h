@@ -16,4 +16,7 @@ void info_finish(int score, char* game, int state);
 void info_save_score(int score, char* game);
 int info_get_score(char* game);
 
+void info_store_temp_score(bool player, int counter, int score);
+int info_get_temp_score(bool player, int counter);
+
 #endif /* SCORE_H_ */

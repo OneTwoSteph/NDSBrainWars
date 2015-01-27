@@ -43,6 +43,9 @@
 
 #define GAMETIME		15
 
+#define PLAYERONE		0
+#define PLAYERTWO		1
+
 typedef enum STATE STATE;
 enum STATE
 {
