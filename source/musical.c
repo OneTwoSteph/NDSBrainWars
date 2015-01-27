@@ -100,11 +100,7 @@ void musical_init(int gameState){
 	irqSet(IRQ_TIMER1, &musical_wait_ISR);
 	irqEnable(IRQ_TIMER1);
 
-	// Initialize the sound library
-	mmInitDefaultMem((mm_addr)soundbank_bin);
-
-	mmLoadEffect(SFX_DO);
-
+	// Initialize sound parameters
 	sound.id = SFX_DO;
 	sound.rate    =	(int)(1.0f * (1<<10));		// rate
 	sound.handle  = 0;           				// 0 = allocate new handle
