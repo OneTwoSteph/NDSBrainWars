@@ -140,8 +140,11 @@ bool jankenpon_game(bool player){
 	scanKeys();
 	u16 keys = (u16) keysDown();
 
-	// Stop game if START button pressed
-	if(keys & KEY_START) return true;
+	// Stop game if START button pressed or time crossed 15 sec
+	int time;
+	time = info_get_time();
+
+	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
 	else{
 		// If touchscreen was touched, check if correct
 		if(keys & KEY_TOUCH){

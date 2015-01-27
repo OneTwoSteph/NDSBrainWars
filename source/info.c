@@ -39,10 +39,11 @@ void info_init(state){
 		}
 	}
 
+	sec = 0;
+	min = 0;
+
 	// Initialize the timer only if state is not TRAIN
 	if(state!=TRAIN){
-		sec = 0;
-		min = 0;
 
 		TIMER2_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
 		TIMER2_DATA = TIMER_FREQ_1024(1);

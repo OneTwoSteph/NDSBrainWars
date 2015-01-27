@@ -131,8 +131,11 @@ bool musical_game(bool player){
 	scanKeys();
 	u16 keys = (u16) keysDown();
 
-	// Stop game if START button pressed (return true)
-	if(keys & KEY_START) return true;
+	// Stop game if START button pressed or time crossed 15 sec
+	int time;
+	time = info_get_time();
+
+	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
 	else{
 		// If game ready and touchscreen was touched, check if correct
 		if(ready && (keys & KEY_TOUCH)){
