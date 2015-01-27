@@ -174,7 +174,7 @@ void plusminus_draw(void) {
 	}
 }
 
-bool plusminus_game(void) {
+bool plusminus_game(bool player) {
 
 	scanKeys();
 	u16 keys = (u16) keysDown();

@@ -9,6 +9,6 @@
 void jankenpon_wrong(void);
 void jankenpon_init(int gameState);
 void jankenpon_draw(void);
-bool jankenpon_game(void);
+bool jankenpon_game(bool player);
 void jankenpon_next(void);
 void jankenpon_reset(void);

@@ -113,7 +113,7 @@ void addition_draw() {
 
 }
 
-bool addition_game() {
+bool addition_game(bool player) {
 
 	scanKeys();
 	u16 keys = (u16) keysDown();

@@ -10,7 +10,7 @@
 #define MUSICAL_H_
 
 void musical_init(int gameState);
-bool musical_game(void);
+bool musical_game(bool player);
 void musical_next(void);
 void musical_draw(void);
 void musical_play(void);

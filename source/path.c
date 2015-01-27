@@ -125,7 +125,7 @@ void path_draw(){
 	}
 }
 
-bool path_game(){
+bool path_game(bool player){
 	// Scan keys to find pressed ones
 	scanKeys();
 	u16 keys = (u16) keysDown();

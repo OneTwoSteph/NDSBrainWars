@@ -126,7 +126,7 @@ void musical_init(int gameState){
 	info_init(state);
 }
 
-bool musical_game(){
+bool musical_game(bool player){
 	// Scan keys
 	scanKeys();
 	u16 keys = (u16) keysDown();
