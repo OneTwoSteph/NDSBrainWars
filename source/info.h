@@ -10,7 +10,7 @@
 #define SCORE_H_
 
 void info_init(int state);
-void info_update(int score, int state);
+void info_update(int score, int state, bool player);
 int info_get_time();
 void info_finish(int score, char* game, int state);
 void info_save_score(int score, char* game);

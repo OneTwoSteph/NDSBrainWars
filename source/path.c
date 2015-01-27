@@ -21,6 +21,9 @@ LEVEL level;
 STATE state;
 
 void path_wrong(){
+	// Play effect
+	if(wrong == 0) mmEffect(SFX_BOING);
+
 	// Update wrong variable
 	wrong++;
 
@@ -238,7 +241,7 @@ bool path_game(bool player, int gameCounter){
 	}
 
 	// Update infos
-	info_update(score, state);
+	info_update(score, state, player);
 
 	// Return with game not ended
 	return false;

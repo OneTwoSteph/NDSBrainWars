@@ -65,6 +65,12 @@ void brainwars_init(){
 	// Init score saving
 	fatInitDefault();
 
+	// Initialize sound
+	mmInitDefaultMem((mm_addr)soundbank_bin);
+	mmLoad(MOD_AURORA);
+	mmLoadEffect(SFX_DO);
+	mmLoadEffect(SFX_BOING);
+
 	// Read initial best scores
 	scores[0] = info_get_score("leader");
 	scores[1] = info_get_score("eatit");
@@ -139,6 +145,9 @@ void brainwars_start_draw(){
 	BG_PALETTE_SUB[22] = GREYVAL;
 
 	brainwars_main_draw();
+
+	mmStart(MOD_AURORA, MM_PLAY_LOOP);
+	mmSetModuleVolume(250);
 }
 
 void brainwars_configMain(){

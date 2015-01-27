@@ -224,7 +224,7 @@ bool plusminus_game(bool player, int gameCounter) {
 	}
 
 	// Update infos
-	info_update(pm_score, state);
+	info_update(pm_score, state, player);
 
 	// Return game not ended
 	return false;
@@ -257,6 +257,8 @@ void plusminus_correct(void) {
 
 }
 void plusminus_wrong(void) {
+	// Play effect
+	mmEffect(SFX_BOING);
 
 	if(pm_score > 0)	{ pm_score--; }
 	// Remove points
