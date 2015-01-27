@@ -21,6 +21,9 @@ int wrong;
 STATE state;
 
 void eatit_wrong(void){
+	// Play effect
+	if(wrong == 0) mmEffect(SFX_BOING);
+
 	// Update wrong variable
 	wrong++;
 

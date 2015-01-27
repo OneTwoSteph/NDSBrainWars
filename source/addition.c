@@ -273,6 +273,8 @@ void addition_correct() {
 }
 
 void addition_wrong() {
+	mmEffect(SFX_BOING);
+
 	if(add_score > 0)	{ add_score--; }
 
 	int old_color = BG_PALETTE_SUB[1];

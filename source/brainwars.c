@@ -67,8 +67,9 @@ void brainwars_init(){
 
 	// Initialize sound
 	mmInitDefaultMem((mm_addr)soundbank_bin);
-	mmLoad(MOD_ELYSIUM);
+	mmLoad(MOD_AURORA);
 	mmLoadEffect(SFX_DO);
+	mmLoadEffect(SFX_BOING);
 
 	// Read initial best scores
 	scores[0] = info_get_score("leader");
@@ -145,8 +146,8 @@ void brainwars_start_draw(){
 
 	brainwars_main_draw();
 
-	mmStart(MOD_ELYSIUM, MM_PLAY_LOOP);
-	mmSetModuleVolume(300);
+	mmStart(MOD_AURORA, MM_PLAY_LOOP);
+	mmSetModuleVolume(250);
 }
 
 void brainwars_configMain(){

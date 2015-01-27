@@ -359,6 +359,8 @@ void leader_correct(){
 }
 
 void leader_wrong() {
+	// Play effect
+	mmEffect(SFX_BOING);
 
 	// If mistake, generate WRONG flash and redraw new tiles
 	BG_PALETTE_SUB[0] = REDVAL;

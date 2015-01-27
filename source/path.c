@@ -21,6 +21,9 @@ LEVEL level;
 STATE state;
 
 void path_wrong(){
+	// Play effect
+	if(wrong == 0) mmEffect(SFX_BOING);
+
 	// Update wrong variable
 	wrong++;
 

@@ -209,6 +209,9 @@ bool musical_game(bool player, int gameCounter){
 		}
 	}
 
+	// Play effect if tone was false
+	//if(wrong<=FA) mmEffect(SFX_BOING);
+
 	// Update infos
 	info_update(score, state, player);
 
