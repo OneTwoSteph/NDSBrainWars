@@ -19,11 +19,13 @@ static volatile int final_number;
 static volatile int numbers[2];
 static volatile int add_score;
 
+STATE state;
+
 void addition_timer_ISR(){
 	draw_timer++;
 }
 
-void addition_init() {
+void addition_init(int gameState) {
 	// Add BG1 and configure
 	BGCTRL_SUB[1] = BG_TILE_BASE(4) | BG_MAP_BASE(17) | BG_32x32 | BG_COLOR_16;
 
@@ -53,12 +55,13 @@ void addition_init() {
 
 	add_score = 0;
 	counter = 0;
+	state = gameState;
 
 	addition_new_number();
 	addition_draw();
 
 	// Draw infos
-	info_init();
+	info_init(state);
 }
 
 void addition_new_number() {
@@ -80,7 +83,6 @@ void addition_new_number() {
 	numbers[1] = (final_number - numbers[0])/10;
 
 	counter = 0;
-
 }
 
 void addition_draw() {
@@ -149,7 +151,7 @@ bool addition_game() {
 	}
 
 	// Update infos
-	info_update(add_score);
+	info_update(add_score, state);
 
 	// Return false because game did not end
 	return false;
@@ -289,7 +291,7 @@ void addition_wrong() {
 
 void addition_reset() {
 	// Suppress infos
-	info_finish(add_score, "addition");
+	info_finish(add_score, "addition", state);
 
 	draw_timer = 0;
 	add_score = 0;
@@ -307,7 +309,4 @@ void addition_reset() {
 	irqDisable(IRQ_TIMER0);
 	irqClear(IRQ_TIMER0);
 	TIMER0_CR = 0;
-
-	// Suppress infos
-	info_finish(add_score, ADDITION);
 }

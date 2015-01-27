@@ -23,7 +23,7 @@ void info_time_ISR(){
 	}
 }
 
-void info_init(){
+void info_init(state){
 	// Put correct colors in end of bitmap palette for the tiles
 	swiCopy(scorePal, &BG_PALETTE[16*15], scorePalLen/2);
 
@@ -35,25 +35,27 @@ void info_init(){
 
 	for(x=0; x<32;x++){
 		for(y=ystart; y<ymid;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+x]|(15<<12);
+			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+(state-1)*H)*32+x]|(15<<12);
 		}
 	}
 
-	// Initialize the timer
-	sec = 0;
-	min = 0;
+	// Initialize the timer only if state is not TRAIN
+	if(state!=TRAIN){
+		sec = 0;
+		min = 0;
 
-	TIMER2_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
-	TIMER2_DATA = TIMER_FREQ_1024(1);
+		TIMER2_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
+		TIMER2_DATA = TIMER_FREQ_1024(1);
 
-	irqSet(IRQ_TIMER2, &info_time_ISR);
-	irqEnable(IRQ_TIMER2);
+		irqSet(IRQ_TIMER2, &info_time_ISR);
+		irqEnable(IRQ_TIMER2);
+	}
 
 	// Draw empty initial values
-	info_update(0);
+	info_update(0, state);
 }
 
-void info_update(int score){
+void info_update(int score, int state){
 	int x, y;
 	int xstart = 1;
 	int ystart = 20;
@@ -92,41 +94,43 @@ void info_update(int score){
 		}
 	}
 
-	// Draw time
-	int dot = 1;
-	int W = 20;
+	// Draw time only if state not TRAIN
+	if(state!=TRAIN){
+		int dot = 1;
+		int W = 20;
 
-	dig1 = min/10;
-	dig2 = min-10*dig1;
-	dig3 = sec/10;
-	dig4 = sec-10*dig3;
+		dig1 = min/10;
+		dig2 = min-10*dig1;
+		dig3 = sec/10;
+		dig4 = sec-10*dig3;
 
-	for(x=xstart+W; x<xstart+length+W;x++){
-		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig1*length+(x-W)]|(15<<12);
+		for(x=xstart+W; x<xstart+length+W;x++){
+			for(y=ystart; y<24;y++){
+				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig1*length+(x-W)]|(15<<12);
+			}
 		}
-	}
 
-	for(x=xstart+length+W; x<xstart+2*length+W;x++){
-		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig2*length+(x-length-W)]|(15<<12);
+		for(x=xstart+length+W; x<xstart+2*length+W;x++){
+			for(y=ystart; y<24;y++){
+				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig2*length+(x-length-W)]|(15<<12);
+			}
 		}
-	}
 
-	for(x=xstart+2*length+W+dot; x<xstart+3*length+W+dot;x++){
-		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig3*length+(x-2*length-W-dot)]|(15<<12);
+		for(x=xstart+2*length+W+dot; x<xstart+3*length+W+dot;x++){
+			for(y=ystart; y<24;y++){
+				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig3*length+(x-2*length-W-dot)]|(15<<12);
+			}
 		}
-	}
 
-	for(x=xstart+3*length+W+dot; x<xstart+4*length+W+dot;x++){
-		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig4*length+(x-3*length-W-dot)]|(15<<12);
+		for(x=xstart+3*length+W+dot; x<xstart+4*length+W+dot;x++){
+			for(y=ystart; y<24;y++){
+				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig4*length+(x-3*length-W-dot)]|(15<<12);
+			}
 		}
 	}
 }
 
-void info_finish(int score, char* game){
+void info_finish(int score, char* game, int state){
 	// Put transparent tiles on BGO of sub since no score has to be shown for now
 	int x, y;
 	for(x=0;x<32;x++){
@@ -138,8 +142,8 @@ void info_finish(int score, char* game){
 	// Disable timer
 	TIMER2_CR &= ~(TIMER_ENABLE);
 
-	// Read into file to find if best score beated
-	info_save_score(score, game);
+	// Read into file to find if best score beated only if state not TRAIN
+	if(state!=TRAIN) info_save_score(score, game);
 }
 
 void info_save_score(int score, char* game){

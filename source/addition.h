@@ -8,7 +8,7 @@
 #ifndef ADDITION_H_
 #define ADDITION_H_
 
-void addition_init(void);
+void addition_init(int gameState);
 void addition_new_number(void);
 void addition_draw(void);
 

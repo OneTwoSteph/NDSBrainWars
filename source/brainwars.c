@@ -318,221 +318,6 @@ void brainwars_main_draw(){
 	}
 }
 
-void brainwars_1p_init(){
-
-	game = NOGAME;
-	gameCounter = 0;
-	gameChange = true;
-
-}
-
-void brainwars_1p_next_game(){
-
-	int next_game;
-
-	next_game = rand()%7;
-	while(game == next_game) {	next_game = rand()%7; }
-
-	game = next_game;
-
-}
-
-void brainwars_1p_wait_next(){
-
-	swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
-	swiCopy(oneplayerPal, BG_PALETTE_SUB, oneplayerPalLen/2);
-
-	int x,y;
-
-	// Draw Initial Field
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[y*80+x];
-		}
-	}
-
-	timeCounter = 5;
-
-	TIMER3_DATA = TIMER_FREQ_1024(1);
-	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
-
-	irqSet(IRQ_TIMER3, &brainwars_timer_ISR);
-	irqEnable(IRQ_TIMER3);
-
-	while(timeCounter > 0) {
-		for(x=12; x<20; x++){
-			for(y=10; y<21; y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[(y-10+24)*80+(x-12+(timeCounter*8))];
-			}
-		}
-	}
-
-	irqDisable(IRQ_TIMER3);
-	irqClear(IRQ_TIMER3);
-	TIMER3_CR = 0;
-
-}
-
-void brainwars_1p(){
-	// Check in which game we are training
-	switch(game){
-	case LEADER:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
-			swiCopy(exp_leaderPal, BG_PALETTE, exp_leaderPalLen/2);
-			brainwars_1p_wait_next();
-			leader_init();
-		}
-
-		// Execute action of game
-		gameChange = leader_game();
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			leader_reset();
-		}
-
-		break;
-	case EATIT:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			swiCopy(exp_eatitBitmap, BG_GFX, exp_eatitBitmapLen/2);
-			swiCopy(exp_eatitPal, BG_PALETTE, exp_eatitPalLen/2);
-			brainwars_1p_wait_next();
-			eatit_init();
-		}
-
-		// Execute action of game
-		gameChange = eatit_game();
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			eatit_reset();
-		}
-
-		break;
-	case MUSICAL:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			swiCopy(exp_musicalBitmap, BG_GFX, exp_musicalBitmapLen/2);
-			swiCopy(exp_musicalPal, BG_PALETTE, exp_musicalPalLen/2);
-			brainwars_1p_wait_next();
-			musical_init();
-		}
-
-		// Execute action of game
-		gameChange = musical_game();
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			musical_reset();
-		}
-
-		break;
-	case PATH:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			swiCopy(exp_pathBitmap, BG_GFX, exp_pathBitmapLen/2);
-			swiCopy(exp_pathPal, BG_PALETTE, exp_pathPalLen/2);
-			brainwars_1p_wait_next();
-			path_init();
-		}
-
-		// Execute action of game
-		gameChange = path_game();
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			path_reset();
-		}
-
-		break;
-	case ADDITION:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			swiCopy(exp_additionBitmap, BG_GFX, exp_additionBitmapLen/2);
-			swiCopy(exp_additionPal, BG_PALETTE, exp_additionPalLen/2);
-			brainwars_1p_wait_next();
-			addition_init();
-		}
-
-		// Execute action of game
-		gameChange = addition_game();
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			addition_reset();
-		}
-
-		break;
-	case PLUSMINUS:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			swiCopy(exp_plusminusBitmap, BG_GFX, exp_plusminusBitmapLen/2);
-			swiCopy(exp_plusminusPal, BG_PALETTE, exp_plusminusPalLen/2);
-			brainwars_1p_wait_next();
-			plusminus_init();
-		}
-
-		// Execute action of game
-		gameChange = plusminus_game();
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			plusminus_reset();
-		}
-
-		break;
-	case JANKENPON:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			swiCopy(exp_jankenponBitmap, BG_GFX, exp_jankenponBitmapLen/2);
-			swiCopy(exp_jankenponPal, BG_PALETTE, exp_jankenponPalLen/2);
-			brainwars_1p_wait_next();
-			jankenpon_init();
-		}
-
-		// Execute action of game
-		gameChange = jankenpon_game();
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			jankenpon_reset();
-		}
-
-		break;
-	case NOGAME:
-		// Check if game just changed
-		if(gameCounter >= 3){
-			state = MAIN;
-			stateChange = true;
-		}
-		else {
-			gameCounter++;
-			brainwars_1p_next_game();
-		}
-
-		break;
-	default:
-		break;
-	}
-}
-
 void brainwars_train_init(){
 	// Copy bitmap and palette for BG2 in main
 	swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
@@ -574,7 +359,7 @@ void brainwars_train(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			leader_init();
+			leader_init(state);
 		}
 
 		// Execute action of game
@@ -591,7 +376,7 @@ void brainwars_train(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			eatit_init();
+			eatit_init(state);
 		}
 
 		// Execute action of game
@@ -608,7 +393,7 @@ void brainwars_train(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			musical_init();
+			musical_init(state);
 		}
 
 		// Execute action of game
@@ -625,7 +410,7 @@ void brainwars_train(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			path_init();
+			path_init(state);
 		}
 
 		// Execute action of game
@@ -642,7 +427,7 @@ void brainwars_train(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			addition_init();
+			addition_init(state);
 		}
 
 		// Execute action of game
@@ -659,7 +444,7 @@ void brainwars_train(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			plusminus_init();
+			plusminus_init(state);
 		}
 
 		// Execute action of game
@@ -676,7 +461,7 @@ void brainwars_train(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			jankenpon_init();
+			jankenpon_init(state);
 		}
 
 		// Execute action of game
@@ -711,28 +496,16 @@ void brainwars_train_select(){
 	u16 keys = (u16) keysDown();
 
 	// Check if right key pressed
-	if(keys & KEY_RIGHT){
-		// Update selected button
-		selectTrain = (selectTrain+1)%8;
-	}
+	if(keys & KEY_RIGHT) selectTrain = (selectTrain+1)%8;
 
 	// Check if left key pressed
-	if(keys & KEY_LEFT){
-		// Update selected button
-		selectTrain = (selectTrain+7)%8;
-	}
+	if(keys & KEY_LEFT) selectTrain = (selectTrain+7)%8;
 
 	// Check if down key pressed
-	if(keys & KEY_DOWN){
-		// Update selected button
-		selectTrain = (selectTrain+3)%8;
-	}
+	if(keys & KEY_DOWN) selectTrain = (selectTrain+3)%8;
 
 	// Check if up key pressed
-	if(keys & KEY_UP){
-		// Update selected button
-		selectTrain = (selectTrain+5)%8;
-	}
+	if(keys & KEY_UP) selectTrain = (selectTrain+5)%8;
 
 	// Check if start key pressed
 	if(keys & KEY_START){
@@ -811,6 +584,221 @@ void brainwars_train_draw(){
 		for(y=ystart+row*height; y<ystart+(row+1)*height; y++){
 			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
 		}
+	}
+}
+
+void brainwars_1p_init(){
+	// Initialize global variables
+	game = NOGAME;
+	gameCounter = 0;
+	gameChange = true;
+}
+
+void brainwars_1p_next_game(){
+	// Find next game randomly
+	int next_game;
+
+	next_game = rand()%7;
+	while(game == next_game) {	next_game = rand()%7; }
+
+	game = next_game;
+
+}
+
+void brainwars_1p_wait_next(){
+	// Copy image to memory
+	swiCopy(oneplayerTiles, BG_TILE_RAM_SUB(1), oneplayerTilesLen/2);
+	swiCopy(oneplayerPal, BG_PALETTE_SUB, oneplayerPalLen/2);
+
+	// Draw Initial Field
+	int x,y;
+	for(x=0; x<32; x++){
+		for(y=0; y<24; y++){
+			BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[y*80+x];
+		}
+	}
+
+	// Initiate timer for game start
+	timeCounter = 5;
+
+	TIMER3_DATA = TIMER_FREQ_1024(1);
+	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
+
+	irqSet(IRQ_TIMER3, &brainwars_timer_ISR);
+	irqEnable(IRQ_TIMER3);
+
+	// Display number for game start counting
+	while(timeCounter > 0) {
+		for(x=12; x<20; x++){
+			for(y=10; y<21; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = oneplayerMap[(y-10+24)*80+(x-12+(timeCounter*8))];
+			}
+		}
+	}
+
+	// Disable timers
+	irqDisable(IRQ_TIMER3);
+	irqClear(IRQ_TIMER3);
+	TIMER3_CR = 0;
+}
+
+void brainwars_1p(){
+	// Check in which game we are playing
+	switch(game){
+	case LEADER:
+		// Check if game just changed
+		if(gameChange){
+			gameChange = false;
+			swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
+			swiCopy(exp_leaderPal, BG_PALETTE, exp_leaderPalLen/2);
+			brainwars_1p_wait_next();
+			leader_init(state);
+		}
+
+		// Execute action of game
+		gameChange = leader_game();
+
+		// Check if game ended
+		if(gameChange){
+			game = NOGAME;
+			leader_reset();
+		}
+
+		break;
+	case EATIT:
+		// Check if game just changed
+		if(gameChange){
+			gameChange = false;
+			swiCopy(exp_eatitBitmap, BG_GFX, exp_eatitBitmapLen/2);
+			swiCopy(exp_eatitPal, BG_PALETTE, exp_eatitPalLen/2);
+			brainwars_1p_wait_next();
+			eatit_init(state);
+		}
+
+		// Execute action of game
+		gameChange = eatit_game();
+
+		// Check if game ended
+		if(gameChange){
+			game = NOGAME;
+			eatit_reset();
+		}
+
+		break;
+	case MUSICAL:
+		// Check if game just changed
+		if(gameChange){
+			gameChange = false;
+			swiCopy(exp_musicalBitmap, BG_GFX, exp_musicalBitmapLen/2);
+			swiCopy(exp_musicalPal, BG_PALETTE, exp_musicalPalLen/2);
+			brainwars_1p_wait_next();
+			musical_init(state);
+		}
+
+		// Execute action of game
+		gameChange = musical_game();
+
+		// Check if game ended
+		if(gameChange){
+			game = NOGAME;
+			musical_reset();
+		}
+
+		break;
+	case PATH:
+		// Check if game just changed
+		if(gameChange){
+			gameChange = false;
+			swiCopy(exp_pathBitmap, BG_GFX, exp_pathBitmapLen/2);
+			swiCopy(exp_pathPal, BG_PALETTE, exp_pathPalLen/2);
+			brainwars_1p_wait_next();
+			path_init(state);
+		}
+
+		// Execute action of game
+		gameChange = path_game();
+
+		// Check if game ended
+		if(gameChange){
+			game = NOGAME;
+			path_reset();
+		}
+
+		break;
+	case ADDITION:
+		// Check if game just changed
+		if(gameChange){
+			gameChange = false;
+			swiCopy(exp_additionBitmap, BG_GFX, exp_additionBitmapLen/2);
+			swiCopy(exp_additionPal, BG_PALETTE, exp_additionPalLen/2);
+			brainwars_1p_wait_next();
+			addition_init(state);
+		}
+
+		// Execute action of game
+		gameChange = addition_game();
+
+		// Check if game ended
+		if(gameChange){
+			game = NOGAME;
+			addition_reset();
+		}
+
+		break;
+	case PLUSMINUS:
+		// Check if game just changed
+		if(gameChange){
+			gameChange = false;
+			swiCopy(exp_plusminusBitmap, BG_GFX, exp_plusminusBitmapLen/2);
+			swiCopy(exp_plusminusPal, BG_PALETTE, exp_plusminusPalLen/2);
+			brainwars_1p_wait_next();
+			plusminus_init(state);
+		}
+
+		// Execute action of game
+		gameChange = plusminus_game();
+
+		// Check if game ended
+		if(gameChange){
+			game = NOGAME;
+			plusminus_reset();
+		}
+
+		break;
+	case JANKENPON:
+		// Check if game just changed
+		if(gameChange){
+			gameChange = false;
+			swiCopy(exp_jankenponBitmap, BG_GFX, exp_jankenponBitmapLen/2);
+			swiCopy(exp_jankenponPal, BG_PALETTE, exp_jankenponPalLen/2);
+			brainwars_1p_wait_next();
+			jankenpon_init(state);
+		}
+
+		// Execute action of game
+		gameChange = jankenpon_game();
+
+		// Check if game ended
+		if(gameChange){
+			game = NOGAME;
+			jankenpon_reset();
+		}
+
+		break;
+	case NOGAME:
+		// Check if game just changed
+		if(gameCounter >= 3){
+			state = MAIN;
+			stateChange = true;
+		}
+		else {
+			gameCounter++;
+			brainwars_1p_next_game();
+		}
+
+		break;
+	default:
+		break;
 	}
 }
 

@@ -19,11 +19,13 @@ static volatile int compare;
 
 static volatile int draw_timer;
 
+STATE state;
+
 void plusminus_timer_ISR(){
 	draw_timer++;
 }
 
-void plusminus_init() {
+void plusminus_init(int gameState) {
 	// Add BG1 and configure
 	BGCTRL_SUB[1] = BG_TILE_BASE(4) | BG_MAP_BASE(17) | BG_32x32 | BG_COLOR_16;
 
@@ -69,11 +71,12 @@ void plusminus_init() {
 
 	pm_score = 0;
 	compare = GREATER;
+	state = gameState;
 
 	plusminus_draw();
 
 	// Draw infos
-	info_init();
+	info_init(state);
 }
 
 void plusminus_new_number() {
@@ -215,7 +218,7 @@ bool plusminus_game(void) {
 	}
 
 	// Update infos
-	info_update(pm_score);
+	info_update(pm_score, state);
 
 	// Return game not ended
 	return false;
@@ -272,7 +275,7 @@ void plusminus_wrong(void) {
 
 void plusminus_reset(void) {
 	// Suppress infos
-	info_finish(pm_score, "plusminus");
+	info_finish(pm_score, "plusminus", state);
 
 	int row, col;
 

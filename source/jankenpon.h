@@ -7,7 +7,7 @@
  */
 
 void jankenpon_wrong(void);
-void jankenpon_init(void);
+void jankenpon_init(int gameState);
 void jankenpon_draw(void);
 bool jankenpon_game(void);
 void jankenpon_next(void);

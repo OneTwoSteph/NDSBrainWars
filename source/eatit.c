@@ -18,6 +18,8 @@ FOOD down[4];
 int score;
 int wrong;
 
+STATE state;
+
 void eatit_wrong(void){
 	// Update wrong variable
 	wrong++;
@@ -33,7 +35,7 @@ void eatit_wrong(void){
 	eatit_draw();
 }
 
-void eatit_init(){
+void eatit_init(int gameState){
 	// Configure Background
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 
@@ -77,9 +79,10 @@ void eatit_init(){
 	// Set global variables
 	score = 0;
 	wrong = 0;
+	state = gameState;
 
 	// Draw infos
-	info_init();
+	info_init(state);
 }
 
 void eatit_draw(){
@@ -180,7 +183,7 @@ bool eatit_game(void){
 	}
 
 	// Update infos
-	info_update(score);
+	info_update(score, state);
 
 	// Return true for the game to continue
 	return false;
@@ -217,7 +220,7 @@ void eatit_next(void){
 
 void eatit_reset(){
 	// Suppress infos
-	info_finish(score, "eatit");
+	info_finish(score, "eatit", state);
 
 	// Draw nothing
 	wrong = 1;

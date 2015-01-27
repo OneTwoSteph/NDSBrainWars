@@ -7,7 +7,7 @@
  */
 
 void eatit_wrong(void);
-void eatit_init(void);
+void eatit_init(int gameState);
 void eatit_draw(void);
 bool eatit_game(void);
 void eatit_next(void);

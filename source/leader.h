@@ -8,7 +8,7 @@
 #ifndef LEADER_H_
 #define LEADER_H_
 
-void leader_init(void);
+void leader_init(int gameState);
 void leader_new_order(void);
 void leader_draw(void);
 

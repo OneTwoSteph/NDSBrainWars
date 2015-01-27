@@ -22,6 +22,8 @@ MUSIC wrong;
 int score;
 LEVEL level;
 
+STATE state;
+
 void musical_play(){
 	//Disable Timer
 	TIMER0_CR &= ~(TIMER_ENABLE);
@@ -66,10 +68,7 @@ void musical_wait_ISR(){
 	else musical_play();
 }
 
-void musical_init(){
-	// Configure Backgrounds
-	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
-
+void musical_init(int gameState){
 	// Copy tiles to memory
 	swiCopy(musical_toneTiles, BG_TILE_RAM_SUB(1), musical_toneTilesLen);
 
@@ -118,12 +117,13 @@ void musical_init(){
 	score = -1;
 	level = EASY;
 	tonenb = 0;
+	state = gameState;
 
 	// Launch first music
 	musical_next();
 
 	// Draw infos
-	info_init();
+	info_init(state);
 }
 
 bool musical_game(){
@@ -203,14 +203,13 @@ bool musical_game(){
 			// If last ton or wrong, wait a few seconds and launch new music
 			if((answer==(level+1)) || (wrong<=FA)){
 				ready = false;
-				//musical_next();
 				TIMER1_CR |= TIMER_ENABLE;
 			}
 		}
 	}
 
 	// Update infos
-	info_update(score);
+	info_update(score, state);
 
 	// Return false (the game is note finished)
 	return false;
@@ -317,25 +316,26 @@ void musical_draw(){
 }
 
 void musical_reset(){
-	// Suppress infos
-	info_finish(score, "musical");
+	// Suppress infos display
+	info_finish(score, "musical", state);
 
+	// Disable timers
+	TIMER0_CR = 0;
+	TIMER1_CR = 0;
 	irqDisable(IRQ_TIMER0);
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER0);
 	irqClear(IRQ_TIMER1);
-	TIMER0_CR = 0;
-	TIMER1_CR = 0;
 
+	// Draw grey screen
 	int x,y;
-
 	for(x=0; x<32; x++){
 		for(y=0; y<24; y++){
 			BG_MAP_RAM_SUB(0)[y*32+x] = musical_toneMap[0];
 		}
 	}
 
-	// Reset all global variables
+	// Reset all global variables (just to be sure)
 	score = 0;
 	wrong = 0;
 	level = EASY;

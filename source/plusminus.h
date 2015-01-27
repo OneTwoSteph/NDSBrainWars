@@ -13,7 +13,7 @@
 #define MULTIPLY	3
 #define DIVIDED 	4
 
-void plusminus_init(void);
+void plusminus_init(int gameState);
 void plusminus_new_number(void);
 void plusminus_draw(void);
 

@@ -54,11 +54,13 @@ static volatile int leader_step;
 
 LEVEL level;
 
+STATE state;
+
 void leader_timer_ISR(){
 	draw_timer++;
 }
 
-void leader_init() {
+void leader_init(int gameState) {
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_256;
 
@@ -82,9 +84,10 @@ void leader_init() {
 	draw_timer = 0;
 	wrong = 0;
 	level = VERYEASY;
+	state = gameState;
 
 	// Draw infos
-	info_init();
+	info_init(state);
 
 	leader_new_order();
 	leader_draw();
@@ -313,7 +316,7 @@ bool leader_game() {
 	}
 
 	// Update infos
-	info_update(leader_score);
+	info_update(leader_score, state);
 
 	// Return false because game not ended
 	return false;
@@ -381,7 +384,7 @@ void leader_wrong() {
 
 void leader_reset() {
 	// Suppress infos
-	info_finish(leader_score, "leader");
+	info_finish(leader_score, "leader", state);
 
 	int row, col;
 

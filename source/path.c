@@ -18,6 +18,8 @@ int score;
 int wrong;
 LEVEL level;
 
+STATE state;
+
 void path_wrong(){
 	// Update wrong variable
 	wrong++;
@@ -33,7 +35,7 @@ void path_wrong(){
 	path_draw();
 }
 
-void path_init(){
+void path_init(int gameState){
 	// Copy tiles to memory
 	swiCopy(path_arrowTiles, BG_TILE_RAM_SUB(1), path_arrowTilesLen/2);
 
@@ -77,9 +79,10 @@ void path_init(){
 	score = 0;
 	wrong = 0;
 	level = EASY;
+	state = gameState;
 
 	// Draw infos
-	info_init();
+	info_init(state);
 }
 
 void path_draw(){
@@ -230,7 +233,7 @@ bool path_game(){
 	}
 
 	// Update infos
-	info_update(score);
+	info_update(score, state);
 
 	// Return with game not ended
 	return false;
@@ -263,7 +266,7 @@ void path_next(){
 
 void path_reset(){
 	// Suppress infos
-	info_finish(score, "path");
+	info_finish(score, "path", state);
 
 	// Draw nothing
 	wrong = 1;

@@ -7,7 +7,7 @@
  */
 
 void path_wrong(void);
-void path_init(void);
+void path_init(int gameState);
 void path_draw(void);
 bool path_game(void);
 void path_next(void);

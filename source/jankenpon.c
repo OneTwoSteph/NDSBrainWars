@@ -19,6 +19,8 @@ int score;
 int wrong;
 LEVEL level;
 
+STATE state;
+
 void jankenpon_wrong(void){
 	// Update wrong variable
 	wrong++;
@@ -34,7 +36,7 @@ void jankenpon_wrong(void){
 	jankenpon_draw();
 }
 
-void jankenpon_init(){
+void jankenpon_init(int gameState){
 	// Configure Background
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 
@@ -75,9 +77,10 @@ void jankenpon_init(){
 	score = 0;
 	wrong = 0;
 	level = EASY;
+	state = gameState;
 
 	// Draw infos
-	info_init();
+	info_init(state);
 }
 
 void jankenpon_draw(){
@@ -196,7 +199,7 @@ bool jankenpon_game(){
 	}
 
 	// Update infos
-	info_update(score);
+	info_update(score, state);
 
 	// Return true for the game to continue
 	return false;
@@ -251,7 +254,7 @@ void jankenpon_next(){
 
 void jankenpon_reset(){
 	// Suppress infos
-	info_finish(score, "jankenpon");
+	info_finish(score, "jankenpon", state);
 
 	// Draw nothing
 	wrong = 1;
