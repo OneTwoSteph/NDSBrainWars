@@ -28,18 +28,20 @@
 #define GREENVAL 	ARGB16(1,7,22,14)
 #define YELLOWVAL 	ARGB16(1,31,26,0)
 
-#define PATHMEDIUM 5
-#define PATHHARD 10
+#define PATHMEDIUM 		5
+#define PATHHARD 		10
 
-#define MUSICALMEDIUM 5
-#define MUSICALHARD 10
+#define MUSICALMEDIUM 	5
+#define MUSICALHARD 	10
 
 #define JANKENPONMEDIUM 10
-#define JANKENPONHARD 20
+#define JANKENPONHARD 	20
 
-#define LEADEREASY 10
-#define LEADERMEDIUM 15
-#define LEADERHARD 30
+#define LEADEREASY 		10
+#define LEADERMEDIUM 	15
+#define LEADERHARD 		30
+
+#define GAMETIME		15
 
 typedef enum STATE STATE;
 enum STATE

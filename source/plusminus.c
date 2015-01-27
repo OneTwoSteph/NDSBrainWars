@@ -179,9 +179,13 @@ bool plusminus_game(bool player) {
 	scanKeys();
 	u16 keys = (u16) keysDown();
 
-	// Stop game if START button pressed
+	// Stop game if START button pressed or if time crossed 15 sec
 	// Else check where pressed, and if correct
-	if(keys & KEY_START) { return true; }
+
+	int time;
+	time = info_get_time();
+
+	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
 	else if(keys & KEY_TOUCH) {
 
 		touchPosition touch;
