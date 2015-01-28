@@ -1,1 +1,0 @@
-score.o: score.s

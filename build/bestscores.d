@@ -1,1 +1,0 @@
-bestscores.o: bestscores.s
