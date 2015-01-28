@@ -1,0 +1,1 @@
+oneplayer.o: oneplayer.s

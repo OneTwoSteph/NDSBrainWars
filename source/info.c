@@ -355,7 +355,7 @@ void info_draw_final_score(STATE state){
 		if(final_p1 > final_p2){
 			for(x=15;x<17;x++){
 				for(y=10+l; y<15+l; y++){
-					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-10+15ll)*32 + (x-15)+2] | (1 << 12);
+					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-10+15-l)*32 + (x-15)+2] | (1 << 12);
 				}
 			}
 		}

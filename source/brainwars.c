@@ -727,8 +727,10 @@ void brainwars_next_game(){
 	// Find next game randomly
 	int next_game;
 
-	next_game = rand()%7;
-	while(game == next_game) {	next_game = rand()%7; }
+	while((next_game=rand()%7)==game);
+
+	/*next_game = rand()%7;
+	while(game == next_game) {	next_game = rand()%7; }*/
 
 	game = next_game;
 
