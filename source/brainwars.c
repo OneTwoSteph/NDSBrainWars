@@ -51,6 +51,7 @@ static volatile int timeCounter;
 static volatile bool twoPlayers;
 static volatile bool gamePlayer;
 
+GAME oldgame;
 GAME game;
 GAME selectTrain;
 bool gameChange;
@@ -707,6 +708,7 @@ void brainwars_train_draw(){
 void brainwars_1p_init(){
 	// Initialize global variables
 	game = NOGAME;
+	oldgame = NOGAME;
 	gameCounter = 2;
 	gameChange = true;
 	twoPlayers = false;
@@ -716,6 +718,7 @@ void brainwars_1p_init(){
 void brainwars_2p_init(){
 	// Initialize global variables
 	game = NOGAME;
+	oldgame = NOGAME;
 	gameCounter = 0;
 	gameChange = true;
 	twoPlayers = true;
@@ -727,12 +730,11 @@ void brainwars_next_game(){
 	// Find next game randomly
 	int next_game;
 
-	while((next_game=rand()%7)==game);
-
-	/*next_game = rand()%7;
-	while(game == next_game) {	next_game = rand()%7; }*/
+	next_game = rand()%7;
+	while(oldgame == next_game) {	next_game = rand()%7; }
 
 	game = next_game;
+	oldgame = next_game;
 
 }
 
