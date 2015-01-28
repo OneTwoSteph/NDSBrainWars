@@ -239,12 +239,8 @@ void info_store_temp_score(bool player, int counter, int score){
 }
 
 void info_draw_final_score(STATE state){
-<<<<<<< HEAD
-
 	int x,y,j;
-=======
-	int x,y;
->>>>>>> origin/master
+
 	int digits[4];
 	u16 keys;
 
@@ -254,20 +250,12 @@ void info_draw_final_score(STATE state){
 	switch(state){
 
 	case ONEP:
-<<<<<<< HEAD
-
 		final_p1 = score_p1[2];
 
 		digits[0] = final_p1/1000;
 		digits[1] = (final_p1-1000*digits[0])/100;
 		digits[2] = (final_p1-1000*digits[0]-100*digits[1])/10;
 		digits[3] = (final_p1-1000*digits[0]-100*digits[1]-10*digits[2]);
-=======
-		digits[0] = score_p1[2]/1000;
-		digits[1] = (score_p1[2]-1000*digits[0])/100;
-		digits[2] = (score_p1[2]-1000*digits[0]-100*digits[1])/10;
-		digits[3] = (score_p1[2]-1000*digits[0]-100*digits[1]-10*digits[2]);
->>>>>>> origin/master
 
 		// Copy image to memory
 		swiCopy(resultTiles, BG_TILE_RAM_SUB(1), resultTilesLen/2);
@@ -302,13 +290,8 @@ void info_draw_final_score(STATE state){
 		}
 
 		break;
-<<<<<<< HEAD
-
 	case TWOP:
 
-=======
-	case TWOP:
->>>>>>> origin/master
 		for(x=0; x<3; x++){
 			final_p1 = final_p1 + score_p1[x];
 			final_p2 = final_p2 + score_p2[x];
@@ -329,6 +312,7 @@ void info_draw_final_score(STATE state){
 		BG_PALETTE_SUB[0x28] = REDVAL;
 
 		// Draw Initial Field
+		int l = 5;
 
 		for(x=0; x<32; x++){
 			for(y=0; y<24; y++){
@@ -340,8 +324,8 @@ void info_draw_final_score(STATE state){
 			for(y=0; y<5; y++){
 				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[y*32+x];
 			}
-			for(y=10; y<15; y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[y*32+x];
+			for(y=10+l; y<15+l; y++){
+				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-l)*32+x];
 			}
 		}
 
@@ -370,21 +354,21 @@ void info_draw_final_score(STATE state){
 
 		if(final_p1 > final_p2){
 			for(x=15;x<17;x++){
-				for(y=10; y<15; y++){
-					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-10+15)*32 + (x-15)+2] | (1 << 12);
+				for(y=10+l; y<15+l; y++){
+					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-10+15ll)*32 + (x-15)+2] | (1 << 12);
 				}
 			}
 		}
 		else if (final_p1 < final_p2){
 			for(x=15;x<17;x++){
-				for(y=10; y<15; y++){
-					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-10+15)*32 + (x-15)+4] | (2 << 12);
+				for(y=10+l; y<15+l; y++){
+					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-10+15-l)*32 + (x-15)+4] | (2 << 12);
 				}
 			}
 		}
 		else	{
 			for(x=0; x<32; x++){
-				for(y=10; y<15; y++){
+				for(y=10+l; y<15+l; y++){
 					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[1];
 				}
 			}

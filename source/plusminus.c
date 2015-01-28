@@ -259,9 +259,6 @@ void plusminus_correct(void) {
 void plusminus_wrong(void) {
 	// Play effect
 	mmEffect(SFX_BOING);
-
-	if(pm_score > 0)	{ pm_score--; }
-	// Remove points
 	
 	// Generate WRONG condition
 	int old_color = BG_PALETTE_SUB[1];

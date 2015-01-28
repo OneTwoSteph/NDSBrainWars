@@ -247,9 +247,6 @@ void addition_add_num(int num) {
 		if(total == final_number) { addition_correct(); }
 		else					  { addition_wrong();   }
 	}
-
-
-
 }
 
 void addition_correct() {
@@ -274,8 +271,6 @@ void addition_correct() {
 
 void addition_wrong() {
 	mmEffect(SFX_BOING);
-
-	if(add_score > 0)	{ add_score--; }
 
 	int old_color = BG_PALETTE_SUB[1];
 

@@ -147,7 +147,7 @@ void brainwars_start_draw(){
 	brainwars_main_draw();
 
 	mmStart(MOD_AURORA, MM_PLAY_LOOP);
-	mmSetModuleVolume(250);
+	mmSetModuleVolume(350);
 }
 
 void brainwars_configMain(){
@@ -624,6 +624,12 @@ void brainwars_train_select(){
 		}
 	}
 
+	// Check if start pressed
+	if(keys & KEY_START){
+		state = MAIN;
+		stateChange = true;
+	}
+
 	// Draw updates
 	brainwars_train_draw();
 }
@@ -742,7 +748,7 @@ void brainwars_wait_next(){
 	}
 
 	// Initiate timer for game start
-	timeCounter = 1;
+	timeCounter = 5;
 
 	TIMER3_DATA = TIMER_FREQ_1024(1);
 	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
@@ -982,21 +988,6 @@ void brainwars_score_init(void){
 	BG_PALETTE_SUB[25] = GREYVAL;
 	BG_PALETTE_SUB[27] = YELLOWVAL;
 
-	// Put correct colors in palettes
-	BG_PALETTE_SUB[5] = REDVAL;
-	BG_PALETTE_SUB[6] = BLUEVAL;
-	BG_PALETTE_SUB[7] = GREENVAL;
-	BG_PALETTE_SUB[8] = BLACKVAL;
-	BG_PALETTE_SUB[9] = GREYVAL;
-	BG_PALETTE_SUB[11] = GREENVAL;
-
-	BG_PALETTE_SUB[21] = REDVAL;
-	BG_PALETTE_SUB[22] = BLUEVAL;
-	BG_PALETTE_SUB[23] = GREENVAL;
-	BG_PALETTE_SUB[24] = BLACKVAL;
-	BG_PALETTE_SUB[25] = GREYVAL;
-	BG_PALETTE_SUB[27] = YELLOWVAL;
-
 	// Draw score of each game
 	int i, j;
 
@@ -1030,14 +1021,6 @@ void brainwars_score_init(void){
 		case 5: score = info_get_score("plusminus"); break;
 		case 6: score = info_get_score("jankenpon"); break;
 		}
-
-		scores[0] = info_get_score("leader");
-		scores[1] = info_get_score("eatit");
-		scores[2] = info_get_score("musical");
-		scores[3] = info_get_score("path");
-		scores[4] = info_get_score("addition");
-		scores[5] = info_get_score("plusminus");
-		scores[6] = info_get_score("jankenpon");
 
 		// Check if higher then old score
 		if(score>scores[i]){

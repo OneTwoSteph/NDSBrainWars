@@ -377,7 +377,6 @@ void leader_wrong() {
 
 	if(wrong >= 3) {
 		wrong = 0;
-		leader_score--;
 
 		if(level != VERYEASY){
 			level = level-1;
