@@ -51,7 +51,6 @@ void eatit_init(){
 	BG_PALETTE_SUB[7] = GREENVAL;
 	BG_PALETTE_SUB[6] = BLUEVAL;
 
-
 	// Set draw on screen
 	up[0] = CHERRY;
 	up[1] = CHERRY;

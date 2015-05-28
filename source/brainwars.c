@@ -94,7 +94,6 @@ void brainwars_start_draw(){
 	BG_PALETTE_SUB[22] = GREYVAL;
 
 	brainwars_main_draw();
-
 }
 
 void brainwars_init(){
