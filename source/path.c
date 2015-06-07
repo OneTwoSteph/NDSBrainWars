@@ -139,7 +139,7 @@ bool path_game(bool player, int gameCounter){
 
 	if(state != TRAIN) { info_store_temp_score(player, gameCounter, score); }
 
-	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
+	if((keys & KEY_START) || (time > GAMETIME)) return true;
 	else{
 		// Check how many keys were pressed
 		int counter = 0;
@@ -240,7 +240,6 @@ void path_reset(){
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER1);
 	TIMER1_CR = 0;
-
 
 	// Reset all global variables
 	score = 0;

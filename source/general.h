@@ -37,9 +37,7 @@
 #define JANKENPONMEDIUM 4
 #define JANKENPONHARD 	8
 
-#define LEADEREASY 		4
-#define LEADERMEDIUM 	6
-#define LEADERHARD 		8
+#define LEADERLEVEL		4
 
 #define GAMETIME		20
 
@@ -138,5 +136,15 @@ enum LEVEL
 	VERYEASY = 0,
     EASY = 1,
     MEDIUM = 2,
-    HARD = 3
+    HARD = 3,
+    VERHARD = 4,
+    EXTREME = 5,
+    PRO = 6
+};
+
+typedef enum TAPORDER TAPORDER;
+enum TAPORDER
+{
+	SAME = 0,
+	INVERSE = 1
 };
