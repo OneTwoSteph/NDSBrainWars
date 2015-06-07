@@ -10,13 +10,16 @@
 #include "brainwars.h"
 #include "info.h"
 
-#include "brainwars_main.h"
-#include "brainwars_train.h"
 #include "start.h"
-
 #include "title.h"
 
+#include "brainwars_main.h"
+#include "brainwars_train.h"
+#include "oneplayer.h"
 #include "score.h"
+#include "bestscores.h"
+#include "credits.h"
+
 #include "exp_leader.h"
 #include "exp_eatit.h"
 #include "exp_path.h"
@@ -27,8 +30,6 @@
 #include "exp_onep.h"
 #include "exp_twop.h"
 
-#include "oneplayer.h"
-
 #include "leader.h"
 #include "eatit.h"
 #include "musical.h"
@@ -36,10 +37,6 @@
 #include "addition.h"
 #include "plusminus.h"
 #include "jankenpon.h"
-
-#include "bestscores.h"
-
-#include "credits.h"
 
 STATE state;
 STATE selectMain;
@@ -91,6 +88,66 @@ void brainwars_init(){
 
 	// Initialize main menu
 	brainwars_main_init();
+}
+
+void brainwars_configMain(){
+	// General
+	VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
+	REG_DISPCNT = MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG0_ACTIVE;
+
+	// Background 0 will be filled the whole time with grey (most inside)
+	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(5) | BG_MAP_BASE(25);
+	swiCopy(scoreTiles, BG_TILE_RAM(5), scoreTilesLen/2);
+	swiCopy(scorePal, BG_PALETTE, scorePalLen/2);
+
+	int x, y;
+	for(x=0;x<32;x++){
+		for(y=0;y<24;y++){
+			BG_MAP_RAM(25)[y*32 + x] = 0;
+		}
+	}
+
+	// Background 2 mode
+	BGCTRL[2] = BG_MAP_BASE(0) | BgSize_B8_256x256;
+
+	REG_BG2PA = 256;
+	REG_BG2PC = 0;
+	REG_BG2PB = 0;
+	REG_BG2PD = 256;
+}
+
+void brainwars_configSub(){
+	// Memory, mode and active background
+	VRAM_C_CR = VRAM_ENABLE| VRAM_C_SUB_BG;
+	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
+
+	// Background 0 configuration
+	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
+}
+
+void brainwars_main_init(){
+	// Copy bitmap and its palette for BG2 in main
+	swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
+	swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
+
+	// Copy tiles and palette for BG0 in sub
+	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
+	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
+	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen/2);
+
+	BG_PALETTE_SUB[1] = WHITEVAL;
+	BG_PALETTE_SUB[5] = BLACKVAL;
+	BG_PALETTE_SUB[6] = GREYVAL;
+
+	BG_PALETTE_SUB[17] = YELLOWVAL;
+	BG_PALETTE_SUB[21] = BLACKVAL;
+	BG_PALETTE_SUB[22] = GREYVAL;
+
+	// Initialize selection variable
+	selectMain = TRAIN;
+
+	// Draw main menu
+	brainwars_main_draw();
 }
 
 void brainwars_start_draw(){
@@ -149,66 +206,6 @@ void brainwars_start_draw(){
 
 	mmStart(MOD_AURORA, MM_PLAY_LOOP);
 	mmSetModuleVolume(350);
-}
-
-void brainwars_configMain(){
-	// General
-	VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
-	REG_DISPCNT = MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG0_ACTIVE;
-
-	// Background 0 will always be used with same image
-	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(5) | BG_MAP_BASE(25);
-	swiCopy(scoreTiles, BG_TILE_RAM(5), scoreTilesLen/2);
-	swiCopy(scorePal, BG_PALETTE, scorePalLen/2);
-
-	int x, y;
-	for(x=0;x<32;x++){
-		for(y=0;y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = 0;
-		}
-	}
-
-	// Background 2 mode
-	BGCTRL[2] = BG_MAP_BASE(0) | BgSize_B8_256x256;
-
-	REG_BG2PA = 256;
-	REG_BG2PC = 0;
-	REG_BG2PB = 0;
-	REG_BG2PD = 256;
-}
-
-void brainwars_configSub(){
-	// Memory, mode and active background
-	VRAM_C_CR = VRAM_ENABLE| VRAM_C_SUB_BG;
-	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
-
-	// Background 0 configuration
-	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
-}
-
-void brainwars_main_init(){
-	// Copy bitmap and its palette for BG2 in main
-	swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
-	swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
-
-	// Copy tiles and palette for BG0 in sub
-	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
-	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
-	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen/2);
-
-	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[5] = BLACKVAL;
-	BG_PALETTE_SUB[6] = GREYVAL;
-
-	BG_PALETTE_SUB[17] = YELLOWVAL;
-	BG_PALETTE_SUB[21] = BLACKVAL;
-	BG_PALETTE_SUB[22] = GREYVAL;
-
-	// Initialize selection variable
-	selectMain = TRAIN;
-
-	// Draw main menu
-	brainwars_main_draw();
 }
 
 void brainwars_main(){

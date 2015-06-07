@@ -55,7 +55,6 @@ enum STATE
     TWOP = 3,
     SCORE = 4,
     CREDITS = 5
-
 };
 
 typedef enum GAME GAME;
@@ -141,5 +140,3 @@ enum LEVEL
     MEDIUM = 2,
     HARD = 3
 };
-
-

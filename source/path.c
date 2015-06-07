@@ -141,107 +141,64 @@ bool path_game(bool player, int gameCounter){
 
 	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
 	else{
-		// Check which key was pressed and if it is correct
-		switch(color){
-		case BLUE:
-			if(keys & KEY_RIGHT){
-				if(direction == RIGHT) path_next();
-				else path_wrong();
-			}
+		// Check how many keys were pressed
+		int counter = 0;
+		if(keys & KEY_RIGHT) counter++;
+		if(keys & KEY_LEFT) counter++;
+		if(keys & KEY_UP) counter++;
+		if(keys & KEY_DOWN) counter++;
+		if(keys & KEY_A) counter++;
+		if(keys & KEY_B) counter++;
+		if(keys & KEY_X) counter++;
+		if(keys & KEY_Y) counter++;
 
-			if(keys & KEY_LEFT){
-				if(direction == LEFT) path_next();
+		// Decide what to do in function of how many keys were pressed
+		// If several keys, wrong
+		// If one key, check if ok
+		// If no key, do nothing
+		if(counter > 1) path_wrong();
+		else if(counter == 1){
+			// Check  if the key which was pressed is correct
+			switch(color){
+			case BLUE:
+				if((keys & KEY_RIGHT) && (direction == RIGHT)) path_next();
+				else if((keys & KEY_LEFT) && (direction == LEFT)) path_next();
+				else if((keys & KEY_UP) && (direction == UP)) path_next();
+				else if((keys & KEY_DOWN) && (direction == DOWN)) path_next();
 				else path_wrong();
-			}
-
-			if(keys & KEY_UP){
-				if(direction == UP) path_next();
+				break;
+			case RED:
+				if((keys & KEY_RIGHT) && (direction == LEFT))  path_next();
+				else if((keys & KEY_LEFT) && (direction == RIGHT)) path_next();
+				else if((keys & KEY_UP) && (direction == DOWN)) path_next();
+				else if((keys & KEY_DOWN) && (direction == UP)) path_next();
 				else path_wrong();
-			}
-
-			if(keys & KEY_DOWN){
-				if(direction == DOWN) path_next();
+				break;
+			case GREEN:
+				if((keys & KEY_A) && (direction == RIGHT)) path_next();
+				else if((keys & KEY_Y) && (direction == LEFT)) path_next();
+				else if((keys & KEY_X) && (direction == UP)) path_next();
+				else if((keys & KEY_B) && (direction == DOWN)) path_next();
 				else path_wrong();
-			}
-			if((keys & KEY_Y) ||( keys & KEY_X) || (keys & KEY_B) || (keys & KEY_A))
-				path_wrong();
-			break;
-		case RED:
-			if(keys & KEY_RIGHT){
-				if(direction == LEFT) path_next();
+				break;
+			case YELLOW:
+				if((keys & KEY_A) && (direction == LEFT)) path_next();
+				else if((keys & KEY_Y) && (direction == RIGHT)) path_next();
+				else if((keys & KEY_X) && (direction == DOWN)) path_next();
+				else if((keys & KEY_B) && (direction == UP)) path_next();
 				else path_wrong();
+				break;
+			default:
+				break;
 			}
-
-			if(keys & KEY_LEFT){
-				if(direction == RIGHT) path_next();
-				else path_wrong();
-			}
-
-			if(keys & KEY_UP){
-				if(direction == DOWN) path_next();
-				else path_wrong();
-			}
-
-			if(keys & KEY_DOWN){
-				if(direction == UP) path_next();
-				else path_wrong();
-			}
-			if((keys & KEY_Y) ||( keys & KEY_X) || (keys & KEY_B) || (keys & KEY_A))
-				path_wrong();
-			break;
-		case GREEN:
-			if(keys & KEY_A){
-				if(direction == RIGHT) path_next();
-				else path_wrong();
-			}
-
-			if(keys & KEY_Y){
-				if(direction == LEFT) path_next();
-				else path_wrong();
-			}
-
-			if(keys & KEY_X){
-				if(direction == UP) path_next();
-				else path_wrong();
-			}
-
-			if(keys & KEY_B){
-				if(direction == DOWN) path_next();
-				else path_wrong();
-			}
-			if((keys & KEY_RIGHT) ||( keys & KEY_LEFT) || (keys & KEY_UP) || (keys & KEY_DOWN))
-				path_wrong();
-			break;
-		case YELLOW:
-			if(keys & KEY_A){
-				if(direction == LEFT) path_next();
-				else path_wrong();
-			}
-
-			if(keys & KEY_Y){
-				if(direction == RIGHT) path_next();
-				else path_wrong();
-			}
-
-			if(keys & KEY_X){
-				if(direction == DOWN) path_next();
-				else path_wrong();
-			}
-
-			if(keys & KEY_B){
-				if(direction == UP) path_next();
-				else path_wrong();
-			}
-			if((keys & KEY_RIGHT) ||( keys & KEY_LEFT) || (keys & KEY_UP) || (keys & KEY_DOWN))
-				path_wrong();
-			break;
-		default:
-			break;
 		}
 	}
 
 	// Update infos
 	info_update(score, state, player);
+
+	// In the case the player was wrong, wait until wrong blinking ends
+	while(wrong != 0);
 
 	// Return with game not ended
 	return false;

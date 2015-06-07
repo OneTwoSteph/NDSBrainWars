@@ -11,12 +11,8 @@
 #include "brainwars.h"
 
 int main(void) {
-	// Initialize console
-    //consoleDemoInit();
-
     // Initialize game
     brainwars_init();
-
     brainwars_start_draw();
 
     // Game infinite loop
