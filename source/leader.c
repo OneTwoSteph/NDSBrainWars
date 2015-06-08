@@ -10,6 +10,13 @@
 #include "info.h"
 #include "leader.h"
 
+// Constants
+#define SIDE 6							// block side in tiles
+#define L 32							// screen side in tiles
+#define MAXB 9  						// max nb of blocks
+const int block_x[3] = {6, 13, 20};		// x positions of blocks
+const int block_y[3] = {2, 9, 16};		// y positions of blocks
+
 // Tiles with 16-colors palettes
 u8 fullT[] = {
 	0x11,0x11,0x11,0x11,
@@ -33,52 +40,43 @@ u8 cornerT[] = {
 	0x11,0x11,0x11,0x11
 };
 
-#define SIDE 6
+// Variables
+STATE state;				// general game state
 
-int block_x[9] = {6, 13, 20};
-int block_y[9] = {2, 9, 16};
+TAPORDER taporder;			// order in which the blocks have to be taped
+int order[MAXB];			// order of the blocks
 
-TAPORDER taporder;
-int order[9];
+int score;					// score of the player
+LEVEL level;				// level of the player
+int nb_blocks;				// number of blocks to draw (depends on level)
+int block;					// gives at what block the player is
 
-int score;
-int wrong;
-LEVEL level;
+int draw;					// block drawing counter for timer
+int wrong;					// wrong blinking counter for timer
 
-int step;
+// Block drawing ISR
+void leader_timer_ISR1(){
+	// Draw current block every two interrupts
+	if(((draw+1)%2) == 0) {
+		// Draw block
+		int x, y;
 
-int draw_timer;
+		x = block_x[order[draw/2]%3];
+		y = block_y[order[draw/2]/3];
+		leader_draw_block(x, y, taporder);
+	}
 
-STATE state;
-
-void leader_timer_ISR(){
-	draw_timer++;
+	// Increment draw variable
+	draw++;
 }
 
-void leader_wrong(){
-	// Play effect
-	if(wrong == 0) mmEffect(SFX_BOING);
+// Wrong blinking ISR
+void leader_timer_ISR2(){
+	// Draw for blinking effect
+	leader_draw_blinking();
 
-	// Update wrong variable
+	// Increment wrong
 	wrong++;
-
-	// Start timer at beginning and stop after two blinking effect
-	if(wrong == 1) TIMER1_CR |= TIMER_ENABLE;
-	if(wrong < 4) leader_draw();
-	if(wrong == 4){
-		int row, col;
-			// Set whole background to grey
-				for(row = 0; row < 32; row++){
-					for(col = 0; col < 32; col++){
-						BG_MAP_RAM_SUB(0)[row*32+col] = 0 | (1<<12);
-					}
-				}
-
-		TIMER1_CR &= ~(TIMER_ENABLE);
-		wrong = 0;
-		step = 0;
-		leader_new_config();
-	}
 }
 
 void leader_init(int gameState) {
@@ -94,64 +92,73 @@ void leader_init(int gameState) {
 	BG_PALETTE_SUB[33] = GREYVAL;
 	BG_PALETTE_SUB[34] = GREYVAL;
 
-	// Configure interrupts and timer for block display every 2s
+	// Configure interrupts and timer for block display every 0.4s
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-	TIMER0_DATA = TIMER_FREQ_1024(4);
-	irqSet(IRQ_TIMER0, &leader_timer_ISR);
+	TIMER0_DATA = TIMER_FREQ_1024(5);
+	irqSet(IRQ_TIMER0, &leader_timer_ISR1);
 	irqEnable(IRQ_TIMER0);
 	
-	// Configure interrupts and timer for false blinking effect
+	// Configure interrupts and timer for false blinking effect every 0.123s
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
-	irqSet(IRQ_TIMER1, &leader_wrong);
+	irqSet(IRQ_TIMER1, &leader_timer_ISR2);
 	irqEnable(IRQ_TIMER1);
 	
 	// Initialize variables
-	score = 0;
-	step = 0;
-	draw_timer = 0;
-	wrong = 0;
-	level = VERYEASY;
 	state = gameState;
+
+	taporder = SAME;
 	int i;
-	for(i=0; i<9; i++) order[i] = i;
+	for(i = 0; i < MAXB; i++) order[i] = i;
+
+	score = 0;
+	level = VERYEASY;
+	nb_blocks = level + 3;
+	block = 0;
+
+	draw = 0;
+	wrong = 0;
 
 	// Draw infos
 	info_init(state);
 
-	// Launch game
+	// Launch first configuration
 	leader_new_config();
 }
 
 void leader_new_config() {
-	int nb_blocks = level+3;
-	int rand_order[9];
-	int i, max, position, block;
+	// Reset variable
+	block = 0;
 
 	// Find in which order the blocks have to be touched
 	taporder = rand()%2;
 
 	// Initialize an array with random values
-	for(i = 0; i < 9 ; i++) {
+	int i;
+	int rand_order[MAXB];
+
+	for(i = 0; i < MAXB; i++) {
 		rand_order[i] = rand();
 	}
 	
 	// Set the apparition order of the block by comparing the numbers in the
 	// above array
+	int position, max, blockid;
+
 	for(position=0; position<nb_blocks; position++){
 		// Find biggest number
 		max = 0;
-		for(i = 0; i < 9; i++) {
+		for(i = 0; i < MAXB; i++) {
 			if(rand_order[i] >= max){
 				max = rand_order[i];
-				block = i;
+				blockid = i;
 			}
 		}
 
 		// Assign block to current position in function of biggest number find
 		// above and delete the number from array
-		order[position] = block;
-		rand_order[block] = -1;
+		order[position] = blockid;
+		rand_order[blockid] = -1;
 	}
 
 	// Draw new blocks
@@ -159,43 +166,59 @@ void leader_new_config() {
 }
 
 void leader_draw_blocks(){
-	int x, y;
-	int row, col;
-	int i;
-	int palette;
-
 	// Set whole background to grey
-	for(row = 0; row < 32; row++){
-		for(col = 0; col < 32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 0 | (2<<12);
+	int row, col;
+
+	for(row = 0; row < L; row++){
+		for(col = 0; col < L; col++){
+			BG_MAP_RAM_SUB(0)[row*L+col] = 0 | (2<<12);
 		}
 	}
 
-	// Assign palette in function of order to tap
-	if(taporder == SAME) palette = 0;
-	else palette = 1;
+	// Reset drawing variable
+	draw = 0;
 
-	// Start drawing with timer to make the blocks appear
-	// Also create a map which will be used
-	draw_timer = 0;
+	// Launch timer to draw block sequencially
 	TIMER0_CR |= TIMER_ENABLE;
 
-	// Progressively draw all tiles that are needed
-	for(i = 0; i<(level+3); i++){
-		// Wait the timers time before drawing next block
-		while(draw_timer == 0);
+	// Wait for the blocks to be drawn
+	while(draw < (nb_blocks*2));
 
-		// Draw current block
-		x = block_x[order[i]%3];
-		y = block_y[order[i]/3];
-		leader_draw_block(x, y, palette);
+	// Disable timer when drawing finished
+	TIMER0_CR &= ~(TIMER_ENABLE);
+}
 
-		// Reinistialize timer
-		draw_timer = 0;
+void leader_draw_blinking() {
+	// Draw or undraw only the blocks that weren't taped yet
+	int start, stop;
+
+	if(taporder == SAME){
+		start = block;
+		stop = nb_blocks;
+	}
+	else{
+		start = 0;
+		stop = nb_blocks - block;
 	}
 
-	// Disable Timer
-	TIMER0_CR &= ~(TIMER_ENABLE);
+	// Undraw if wrong pair, draw if wrong unpair
+	int i;
+	int x, y;
+
+	if((wrong%2) == 0) {
+		for(i = 0; i < stop; i++){
+			x = block_x[order[i]%3];
+			y = block_y[order[i]/3];
+			leader_draw_block(x, y, 2);
+		}
+	}
+	else {
+		for(i=start; i<stop; i++){
+			x = block_x[order[i]%3];
+			y = block_y[order[i]/3];
+			leader_draw_block(x, y, taporder);
+		}
+	}
 }
 
 void leader_draw_block(int x, int y, int palette){
@@ -204,92 +227,57 @@ void leader_draw_block(int x, int y, int palette){
 	// Fill the block
 	for(col = x; col < x+SIDE; col++){
 		for(row = y; row < y+SIDE; row++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 0 | (palette<<12);
+			BG_MAP_RAM_SUB(0)[row*L+col] = 0 | (palette<<12);
 		}
 	}
 
 	// Change the 4 corners
-	BG_MAP_RAM_SUB(0)[y*32+x] = 1 | (palette<<12);
-	BG_MAP_RAM_SUB(0)[(y+SIDE-1)*32+x] = 1 | (palette<<12) | (1<<11);
-	BG_MAP_RAM_SUB(0)[y*32+(x+SIDE-1)] = 1 | (palette<<12) | (1<<10);
-	BG_MAP_RAM_SUB(0)[(y+SIDE-1)*32+(x+SIDE-1)] = 1 | (palette<<12) | (1<<10) | (1<<11);
-}
-
-void leader_draw() {
-	int i, start, stop, palette;
-	int x, y;
-	int row, col;
-
-	// Set whole background to grey
-	for(row = 0; row < 32; row++){
-		for(col = 0; col < 32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 0 | (2<<12);
-		}
-	}
-
-	// Check color
-	if((wrong%2)==0){
-		// Check for color
-		if(taporder == SAME) palette = 0;
-		else palette = 1;
-
-		// Draw only the blocks that weren't taped yet
-		if(taporder == SAME){
-			start = step;
-			stop = (level+3);
-		}
-		else{
-			start = 0;
-			stop = (level+3) - step;
-		}
-		for(i=start; i<stop; i++){
-			x = block_x[order[i]%3];
-			y = block_y[order[i]/3];
-			leader_draw_block(x, y, palette);
-		}
-	}
+	BG_MAP_RAM_SUB(0)[y*L+x] = 1 | (palette<<12);
+	BG_MAP_RAM_SUB(0)[(y+SIDE-1)*L+x] = 1 | (palette<<12) | (1<<11);
+	BG_MAP_RAM_SUB(0)[y*L+(x+SIDE-1)] = 1 | (palette<<12) | (1<<10);
+	BG_MAP_RAM_SUB(0)[(y+SIDE-1)*L+(x+SIDE-1)] = 1 | (palette<<12) | (1<<10) | (1<<11);
 }
 
 bool leader_game(bool player, int gameCounter) {
-	// Scan the keys and the touch screen
-	scanKeys();
-	u16 keys = keysDown();
-	
 	// Stop game if START button pressed or time crossed 15 sec
 	// Else check if the correct block was touched
 	int time;
-	time = info_get_time();
 
+	time = info_get_time();
 	if(state != TRAIN) info_store_temp_score(player, gameCounter, score);
+
+	// Scan the keys and the touch screen
+	scanKeys();
+	u16 keys = keysDown();
 
 	if((keys & KEY_START) || (time > GAMETIME)) return true;
 	else if(keys & KEY_TOUCH){
-		int current;
-
 		// Check at which position the touch screen was touched
 		touchPosition touch;
 		touchRead(&touch);
 
 		// Check at which position we are
-		if(taporder == SAME) current = step;
-		else current = (level+3) - step - 1;
+		int current;
+
+		if(taporder == SAME) current = block;
+		else current = nb_blocks - block - 1;
 
 		// Check if correct position was touched
 		int i;
 		int xl, yh, xr, yl;
 
-		for(i=0; i<(level+3); i++){
+		for(i=0; i<nb_blocks; i++){
 			xl = block_x[order[i]%3]*8 - 1;
 			yh = block_y[order[i]/3]*8 - 1;
 			xr = xl + SIDE*8;
 			yl = yh + SIDE*8 ;
 
 			if((touch.px > xl) && (touch.px < xr) && (touch.py > yh) && (touch.py < yl)){
-				if(i==current){
-					leader_correct();
+				if(i == current) {
+					leader_correct(player);
 					break;
 				}
-				else{
+				else {
 					leader_wrong();
 					break;
 				}
@@ -297,48 +285,72 @@ bool leader_game(bool player, int gameCounter) {
 		}
 	}
 
-	// Update infos
+	// Update infos (has to do it n every loop because updates time)
 	info_update(score, state, player);
-
-	// Wait
-	while(wrong!=0);
 
 	// Return false because game not ended
 	return false;
 }
 
-void leader_correct(){
-	// Update player state
-	step++;
+void leader_correct(bool player){
+	// Erase taped block
+	int x, y;
+	int current;
 
-	// Draw new config with one block less
-	leader_draw();
+	if(taporder == SAME) current = block;
+	else current = (nb_blocks-1) - block;
+
+	x = block_x[order[current]%3];
+	y = block_y[order[current]/3];
+	leader_draw_block(x, y, 2);
+
+	// Update player state
+	block++;
 
 	// If the current configuration is finished and was correctly found
-	if(step >= (level + 3)) {
+	if(block == (nb_blocks)) {
 		// Update score
 		score++;
 
-		// Reinitialize step
-		step = 0;
+		// Update displayed score
+		info_update(score, state, player);
 
-		// See if level changed
+		// Update level
 		level = score/LEADERLEVEL;
+		nb_blocks = level + 3;
 
-		// Create new configuration
+		// Launch new configuration
 		leader_new_config();
 	}
 }
 
+void leader_wrong(){
+	// Reset wrong variable
+	wrong = 0;
+
+	// Launch wrong timer
+	TIMER1_CR |= TIMER_ENABLE;
+
+	// Play wrong effect
+	if(wrong == 0) mmEffect(SFX_BOING);
+
+	// Produce exactly 2 blinkings and stop timer
+	while(wrong < 4);
+	TIMER1_CR &= ~(TIMER_ENABLE);
+
+	// Launch new configuration
+	leader_new_config();
+}
+
 void leader_reset() {
-	// Suppress infos
+	// Suppress displayed infos
 	info_finish(score, "leader", state);
 
 	// Draw nothing
 	int row, col;
-	for(row = 0; row < 32; row++){
-		for(col = 0; col < 32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
+	for(row = 0; row < L; row++){
+		for(col = 0; col < L; col++){
+			BG_MAP_RAM_SUB(0)[row*L+col] = 0;
 		}
 	}
 
@@ -346,14 +358,21 @@ void leader_reset() {
 	irqDisable(IRQ_TIMER0);
 	irqClear(IRQ_TIMER0);
 	TIMER0_CR = 0;
+
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER1);
 	TIMER0_CR = 1;
 
 	// Reset variables
+	taporder = SAME;
+	int i;
+	for(i = 0; i < MAXB; i++) order[i] = i;
+
 	score = 0;
-	step = 0;
-	draw_timer = 0;
-	wrong = 0;
 	level = VERYEASY;
+	nb_blocks = level + 3;
+	block = 0;
+
+	draw = 0;
+	wrong = 0;
 }
