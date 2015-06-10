@@ -20,6 +20,7 @@
 #include "bestscores.h"
 #include "credits.h"
 
+#include "main_graphics.h"
 #include "exp_leader.h"
 #include "exp_eatit.h"
 #include "exp_path.h"
@@ -60,16 +61,10 @@ void brainwars_timer_ISR(){
 }
 
 void brainwars_init(){
-	// Init score saving
+	// Initialize score saving in text files
 	fatInitDefault();
 
-	// Initialize sound
-	mmInitDefaultMem((mm_addr)soundbank_bin);
-	mmLoad(MOD_AURORA);
-	mmLoadEffect(SFX_DO);
-	mmLoadEffect(SFX_BOING);
-
-	// Read initial best scores in files
+	// Read initial best scores in files to initialize scores array
 	scores[0] = info_get_score("leader");
 	scores[1] = info_get_score("eatit");
 	scores[2] = info_get_score("musical");
@@ -78,15 +73,21 @@ void brainwars_init(){
 	scores[5] = info_get_score("plusminus");
 	scores[6] = info_get_score("jankenpon");
 
-	// Initialize game state
-	state = MAIN;
-	stateChange = false;
+	// Initialize sound
+	mmInitDefaultMem((mm_addr)soundbank_bin);
+	mmLoad(MOD_AURORA);
+	mmLoadEffect(SFX_DO);
+	mmLoadEffect(SFX_BOING);
 
 	// Configure main and sub engines for graphics
 	brainwars_configMain();
 	brainwars_configSub();
 
-	// Initialize main menu
+	// Initialize game state (for after initial screen)
+	state = MAIN;
+	stateChange = false;
+
+	// Launch init screen
 	brainwars_main_init();
 }
 
@@ -95,27 +96,35 @@ void brainwars_configMain(){
 	VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
 
 	// Activate BG0 for tile mode and BG2 for rotoscale mode
-	REG_DISPCNT = MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG0_ACTIVE;
+	REG_DISPCNT = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
 
-	// Background 0 will be filled the whole time with grey (most inside)
-	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(5) | BG_MAP_BASE(25);
-	swiCopy(scoreTiles, BG_TILE_RAM(5), scoreTilesLen/2);
-	swiCopy(scorePal, BG_PALETTE, scorePalLen/2);
+	// Background 0 which will always have one of the backgrounds in big
+	// main_graphics image
+	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(1) | BG_MAP_BASE(0);
+	swiCopy(main_graphicsTiles, BG_TILE_RAM(1), main_graphicsTilesLen/2);
+	swiCopy(main_graphicsPal, BG_PALETTE, main_graphicsPalLen/2);
 
+	// Already configure the palette
+	BG_PALETTE[8] = BLACKVAL;
+	BG_PALETTE[7] = BLACKGREYVAL;
+	BG_PALETTE[6] = GREYVAL;
+	BG_PALETTE[5] = WHITEVAL;
+	BG_PALETTE[2] = BLUEVAL;
+	BG_PALETTE[1] = REDVAL;
+	BG_PALETTE[3] = GREENVAL;
+	BG_PALETTE[4] = YELLOWVAL;
+
+	// Already put title as background
 	int x, y;
-	for(x=0;x<32;x++){
-		for(y=0;y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = 0;
+
+	for(x=0; x<32; x++){
+		for(y=0; y<24; y++){
+			BG_MAP_RAM(0)[y*32 + x] = main_graphicsMap[24*6*32 + y*32 + x];
 		}
 	}
 
-	// Background 2 will be used to display bitmaps
-	BGCTRL[2] = BG_MAP_BASE(0) | BgSize_B8_256x256;
-
-	REG_BG2PA = 256;
-	REG_BG2PC = 0;
-	REG_BG2PB = 0;
-	REG_BG2PD = 256;
+	// Background 1 will be used to display game infos (score, time)
+	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(4) | BG_MAP_BASE(30);
 }
 
 void brainwars_configSub(){
@@ -130,10 +139,6 @@ void brainwars_configSub(){
 }
 
 void brainwars_main_init(){
-	// Copy bitmap and its palette for BG2 in main
-	swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
-	swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
-
 	// Copy tiles and palette for BG0 in sub
 	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
 	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
@@ -343,7 +348,7 @@ void brainwars_main_select(){
 
 void brainwars_main_draw(){
 	// Put mode instructions on MAIN screen
-	switch(selectMain){
+	/*switch(selectMain){
 	case ONEP:
 		swiCopy(exp_onepBitmap, BG_GFX, exp_onepBitmapLen/2);
 		swiCopy(exp_onepPal, BG_PALETTE, exp_onepPalLen/2);
@@ -356,7 +361,7 @@ void brainwars_main_draw(){
 		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
 		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
 		break;
-	}
+	}*/
 
 	// Draw menu
 	int x, y;
