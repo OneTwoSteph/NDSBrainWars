@@ -20,6 +20,8 @@
 #include <math.h>
 #include <stdbool.h>
 
+#define LT	32
+
 #define BLACKVAL 	ARGB16(1,11,11,11)
 #define GREYVAL 	ARGB16(1,28,28,28)
 #define WHITEVAL 	ARGB16(1,31,31,31)

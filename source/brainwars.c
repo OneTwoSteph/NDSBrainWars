@@ -42,11 +42,11 @@ STATE state;
 STATE selectMain;
 bool stateChange;
 
-static volatile int gameCounter;
-static volatile int timeCounter;
+int gameCounter;
+int timeCounter;
 
-static volatile bool twoPlayers;
-static volatile bool gamePlayer;
+bool twoPlayers;
+bool gamePlayer;
 
 GAME oldgame;
 GAME game;
@@ -69,7 +69,7 @@ void brainwars_init(){
 	mmLoadEffect(SFX_DO);
 	mmLoadEffect(SFX_BOING);
 
-	// Read initial best scores
+	// Read initial best scores in files
 	scores[0] = info_get_score("leader");
 	scores[1] = info_get_score("eatit");
 	scores[2] = info_get_score("musical");
@@ -91,8 +91,10 @@ void brainwars_init(){
 }
 
 void brainwars_configMain(){
-	// General
+	// Use VRAM A
 	VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
+
+	// Activate BG0 for tile mode and BG2 for rotoscale mode
 	REG_DISPCNT = MODE_5_2D | DISPLAY_BG2_ACTIVE | DISPLAY_BG0_ACTIVE;
 
 	// Background 0 will be filled the whole time with grey (most inside)
@@ -107,7 +109,7 @@ void brainwars_configMain(){
 		}
 	}
 
-	// Background 2 mode
+	// Background 2 will be used to display bitmaps
 	BGCTRL[2] = BG_MAP_BASE(0) | BgSize_B8_256x256;
 
 	REG_BG2PA = 256;
@@ -117,8 +119,10 @@ void brainwars_configMain(){
 }
 
 void brainwars_configSub(){
-	// Memory, mode and active background
+	// Use VRAM C
 	VRAM_C_CR = VRAM_ENABLE| VRAM_C_SUB_BG;
+
+	// Activate BG0 for tile mode and BG1 for rotoscale mode
 	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
 
 	// Background 0 configuration

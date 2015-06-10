@@ -54,6 +54,9 @@ int block;					// gives at what block the player is
 int draw;					// block drawing counter for timer
 int wrong;					// wrong blinking counter for timer
 
+// Drawing status
+bool occupied;
+
 // Block drawing ISR
 void leader_timer_ISR1(){
 	// Draw current block every two interrupts
@@ -63,11 +66,18 @@ void leader_timer_ISR1(){
 
 		x = block_x[order[draw/2]%3];
 		y = block_y[order[draw/2]/3];
+		swiWaitForVBlank();
 		leader_draw_block(x, y, taporder);
 	}
 
 	// Increment draw variable
 	draw++;
+
+	// When blocks are all drawn, update flag and unable timer
+	if(draw == (nb_blocks*2)) {
+		occupied = false;
+		TIMER0_CR &= ~(TIMER_ENABLE);
+	}
 }
 
 // Wrong blinking ISR
@@ -77,6 +87,14 @@ void leader_timer_ISR2(){
 
 	// Increment wrong
 	wrong++;
+
+	// When already blinked 3 times, update status, disable timer and launch new
+	// config
+	if(wrong == 5){
+		occupied = false;
+		TIMER1_CR &= ~(TIMER_ENABLE);
+		leader_new_config();
+	}
 }
 
 void leader_init(int gameState) {
@@ -119,6 +137,8 @@ void leader_init(int gameState) {
 	draw = 0;
 	wrong = 0;
 
+	occupied = false;
+
 	// Draw infos
 	info_init(state);
 
@@ -127,6 +147,9 @@ void leader_init(int gameState) {
 }
 
 void leader_new_config() {
+	// Set status to occupied
+	occupied = true;
+
 	// Reset variable
 	block = 0;
 
@@ -169,6 +192,7 @@ void leader_draw_blocks(){
 	// Set whole background to grey
 	int row, col;
 
+	swiWaitForVBlank();
 	for(row = 0; row < L; row++){
 		for(col = 0; col < L; col++){
 			BG_MAP_RAM_SUB(0)[row*L+col] = 0 | (2<<12);
@@ -180,12 +204,6 @@ void leader_draw_blocks(){
 
 	// Launch timer to draw block sequencially
 	TIMER0_CR |= TIMER_ENABLE;
-
-	// Wait for the blocks to be drawn
-	while(draw < (nb_blocks*2));
-
-	// Disable timer when drawing finished
-	TIMER0_CR &= ~(TIMER_ENABLE);
 }
 
 void leader_draw_blinking() {
@@ -205,6 +223,7 @@ void leader_draw_blinking() {
 	int i;
 	int x, y;
 
+	swiWaitForVBlank();
 	if((wrong%2) == 0) {
 		for(i = 0; i < stop; i++){
 			x = block_x[order[i]%3];
@@ -246,50 +265,56 @@ bool leader_game(bool player, int gameCounter) {
 	time = info_get_time();
 	if(state != TRAIN) info_store_temp_score(player, gameCounter, score);
 
-	// Scan the keys and the touch screen
-	scanKeys();
-	u16 keys = keysDown();
+	// Scan the keys and the touch screen only the game is not in block drawing
+	// or blinking mode
+	if(occupied){
+		return false;
+	}
+	else{
+		scanKeys();
+		u16 keys = keysDown();
 
-	if((keys & KEY_START) || (time > GAMETIME)) return true;
-	else if(keys & KEY_TOUCH){
-		// Check at which position the touch screen was touched
-		touchPosition touch;
-		touchRead(&touch);
+		if((keys & KEY_START) || (time > GAMETIME)) return true;
+		else if(keys & KEY_TOUCH){
+			// Check at which position the touch screen was touched
+			touchPosition touch;
+			touchRead(&touch);
 
-		// Check at which position we are
-		int current;
+			// Check at which position we are
+			int current;
 
-		if(taporder == SAME) current = block;
-		else current = nb_blocks - block - 1;
+			if(taporder == SAME) current = block;
+			else current = nb_blocks - block - 1;
 
-		// Check if correct position was touched
-		int i;
-		int xl, yh, xr, yl;
+			// Check if correct position was touched
+			int i;
+			int xl, yh, xr, yl;
 
-		for(i=0; i<nb_blocks; i++){
-			xl = block_x[order[i]%3]*8 - 1;
-			yh = block_y[order[i]/3]*8 - 1;
-			xr = xl + SIDE*8;
-			yl = yh + SIDE*8 ;
+			for(i=0; i<nb_blocks; i++){
+				xl = block_x[order[i]%3]*8 - 1;
+				yh = block_y[order[i]/3]*8 - 1;
+				xr = xl + SIDE*8;
+				yl = yh + SIDE*8 ;
 
-			if((touch.px > xl) && (touch.px < xr) && (touch.py > yh) && (touch.py < yl)){
-				if(i == current) {
-					leader_correct(player);
-					break;
-				}
-				else {
-					leader_wrong();
-					break;
+				if((touch.px > xl) && (touch.px < xr) && (touch.py > yh) && (touch.py < yl)){
+					if(i == current) {
+						leader_correct(player);
+						break;
+					}
+					else {
+						leader_wrong();
+						break;
+					}
 				}
 			}
 		}
+
+		// Update infos (has to do it n every loop because updates time)
+		info_update(score, state, player);
+
+		// Return false because game not ended
+		return false;
 	}
-
-	// Update infos (has to do it n every loop because updates time)
-	info_update(score, state, player);
-
-	// Return false because game not ended
-	return false;
 }
 
 void leader_correct(bool player){
@@ -325,6 +350,9 @@ void leader_correct(bool player){
 }
 
 void leader_wrong(){
+	// Update status
+	occupied = true;
+
 	// Reset wrong variable
 	wrong = 0;
 
@@ -333,13 +361,6 @@ void leader_wrong(){
 
 	// Play wrong effect
 	if(wrong == 0) mmEffect(SFX_BOING);
-
-	// Produce exactly 2 blinkings and stop timer
-	while(wrong < 4);
-	TIMER1_CR &= ~(TIMER_ENABLE);
-
-	// Launch new configuration
-	leader_new_config();
 }
 
 void leader_reset() {
