@@ -23,6 +23,8 @@
 #define W	32
 #define H 	24
 
+#define NBMAIN	6
+
 #define BLACKVAL 		ARGB16(1,11,11,11)
 #define BLACKGREYVAL 	ARGB16(1,21,21,21)
 #define GREYVAL 		ARGB16(1,28,28,28)

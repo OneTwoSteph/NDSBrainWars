@@ -40,7 +40,7 @@
 #include "jankenpon.h"
 
 STATE state;
-STATE selectMain;
+STATE select_main;
 bool state_change;
 
 int gameCounter;
@@ -111,7 +111,7 @@ void brainwars_configMain(){
 	BG_PALETTE[8] = BLACKVAL;
 
 	// Background 1 will be used to display game infos (score, time)
-	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(4) | BG_MAP_BASE(30);
+	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(6) | BG_MAP_BASE(50);
 }
 
 void brainwars_configSub(){
@@ -129,9 +129,10 @@ void brainwars_start(){
 	// Put game title as background for main screen
 	int x, y;
 
+	swiWaitForVBlank();
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM(0)[y*W + x] = main_graphicsMap[(y + MAIN*H)*W + x];
+			BG_MAP_RAM(0)[y*W + x] = main_graphicsMap[y*W + x];
 		}
 	}
 
@@ -264,7 +265,7 @@ void brainwars_main_init(){
 	BG_PALETTE_SUB[22] = GREYVAL;
 
 	// Initialize selection variable
-	selectMain = TRAIN;
+	select_main = TRAIN;
 
 	// Draw main menu
 	brainwars_main_draw();
@@ -278,21 +279,21 @@ void brainwars_main_select(){
 	// Check if up key pressed
 	if(keys & KEY_UP){
 		// Update selected button
-		if(selectMain==TRAIN) selectMain = CREDITS;
-		else selectMain--;
+		if(select_main==TRAIN) select_main = CREDITS;
+		else select_main--;
 	}
 
 	// Check if down key pressed
 	if(keys & KEY_DOWN){
 		// Update selected button
-		if(selectMain==CREDITS) selectMain = TRAIN;
-		else selectMain++;
+		if(select_main==CREDITS) select_main = TRAIN;
+		else select_main++;
 	}
 
 	// Check if start key pressed
 	if(keys & KEY_A){
 		// Update game state
-		state = selectMain;
+		state = select_main;
 		state_change = true;
 	}
 
@@ -314,12 +315,12 @@ void brainwars_main_select(){
 			if((touch.py>=ystart+4*inter+4*h)&&(touch.py<=ystart+4*inter+5*h)) touched = CREDITS;
 
 			if(touched!=-1){
-				if(touched==selectMain){
+				if(touched==select_main){
 					// Update game state
-					state = selectMain;
+					state = select_main;
 					state_change = true;
 				}
-				else selectMain = touched;
+				else select_main = touched;
 			}
 		}
 	}
@@ -329,24 +330,17 @@ void brainwars_main_select(){
 }
 
 void brainwars_main_draw(){
-	// Put mode instructions on MAIN screen
-	/*switch(selectMain){
-	case ONEP:
-		swiCopy(exp_onepBitmap, BG_GFX, exp_onepBitmapLen/2);
-		swiCopy(exp_onepPal, BG_PALETTE, exp_onepPalLen/2);
-		break;
-	case TWOP:
-		swiCopy(exp_twopBitmap, BG_GFX, exp_twopBitmapLen/2);
-		swiCopy(exp_twopPal, BG_PALETTE, exp_twopPalLen/2);
-		break;
-	default:
-		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
-		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
-		break;
-	}*/
+	// Put correct information on main screen in function of selection in menu
+	int x, y;
+
+	swiWaitForVBlank();
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM(0)[y*W + x] = main_graphicsMap[(y + select_main*H)*W + x];
+		}
+	}
 
 	// Draw menu
-	int x, y;
 	int ystart = 2;
 	int height = 4;
 	int L = 32;			// length of the image
@@ -359,17 +353,13 @@ void brainwars_main_draw(){
 
 	// Change color of the selected button
 	for(x=0; x<32; x++){
-		for(y=(selectMain-1)*height+ystart; y<selectMain*height+ystart; y++){
+		for(y=(select_main-1)*height+ystart; y<select_main*height+ystart; y++){
 			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
 		}
 	}
 }
 
 void brainwars_train_init(){
-	// Copy bitmap and palette for BG2 in main
-	swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
-	swiCopy(exp_leaderPal, BG_PALETTE, exp_leaderPalLen/2);
-
 	// Copy tiles and palette for BG0 in sub
 	swiCopy(brainwars_trainTiles, BG_TILE_RAM_SUB(1), brainwars_trainTilesLen/2);
 	swiCopy(brainwars_trainPal, BG_PALETTE_SUB, brainwars_trainPalLen/2);
@@ -625,44 +615,16 @@ void brainwars_train_select(){
 
 void brainwars_train_draw(){
 	// Draw instructions on main
-	switch(selectTrain){
-	case LEADER:
-		swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
-		swiCopy(exp_leaderPal, BG_PALETTE, exp_leaderPalLen/2);
-		break;
-	case EATIT:
-		swiCopy(exp_eatitBitmap, BG_GFX, exp_eatitBitmapLen/2);
-		swiCopy(exp_eatitPal, BG_PALETTE, exp_eatitPalLen/2);
-		break;
-	case MUSICAL:
-		swiCopy(exp_musicalBitmap, BG_GFX, exp_musicalBitmapLen/2);
-		swiCopy(exp_musicalPal, BG_PALETTE, exp_musicalPalLen/2);
-		break;
-	case PATH:
-		swiCopy(exp_pathBitmap, BG_GFX, exp_pathBitmapLen/2);
-		swiCopy(exp_pathPal, BG_PALETTE, exp_pathPalLen/2);
-		break;
-	case ADDITION:
-		swiCopy(exp_additionBitmap, BG_GFX, exp_additionBitmapLen/2);
-		swiCopy(exp_additionPal, BG_PALETTE, exp_additionPalLen/2);
-		break;
-	case PLUSMINUS:
-		swiCopy(exp_plusminusBitmap, BG_GFX, exp_plusminusBitmapLen/2);
-		swiCopy(exp_plusminusPal, BG_PALETTE, exp_plusminusPalLen/2);
-		break;
-	case JANKENPON:
-		swiCopy(exp_jankenponBitmap, BG_GFX, exp_jankenponBitmapLen/2);
-		swiCopy(exp_jankenponPal, BG_PALETTE, exp_jankenponPalLen/2);
-		break;
-	case NOGAME:
-		swiCopy(titleBitmap, BG_GFX, titleBitmapLen/2);
-		swiCopy(titlePal, BG_PALETTE, titlePalLen/2);
-		break;
+	int x, y;
+
+	swiWaitForVBlank();
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM(0)[y*W + x] = main_graphicsMap[(y + (NBMAIN + selectTrain)*H)*W + x];
+		}
 	}
 
 	// Draw training menu
-	int x, y;
-
 	for(x=0; x<32; x++){
 		for(y=0; y<24; y++){
 			BG_MAP_RAM_SUB(0)[y*32+x] = brainwars_trainMap[y*32+x];
