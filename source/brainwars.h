@@ -9,12 +9,11 @@
 void brainwars_init(void);
 void brainwars_configMain(void);
 void brainwars_configSub(void);
+void brainwars_start(void);
 
-void brainwars_main_init(void);
 void brainwars_main(void);
+void brainwars_main_init(void);
 void brainwars_main_select(void);
-
-void brainwars_start_draw(void);
 void brainwars_main_draw(void);
 
 void brainwars_1p_init(void);

@@ -20,7 +20,8 @@
 #include <math.h>
 #include <stdbool.h>
 
-#define LT	32
+#define W	32
+#define H 	24
 
 #define BLACKVAL 		ARGB16(1,11,11,11)
 #define BLACKGREYVAL 	ARGB16(1,21,21,21)
@@ -50,7 +51,7 @@
 typedef enum STATE STATE;
 enum STATE
 {
-    MAIN = 0,
+	MAIN = 0,
     TRAIN = 1,
     ONEP = 2,
     TWOP = 3,

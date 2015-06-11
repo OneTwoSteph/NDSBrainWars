@@ -41,7 +41,7 @@
 
 STATE state;
 STATE selectMain;
-bool stateChange;
+bool state_change;
 
 int gameCounter;
 int timeCounter;
@@ -83,12 +83,8 @@ void brainwars_init(){
 	brainwars_configMain();
 	brainwars_configSub();
 
-	// Initialize game state (for after initial screen)
-	state = MAIN;
-	stateChange = false;
-
-	// Launch init screen
-	brainwars_main_init();
+	// Launch the start screen before game starts
+	brainwars_start();
 }
 
 void brainwars_configMain(){
@@ -104,24 +100,15 @@ void brainwars_configMain(){
 	swiCopy(main_graphicsTiles, BG_TILE_RAM(1), main_graphicsTilesLen/2);
 	swiCopy(main_graphicsPal, BG_PALETTE, main_graphicsPalLen/2);
 
-	// Already configure the palette
-	BG_PALETTE[8] = BLACKVAL;
-	BG_PALETTE[7] = BLACKGREYVAL;
-	BG_PALETTE[6] = GREYVAL;
-	BG_PALETTE[5] = WHITEVAL;
-	BG_PALETTE[2] = BLUEVAL;
+	// Put correct colors in palette (see color index in Photoshop)
 	BG_PALETTE[1] = REDVAL;
+	BG_PALETTE[2] = BLUEVAL;
 	BG_PALETTE[3] = GREENVAL;
 	BG_PALETTE[4] = YELLOWVAL;
-
-	// Already put title as background
-	int x, y;
-
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM(0)[y*32 + x] = main_graphicsMap[24*6*32 + y*32 + x];
-		}
-	}
+	BG_PALETTE[5] = WHITEVAL;
+	BG_PALETTE[6] = GREYVAL;
+	BG_PALETTE[7] = BLACKGREYVAL;
+	BG_PALETTE[8] = BLACKVAL;
 
 	// Background 1 will be used to display game infos (score, time)
 	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(4) | BG_MAP_BASE(30);
@@ -138,7 +125,131 @@ void brainwars_configSub(){
 	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
 }
 
+void brainwars_start(){
+	// Put game title as background for main screen
+	int x, y;
+
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM(0)[y*W + x] = main_graphicsMap[(y + MAIN*H)*W + x];
+		}
+	}
+
+	// Copy start image
+	swiCopy(startTiles, BG_TILE_RAM_SUB(1), startTilesLen/2);
+	swiCopy(startPal, BG_PALETTE_SUB, startPalLen/2);
+
+	// Draw start screen
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(0)[y*W+x] = startMap[y*W+x];
+		}
+	}
+
+	// Scan touch screen to see if it was taped and if yes, use x and y to
+	// initialize the random seed
+	bool wait = true;
+
+	while(wait){
+		// Scan touch screen
+		touchPosition touch;
+		scanKeys();
+		u16 keys = keysDown();
+
+		// If touch screen was touched, check for position
+		if(keys & KEY_TOUCH) {
+			// Read the touched position
+			touchRead(&touch);
+
+			// Check if it wasn't a false touch and if not, initialize
+			// random number generation and finish the initialization of the
+			// game to go to main loop
+			if((touch.px > 0) && (touch.py > 0)){
+				srand(touch.px + touch.py);
+				state = MAIN;
+				state_change = true;
+				wait = false;
+			}
+		}
+	}
+}
+
+void brainwars_main(){
+	// Check in which state the game is
+	switch(state){
+	case MAIN:
+		// Check if state just changed
+		if(state_change){
+			state_change = false;
+			brainwars_main_init();
+		}
+
+		// Execute action of the state
+		brainwars_main_select();
+
+		break;
+	case TRAIN:
+		// Check if state just changed
+		if(state_change){
+			state_change = false;
+			brainwars_train_init();
+		}
+
+		// Execute action of state
+		brainwars_train();
+
+		break;
+	case ONEP:
+		// Check if state just changed
+		if(state_change){
+			state_change = false;
+			brainwars_1p_init();
+		}
+
+		// Execute action of state
+		brainwars_play();
+
+		break;
+	case TWOP:
+		if(state_change){
+			state_change = false;
+			brainwars_2p_init();
+		}
+
+		brainwars_play();
+
+		break;
+	case SCORE:
+		// Check if state just changed
+		if(state_change){
+			state_change = false;
+			brainwars_score_init();
+		}
+
+		// Execute action of state
+		brainwars_score();
+
+		break;
+	case CREDITS:
+		// Check if state just changed
+		if(state_change){
+			state_change = false;
+			brainwars_credits_init();
+		}
+
+		// Execute action of state
+		brainwars_credits();
+		break;
+	default:
+		break;
+	}
+}
+
 void brainwars_main_init(){
+	// Initialize game music
+	mmStart(MOD_AURORA, MM_PLAY_LOOP);
+	mmSetModuleVolume(350);
+
 	// Copy tiles and palette for BG0 in sub
 	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
 	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
@@ -157,135 +268,6 @@ void brainwars_main_init(){
 
 	// Draw main menu
 	brainwars_main_draw();
-}
-
-void brainwars_start_draw(){
-	int x, y;
-	int L = 32;	// length of the image
-
-	swiCopy(startTiles, BG_TILE_RAM_SUB(1), startTilesLen/2);
-	swiCopy(startPal, BG_PALETTE_SUB, startPalLen/2);
-
-
-	// Draw start screen
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = startMap[y*L+x];
-		}
-	}
-
-	touchPosition touch;
-	x = 1;
-	scanKeys();
-	u16 keys = keysDown();
-	if(keys & KEY_TOUCH) {	touchRead(&touch); }
-
-	while(x){
-
-		if(keys & KEY_TOUCH) {	touchRead(&touch); }
-
-		if((keys & KEY_TOUCH) &&
-		   (touch.px > 0) &&
-		   (touch.py > 0)) {
-			// Initialize random number generation
-			srand(touch.px + touch.py);
-			x = 0;
-		}
-		else {
-			scanKeys();
-			keys = keysDown();
-		}
-	}
-
-	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
-
-	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
-	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen);
-
-	// Set up palette colors
-	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[5] = BLACKVAL;
-	BG_PALETTE_SUB[6] = GREYVAL;
-
-	BG_PALETTE_SUB[17] = YELLOWVAL;
-	BG_PALETTE_SUB[21] = BLACKVAL;
-	BG_PALETTE_SUB[22] = GREYVAL;
-
-	brainwars_main_draw();
-
-	mmStart(MOD_AURORA, MM_PLAY_LOOP);
-	mmSetModuleVolume(350);
-}
-
-void brainwars_main(){
-	// Check in which state the game is
-	switch(state){
-	case MAIN:
-		// Check if state just changed
-		if(stateChange){
-			stateChange = false;
-			brainwars_main_init();
-		}
-
-		// Execute action of the state
-		brainwars_main_select();
-
-		break;
-	case TRAIN:
-		// Check if state just changed
-		if(stateChange){
-			stateChange = false;
-			brainwars_train_init();
-		}
-
-		// Execute action of state
-		brainwars_train();
-
-		break;
-	case ONEP:
-		// Check if state just changed
-		if(stateChange){
-			stateChange = false;
-			brainwars_1p_init();
-		}
-
-		// Execute action of state
-		brainwars_play();
-
-		break;
-	case TWOP:
-		if(stateChange){
-			stateChange = false;
-			brainwars_2p_init();
-		}
-
-		brainwars_play();
-
-		break;
-	case SCORE:
-		// Check if state just changed
-		if(stateChange){
-			stateChange = false;
-			brainwars_score_init();
-		}
-
-		// Execute action of state
-		brainwars_score();
-
-		break;
-	case CREDITS:
-		// Check if state just changed
-		if(stateChange){
-			stateChange = false;
-			brainwars_credits_init();
-		}
-
-		// Execute action of state
-		brainwars_credits();
-		break;
-	default:
-		break;
-	}
 }
 
 void brainwars_main_select(){
@@ -311,7 +293,7 @@ void brainwars_main_select(){
 	if(keys & KEY_A){
 		// Update game state
 		state = selectMain;
-		stateChange = true;
+		state_change = true;
 	}
 
 	// Check if touchscreen was touched
@@ -335,7 +317,7 @@ void brainwars_main_select(){
 				if(touched==selectMain){
 					// Update game state
 					state = selectMain;
-					stateChange = true;
+					state_change = true;
 				}
 				else selectMain = touched;
 			}
@@ -581,7 +563,7 @@ void brainwars_train_select(){
 		// Exit case
 		if(game == NOGAME){
 			state = MAIN;
-			stateChange = true;
+			state_change = true;
 		}
 	}
 
@@ -624,7 +606,7 @@ void brainwars_train_select(){
 				// Exit case
 				if(game == NOGAME){
 					state = MAIN;
-					stateChange = true;
+					state_change = true;
 				}
 			}
 			else selectTrain = touched;
@@ -634,7 +616,7 @@ void brainwars_train_select(){
 	// Check if start pressed
 	if(keys & KEY_START){
 		state = MAIN;
-		stateChange = true;
+		state_change = true;
 	}
 
 	// Draw updates
@@ -960,7 +942,7 @@ void brainwars_play(){
 
 			info_draw_final_score(state);
 			state = MAIN;
-			stateChange = true;
+			state_change = true;
 		}
 		else {
 			gameCounter++;
@@ -1068,7 +1050,7 @@ void brainwars_score(void){
 	// Scan if exit asked
 	if((keys & KEY_TOUCH) | (keys & KEY_A) | (keys & KEY_START)){
 		state = MAIN;
-		stateChange = true;
+		state_change = true;
 	}
 }
 
@@ -1091,6 +1073,6 @@ void brainwars_credits(){
 	// Scan if exit asked
 	if((keys & KEY_TOUCH) | (keys & KEY_A) | (keys & KEY_START)){
 		state = MAIN;
-		stateChange = true;
+		state_change = true;
 	}
 }

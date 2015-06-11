@@ -13,7 +13,6 @@
 int main(void) {
     // Initialize game
     brainwars_init();
-    brainwars_start_draw();
 
     // Game infinite loop
     while(1){
