@@ -49,12 +49,12 @@ void eatit_init(int gameState){
 	swiCopy(eatit_pacmanPal, BG_PALETTE_SUB, eatit_pacmanPalLen);
 
 	// Set up palette colors
-	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[3] = GREYVAL;
-	BG_PALETTE_SUB[4] = BLACKVAL;
-	BG_PALETTE_SUB[5] = REDVAL;
-	BG_PALETTE_SUB[7] = GREENVAL;
-	BG_PALETTE_SUB[6] = BLUEVAL;
+	BG_PALETTE_SUB[1] = WHITE;
+	BG_PALETTE_SUB[3] = GREY;
+	BG_PALETTE_SUB[4] = BLACK;
+	BG_PALETTE_SUB[5] = RED;
+	BG_PALETTE_SUB[7] = GREEN;
+	BG_PALETTE_SUB[6] = BLUE;
 
 
 	// Set draw on screen

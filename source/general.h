@@ -25,14 +25,14 @@
 
 #define NBMAIN	6
 
-#define BLACKVAL 		ARGB16(1,11,11,11)
-#define BLACKGREYVAL 	ARGB16(1,21,21,21)
-#define GREYVAL 		ARGB16(1,28,28,28)
-#define WHITEVAL 		ARGB16(1,31,31,31)
-#define BLUEVAL 		ARGB16(1,4,18,31)
-#define REDVAL 			ARGB16(1,31,13,22)
-#define GREENVAL 		ARGB16(1,7,22,14)
-#define YELLOWVAL 		ARGB16(1,31,26,0)
+#define BLACK 		ARGB16(1,11,11,11)
+#define BLACKGREY 	ARGB16(1,21,21,21)
+#define GREY		ARGB16(1,28,28,28)
+#define WHITE 		ARGB16(1,31,31,31)
+#define BLUE 		ARGB16(1,4,18,31)
+#define RED			ARGB16(1,31,13,22)
+#define GREEN 		ARGB16(1,7,22,14)
+#define YELLOW 		ARGB16(1,31,26,0)
 
 #define PATHMEDIUM 		4
 #define PATHHARD 		8
@@ -77,11 +77,11 @@ enum GAME
 typedef enum COLOR COLOR;
 enum COLOR
 {
-    BLUE = 0,
-    RED = 1,
-    GREEN = 2,
-    YELLOW = 3,
-    GREY = 4
+    B = 0,
+    R = 1,
+    G = 2,
+    Y = 3,
+    N = 4
 };
 
 typedef enum DIRECTION DIRECTION;

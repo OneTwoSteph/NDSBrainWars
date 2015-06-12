@@ -38,16 +38,16 @@ void addition_init(int gameState) {
 	swiCopy(addition_imPal, &BG_PALETTE_SUB[16], addition_imPalLen/2);
 	swiCopy(addition_imPal, &BG_PALETTE_SUB[32], addition_imPalLen/2);
 
-	BG_PALETTE_SUB[0x01] = GREYVAL;
-	BG_PALETTE_SUB[0x05] = BLACKVAL;
+	BG_PALETTE_SUB[0x01] = GREY;
+	BG_PALETTE_SUB[0x05] = BLACK;
 
-	BG_PALETTE_SUB[0x15] = GREYVAL;
-	BG_PALETTE_SUB[0x16] = GREYVAL;
-	BG_PALETTE_SUB[0x18] = BLUEVAL;
+	BG_PALETTE_SUB[0x15] = GREY;
+	BG_PALETTE_SUB[0x16] = GREY;
+	BG_PALETTE_SUB[0x18] = BLUE;
 
-	BG_PALETTE_SUB[0x25] = GREENVAL;
-	BG_PALETTE_SUB[0x26] = GREYVAL;
-	BG_PALETTE_SUB[0x28] = GREYVAL;
+	BG_PALETTE_SUB[0x25] = GREEN;
+	BG_PALETTE_SUB[0x26] = GREY;
+	BG_PALETTE_SUB[0x28] = GREY;
 
 	TIMER0_DATA = TIMER_FREQ_1024(4);
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
@@ -254,8 +254,8 @@ void addition_correct() {
 
 	int old_color = BG_PALETTE_SUB[1];
 
-	BG_PALETTE_SUB[1] = GREENVAL;
-	BG_PALETTE_SUB[22] = GREENVAL;
+	BG_PALETTE_SUB[1] = GREEN;
+	BG_PALETTE_SUB[22] = GREEN;
 
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);
@@ -274,8 +274,8 @@ void addition_wrong() {
 
 	int old_color = BG_PALETTE_SUB[1];
 
-	BG_PALETTE_SUB[1] = REDVAL;
-	BG_PALETTE_SUB[22] = REDVAL;
+	BG_PALETTE_SUB[1] = RED;
+	BG_PALETTE_SUB[22] = RED;
 
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);

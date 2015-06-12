@@ -308,8 +308,8 @@ void info_draw_final_score(STATE state){
 		swiCopy(resultPal, &BG_PALETTE_SUB[16], resultPalLen/2);
 		swiCopy(resultPal, &BG_PALETTE_SUB[32], resultPalLen/2);
 
-		BG_PALETTE_SUB[0x18] = BLUEVAL;
-		BG_PALETTE_SUB[0x28] = REDVAL;
+		BG_PALETTE_SUB[0x18] = BLUE;
+		BG_PALETTE_SUB[0x28] = RED;
 
 		// Draw Initial Field
 		int l = 5;

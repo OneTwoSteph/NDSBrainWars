@@ -38,14 +38,14 @@ void plusminus_init(int gameState) {
 	swiCopy(plusminus_imPal, &BG_PALETTE_SUB[16], plusminus_imPalLen/2);
 
 	// Same background color in both images
-	BG_PALETTE_SUB[1] = GREYVAL;
-	BG_PALETTE_SUB[5] = BLACKVAL;
+	BG_PALETTE_SUB[1] = GREY;
+	BG_PALETTE_SUB[5] = BLACK;
 
-	BG_PALETTE_SUB[21] = GREYVAL;
-	BG_PALETTE_SUB[22] = YELLOWVAL;
-	BG_PALETTE_SUB[23] = YELLOWVAL;
-	BG_PALETTE_SUB[24] = YELLOWVAL;
-	BG_PALETTE_SUB[25] = GREYVAL;
+	BG_PALETTE_SUB[21] = GREY;
+	BG_PALETTE_SUB[22] = YELLOW;
+	BG_PALETTE_SUB[23] = YELLOW;
+	BG_PALETTE_SUB[24] = YELLOW;
+	BG_PALETTE_SUB[25] = GREY;
 	
 	// Init. Timer for interrupt
 	TIMER0_DATA = TIMER_FREQ_1024(4);
@@ -241,8 +241,8 @@ void plusminus_correct(void) {
 
 	int old_color = BG_PALETTE_SUB[1];
 
-	BG_PALETTE_SUB[1] = GREENVAL;
-	BG_PALETTE_SUB[27] = GREENVAL;
+	BG_PALETTE_SUB[1] = GREEN;
+	BG_PALETTE_SUB[27] = GREEN;
 
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);
@@ -263,8 +263,8 @@ void plusminus_wrong(void) {
 	// Generate WRONG condition
 	int old_color = BG_PALETTE_SUB[1];
 
-	BG_PALETTE_SUB[1] = REDVAL;
-	BG_PALETTE_SUB[27] = REDVAL;
+	BG_PALETTE_SUB[1] = RED;
+	BG_PALETTE_SUB[27] = RED;
 
 	draw_timer = 0;
 	irqEnable(IRQ_TIMER0);

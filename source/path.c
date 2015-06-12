@@ -48,21 +48,21 @@ void path_init(int gameState){
 	swiCopy(path_arrowPal, &BG_PALETTE_SUB[16*2], path_arrowPalLen);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
-	BG_PALETTE_SUB[5] = WHITEVAL;
-	BG_PALETTE_SUB[6] = BLUEVAL;
-	BG_PALETTE_SUB[7] = GREYVAL;
+	BG_PALETTE_SUB[5] = WHITE;
+	BG_PALETTE_SUB[6] = BLUE;
+	BG_PALETTE_SUB[7] = GREY;
 
-	BG_PALETTE_SUB[21] = WHITEVAL;
-	BG_PALETTE_SUB[22] = REDVAL;
-	BG_PALETTE_SUB[23] = GREYVAL;
+	BG_PALETTE_SUB[21] = WHITE;
+	BG_PALETTE_SUB[22] = RED;
+	BG_PALETTE_SUB[23] = GREY;
 
-	BG_PALETTE_SUB[37] = WHITEVAL;
-	BG_PALETTE_SUB[38] = GREENVAL;
-	BG_PALETTE_SUB[39] = GREYVAL;
+	BG_PALETTE_SUB[37] = WHITE;
+	BG_PALETTE_SUB[38] = GREEN;
+	BG_PALETTE_SUB[39] = GREY;
 
-	BG_PALETTE_SUB[53] = WHITEVAL;
-	BG_PALETTE_SUB[54] = YELLOWVAL;
-	BG_PALETTE_SUB[55] = GREYVAL;
+	BG_PALETTE_SUB[53] = WHITE;
+	BG_PALETTE_SUB[54] = YELLOW;
+	BG_PALETTE_SUB[55] = GREY;
 
 	// Set initial random direction and color
 	direction = rand()%4;
@@ -160,28 +160,28 @@ bool path_game(bool player, int gameCounter){
 		else if(counter == 1){
 			// Check  if the key which was pressed is correct
 			switch(color){
-			case BLUE:
+			case B:
 				if((keys & KEY_RIGHT) && (direction == RIGHT)) path_next();
 				else if((keys & KEY_LEFT) && (direction == LEFT)) path_next();
 				else if((keys & KEY_UP) && (direction == UP)) path_next();
 				else if((keys & KEY_DOWN) && (direction == DOWN)) path_next();
 				else path_wrong();
 				break;
-			case RED:
+			case R:
 				if((keys & KEY_RIGHT) && (direction == LEFT))  path_next();
 				else if((keys & KEY_LEFT) && (direction == RIGHT)) path_next();
 				else if((keys & KEY_UP) && (direction == DOWN)) path_next();
 				else if((keys & KEY_DOWN) && (direction == UP)) path_next();
 				else path_wrong();
 				break;
-			case GREEN:
+			case G:
 				if((keys & KEY_A) && (direction == RIGHT)) path_next();
 				else if((keys & KEY_Y) && (direction == LEFT)) path_next();
 				else if((keys & KEY_X) && (direction == UP)) path_next();
 				else if((keys & KEY_B) && (direction == DOWN)) path_next();
 				else path_wrong();
 				break;
-			case YELLOW:
+			case Y:
 				if((keys & KEY_A) && (direction == LEFT)) path_next();
 				else if((keys & KEY_Y) && (direction == RIGHT)) path_next();
 				else if((keys & KEY_X) && (direction == DOWN)) path_next();

@@ -78,14 +78,14 @@ void musical_init(int gameState){
 	swiCopy(musical_tonePal, &BG_PALETTE_SUB[32], musical_tonePalLen);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
-	BG_PALETTE_SUB[7] = BLUEVAL;
-	BG_PALETTE_SUB[8] = GREYVAL;
+	BG_PALETTE_SUB[7] = BLUE;
+	BG_PALETTE_SUB[8] = GREY;
 
-	BG_PALETTE_SUB[23] = REDVAL;
-	BG_PALETTE_SUB[24] = GREYVAL;
+	BG_PALETTE_SUB[23] = RED;
+	BG_PALETTE_SUB[24] = GREY;
 
-	BG_PALETTE_SUB[39] = GREENVAL;
-	BG_PALETTE_SUB[40] = GREYVAL;
+	BG_PALETTE_SUB[39] = GREEN;
+	BG_PALETTE_SUB[40] = GREY;
 
 	// Configure interrupts and timers, timer 0 for music and timer 1 for waiting
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;

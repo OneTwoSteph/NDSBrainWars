@@ -11,25 +11,17 @@
 #include "info.h"
 
 #include "start.h"
-#include "title.h"
 
-#include "brainwars_main.h"
+#include "main_menu.h"
 #include "brainwars_train.h"
 #include "oneplayer.h"
 #include "score.h"
 #include "bestscores.h"
 #include "credits.h"
 
+#include "main_start.h"
 #include "main_graphics.h"
-#include "exp_leader.h"
-#include "exp_eatit.h"
-#include "exp_path.h"
-#include "exp_jankenpon.h"
-#include "exp_musical.h"
-#include "exp_addition.h"
-#include "exp_plusminus.h"
-#include "exp_onep.h"
-#include "exp_twop.h"
+#include "train_graphics.h"
 
 #include "leader.h"
 #include "eatit.h"
@@ -94,24 +86,12 @@ void brainwars_configMain(){
 	// Activate BG0 for tile mode and BG2 for rotoscale mode
 	REG_DISPCNT = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
 
-	// Background 0 which will always have one of the backgrounds in big
-	// main_graphics image
+	// Background 0 which will always have one of the backgrounds in one of the
+	// big main_graphics and train_graphics image
 	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(1) | BG_MAP_BASE(0);
-	swiCopy(main_graphicsTiles, BG_TILE_RAM(1), main_graphicsTilesLen/2);
-	swiCopy(main_graphicsPal, BG_PALETTE, main_graphicsPalLen/2);
-
-	// Put correct colors in palette (see color index in Photoshop)
-	BG_PALETTE[1] = REDVAL;
-	BG_PALETTE[2] = BLUEVAL;
-	BG_PALETTE[3] = GREENVAL;
-	BG_PALETTE[4] = YELLOWVAL;
-	BG_PALETTE[5] = WHITEVAL;
-	BG_PALETTE[6] = GREYVAL;
-	BG_PALETTE[7] = BLACKGREYVAL;
-	BG_PALETTE[8] = BLACKVAL;
 
 	// Background 1 will be used to display game infos (score, time)
-	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(6) | BG_MAP_BASE(50);
+	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(4) | BG_MAP_BASE(30);
 }
 
 void brainwars_configSub(){
@@ -126,21 +106,25 @@ void brainwars_configSub(){
 }
 
 void brainwars_start(){
-	// Put game title as background for main screen
-	int x, y;
+	// Copy main menu image for main screen
+	swiCopy(main_startTiles, BG_TILE_RAM(1), main_startTilesLen/2);
+	swiCopy(main_startPal, BG_PALETTE, main_startPalLen/2);
+	swiCopy(main_startMap, BG_MAP_RAM(0), main_startMapLen);
 
-	swiWaitForVBlank();
-	for(x = 0; x < W; x++){
-		for(y = 0; y < H; y++){
-			BG_MAP_RAM(0)[y*W + x] = main_graphicsMap[y*W + x];
-		}
-	}
+	// Put correct colors in palette (see color index in Photoshop)
+	BG_PALETTE[1] = RED;
+	BG_PALETTE[2] = BLUE;
+	BG_PALETTE[3] = GREEN;
+	BG_PALETTE[4] = GREY;
+	BG_PALETTE[5] = BLACK;
 
 	// Copy start image
 	swiCopy(startTiles, BG_TILE_RAM_SUB(1), startTilesLen/2);
 	swiCopy(startPal, BG_PALETTE_SUB, startPalLen/2);
 
 	// Draw start screen
+	int x, y;
+
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
 			BG_MAP_RAM_SUB(0)[y*W+x] = startMap[y*W+x];
@@ -251,18 +235,29 @@ void brainwars_main_init(){
 	mmStart(MOD_AURORA, MM_PLAY_LOOP);
 	mmSetModuleVolume(350);
 
+	// Copy main menu image for main screen
+	swiCopy(main_graphicsTiles, BG_TILE_RAM(1), main_graphicsTilesLen/2);
+	swiCopy(main_graphicsPal, BG_PALETTE, main_graphicsPalLen/2);
+
+	// Put correct colors in palette (see color index in Photoshop)
+	BG_PALETTE[1] = RED;
+	BG_PALETTE[2] = BLUE;
+	BG_PALETTE[3] = GREEN;
+	BG_PALETTE[4] = GREY;
+	BG_PALETTE[5] = BLACK;
+
 	// Copy tiles and palette for BG0 in sub
-	swiCopy(brainwars_mainTiles, BG_TILE_RAM_SUB(1), brainwars_mainTilesLen/2);
-	swiCopy(brainwars_mainPal, BG_PALETTE_SUB, brainwars_mainPalLen/2);
-	swiCopy(brainwars_mainPal, &BG_PALETTE_SUB[16], brainwars_mainPalLen/2);
+	swiCopy(main_menuTiles, BG_TILE_RAM_SUB(1), main_menuTilesLen/2);
+	swiCopy(main_menuPal, BG_PALETTE_SUB, main_menuPalLen/2);
+	swiCopy(main_menuPal, &BG_PALETTE_SUB[16], main_menuPalLen/2);
 
-	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[5] = BLACKVAL;
-	BG_PALETTE_SUB[6] = GREYVAL;
+	BG_PALETTE_SUB[1] = WHITE;
+	BG_PALETTE_SUB[5] = BLACK;
+	BG_PALETTE_SUB[6] = GREY;
 
-	BG_PALETTE_SUB[17] = YELLOWVAL;
-	BG_PALETTE_SUB[21] = BLACKVAL;
-	BG_PALETTE_SUB[22] = GREYVAL;
+	BG_PALETTE_SUB[17] = YELLOW;
+	BG_PALETTE_SUB[21] = BLACK;
+	BG_PALETTE_SUB[22] = GREY;
 
 	// Initialize selection variable
 	select_main = TRAIN;
@@ -336,7 +331,7 @@ void brainwars_main_draw(){
 	swiWaitForVBlank();
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM(0)[y*W + x] = main_graphicsMap[(y + select_main*H)*W + x];
+			BG_MAP_RAM(0)[y*W + x] = main_graphicsMap[(y + (select_main-1)*H)*W + x];
 		}
 	}
 
@@ -347,7 +342,7 @@ void brainwars_main_draw(){
 
 	for(x=0; x<32; x++){
 		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = brainwars_mainMap[y*L+x];
+			BG_MAP_RAM_SUB(0)[y*L+x] = main_menuMap[y*L+x];
 		}
 	}
 
@@ -360,24 +355,38 @@ void brainwars_main_draw(){
 }
 
 void brainwars_train_init(){
+	// Copy train menu image for main screen
+	swiCopy(train_graphicsTiles, BG_TILE_RAM(1), train_graphicsTilesLen/2);
+	swiCopy(train_graphicsPal, BG_PALETTE, train_graphicsPalLen/2);
+
+	// Put correct colors in palette (see color index in Photoshop)
+	BG_PALETTE[1] = RED;
+	BG_PALETTE[2] = BLUE;
+	BG_PALETTE[3] = GREEN;
+	BG_PALETTE[4] = YELLOW;
+	BG_PALETTE[5] = WHITE;
+	BG_PALETTE[6] = GREY;
+	BG_PALETTE[7] = BLACKGREY;
+	BG_PALETTE[8] = BLACK;
+
 	// Copy tiles and palette for BG0 in sub
 	swiCopy(brainwars_trainTiles, BG_TILE_RAM_SUB(1), brainwars_trainTilesLen/2);
 	swiCopy(brainwars_trainPal, BG_PALETTE_SUB, brainwars_trainPalLen/2);
 	swiCopy(brainwars_trainPal, &BG_PALETTE_SUB[16], brainwars_trainPalLen/2);
 
-	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[5] = REDVAL;
-	BG_PALETTE_SUB[6] = BLUEVAL;
-	BG_PALETTE_SUB[7] = GREENVAL;
-	BG_PALETTE_SUB[8] = BLACKVAL;
-	BG_PALETTE_SUB[9] = GREYVAL;
+	BG_PALETTE_SUB[1] = WHITE;
+	BG_PALETTE_SUB[5] = RED;
+	BG_PALETTE_SUB[6] = BLUE;
+	BG_PALETTE_SUB[7] = GREEN;
+	BG_PALETTE_SUB[8] = BLACK;
+	BG_PALETTE_SUB[9] = GREY;
 
-	BG_PALETTE_SUB[17] = YELLOWVAL;
-	BG_PALETTE_SUB[21] = REDVAL;
-	BG_PALETTE_SUB[22] = BLUEVAL;
-	BG_PALETTE_SUB[23] = GREENVAL;
-	BG_PALETTE_SUB[24] = BLACKVAL;
-	BG_PALETTE_SUB[25] = GREYVAL;
+	BG_PALETTE_SUB[17] = YELLOW;
+	BG_PALETTE_SUB[21] = RED;
+	BG_PALETTE_SUB[22] = BLUE;
+	BG_PALETTE_SUB[23] = GREEN;
+	BG_PALETTE_SUB[24] = BLACK;
+	BG_PALETTE_SUB[25] = GREY;
 
 	// Initialize variables
 	game = NOGAME;
@@ -620,7 +629,7 @@ void brainwars_train_draw(){
 	swiWaitForVBlank();
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM(0)[y*W + x] = main_graphicsMap[(y + (NBMAIN + selectTrain)*H)*W + x];
+			BG_MAP_RAM(0)[y*W + x] = train_graphicsMap[(y + selectTrain*H)*W + x];
 		}
 	}
 
@@ -732,8 +741,8 @@ void brainwars_play(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
-			swiCopy(exp_leaderPal, BG_PALETTE, exp_leaderPalLen/2);
+			//swiCopy(exp_leaderBitmap, BG_GFX, exp_leaderBitmapLen/2);
+			//swiCopy(exp_leaderPal, BG_PALETTE, exp_leaderPalLen/2);
 			brainwars_wait_next();
 			leader_init(state);
 		}
@@ -756,8 +765,8 @@ void brainwars_play(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			swiCopy(exp_eatitBitmap, BG_GFX, exp_eatitBitmapLen/2);
-			swiCopy(exp_eatitPal, BG_PALETTE, exp_eatitPalLen/2);
+			//swiCopy(exp_eatitBitmap, BG_GFX, exp_eatitBitmapLen/2);
+			//swiCopy(exp_eatitPal, BG_PALETTE, exp_eatitPalLen/2);
 			brainwars_wait_next();
 			eatit_init(state);
 		}
@@ -780,8 +789,8 @@ void brainwars_play(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			swiCopy(exp_musicalBitmap, BG_GFX, exp_musicalBitmapLen/2);
-			swiCopy(exp_musicalPal, BG_PALETTE, exp_musicalPalLen/2);
+			//swiCopy(exp_musicalBitmap, BG_GFX, exp_musicalBitmapLen/2);
+			//swiCopy(exp_musicalPal, BG_PALETTE, exp_musicalPalLen/2);
 			brainwars_wait_next();
 			musical_init(state);
 		}
@@ -804,8 +813,8 @@ void brainwars_play(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			swiCopy(exp_pathBitmap, BG_GFX, exp_pathBitmapLen/2);
-			swiCopy(exp_pathPal, BG_PALETTE, exp_pathPalLen/2);
+			//swiCopy(exp_pathBitmap, BG_GFX, exp_pathBitmapLen/2);
+			//swiCopy(exp_pathPal, BG_PALETTE, exp_pathPalLen/2);
 			brainwars_wait_next();
 			path_init(state);
 		}
@@ -828,8 +837,8 @@ void brainwars_play(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			swiCopy(exp_additionBitmap, BG_GFX, exp_additionBitmapLen/2);
-			swiCopy(exp_additionPal, BG_PALETTE, exp_additionPalLen/2);
+			//swiCopy(exp_additionBitmap, BG_GFX, exp_additionBitmapLen/2);
+			//swiCopy(exp_additionPal, BG_PALETTE, exp_additionPalLen/2);
 			brainwars_wait_next();
 			addition_init(state);
 		}
@@ -852,8 +861,8 @@ void brainwars_play(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			swiCopy(exp_plusminusBitmap, BG_GFX, exp_plusminusBitmapLen/2);
-			swiCopy(exp_plusminusPal, BG_PALETTE, exp_plusminusPalLen/2);
+			//swiCopy(exp_plusminusBitmap, BG_GFX, exp_plusminusBitmapLen/2);
+			//swiCopy(exp_plusminusPal, BG_PALETTE, exp_plusminusPalLen/2);
 			brainwars_wait_next();
 			plusminus_init(state);
 		}
@@ -876,8 +885,8 @@ void brainwars_play(){
 		// Check if game just changed
 		if(gameChange){
 			gameChange = false;
-			swiCopy(exp_jankenponBitmap, BG_GFX, exp_jankenponBitmapLen/2);
-			swiCopy(exp_jankenponPal, BG_PALETTE, exp_jankenponPalLen/2);
+			//swiCopy(exp_jankenponBitmap, BG_GFX, exp_jankenponBitmapLen/2);
+			//swiCopy(exp_jankenponPal, BG_PALETTE, exp_jankenponPalLen/2);
 			brainwars_wait_next();
 			jankenpon_init(state);
 		}
@@ -928,19 +937,19 @@ void brainwars_score_init(void){
 	swiCopy(bestscoresPal, BG_PALETTE_SUB, bestscoresPalLen/2);
 
 	// Put correct colors in palettes
-	BG_PALETTE_SUB[5] = REDVAL;
-	BG_PALETTE_SUB[6] = BLUEVAL;
-	BG_PALETTE_SUB[7] = GREENVAL;
-	BG_PALETTE_SUB[8] = BLACKVAL;
-	BG_PALETTE_SUB[9] = GREYVAL;
-	BG_PALETTE_SUB[11] = GREENVAL;
+	BG_PALETTE_SUB[5] = RED;
+	BG_PALETTE_SUB[6] = BLUE;
+	BG_PALETTE_SUB[7] = GREEN;
+	BG_PALETTE_SUB[8] = BLACK;
+	BG_PALETTE_SUB[9] = GREY;
+	BG_PALETTE_SUB[11] = GREEN;
 
-	BG_PALETTE_SUB[21] = REDVAL;
-	BG_PALETTE_SUB[22] = BLUEVAL;
-	BG_PALETTE_SUB[23] = GREENVAL;
-	BG_PALETTE_SUB[24] = BLACKVAL;
-	BG_PALETTE_SUB[25] = GREYVAL;
-	BG_PALETTE_SUB[27] = YELLOWVAL;
+	BG_PALETTE_SUB[21] = RED;
+	BG_PALETTE_SUB[22] = BLUE;
+	BG_PALETTE_SUB[23] = GREEN;
+	BG_PALETTE_SUB[24] = BLACK;
+	BG_PALETTE_SUB[25] = GREY;
+	BG_PALETTE_SUB[27] = YELLOW;
 
 	// Draw score of each game
 	int i, j;

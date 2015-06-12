@@ -7,6 +7,7 @@
  *
  */
 
+
 #include "general.h"
 #include "brainwars.h"
 

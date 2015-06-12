@@ -103,12 +103,12 @@ void leader_init(int gameState) {
 	dmaCopy(cornerT, (u8*)BG_TILE_RAM_SUB(1) + 8*8*4/8, 8*8*4/8);
 	
 	// Set up palette colors
-	BG_PALETTE_SUB[1] = BLUEVAL;
-	BG_PALETTE_SUB[2] = GREYVAL;
-	BG_PALETTE_SUB[17] = REDVAL;
-	BG_PALETTE_SUB[18] = GREYVAL;
-	BG_PALETTE_SUB[33] = GREYVAL;
-	BG_PALETTE_SUB[34] = GREYVAL;
+	BG_PALETTE_SUB[1] = BLUE;
+	BG_PALETTE_SUB[2] = GREY;
+	BG_PALETTE_SUB[17] = RED;
+	BG_PALETTE_SUB[18] = GREY;
+	BG_PALETTE_SUB[33] = GREY;
+	BG_PALETTE_SUB[34] = GREY;
 
 	// Configure interrupts and timer for block display every 0.4s
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;

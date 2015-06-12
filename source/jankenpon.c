@@ -51,19 +51,19 @@ void jankenpon_init(int gameState){
 	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16], jankenpon_handPalLen);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
-	BG_PALETTE_SUB[1] = WHITEVAL;
-	BG_PALETTE_SUB[2] = BLUEVAL;
-	BG_PALETTE_SUB[3] = GREYVAL;
-	BG_PALETTE_SUB[4] = BLACKVAL;
+	BG_PALETTE_SUB[1] = WHITE;
+	BG_PALETTE_SUB[2] = BLUE;
+	BG_PALETTE_SUB[3] = GREY;
+	BG_PALETTE_SUB[4] = BLACK;
 
-	BG_PALETTE_SUB[17] = WHITEVAL;
-	BG_PALETTE_SUB[18] = REDVAL;
-	BG_PALETTE_SUB[19] = GREYVAL;
-	BG_PALETTE_SUB[20] = BLACKVAL;
+	BG_PALETTE_SUB[17] = WHITE;
+	BG_PALETTE_SUB[18] = RED;
+	BG_PALETTE_SUB[19] = GREY;
+	BG_PALETTE_SUB[20] = BLACK;
 
 	// Set draw on screen
 	shape = rand()%3;
-	color = BLUE;
+	color = B;
 	U = SCISSOR;
 	M = PAPER;
 	D = ROCK;
@@ -167,7 +167,7 @@ bool jankenpon_game(bool player, int gameCounter){
 
 			// Check if touched correct symbol
 			switch(color){
-			case BLUE:
+			case B:
 				if((pow(cx - touch.px, 2) + pow(cy1 - touch.py,2)) < pow(r,2)){
 					if((U+1)%3 == shape) jankenpon_next();
 					else jankenpon_wrong();
@@ -183,7 +183,7 @@ bool jankenpon_game(bool player, int gameCounter){
 					else jankenpon_wrong();
 				}
 				break;
-			case RED:
+			case R:
 				if((pow(cx - touch.px, 2) + pow(cy1 - touch.py,2)) < pow(r,2)){
 					if(U == (shape+1)%3) jankenpon_next();
 					else jankenpon_wrong();
@@ -199,8 +199,6 @@ bool jankenpon_game(bool player, int gameCounter){
 					else jankenpon_wrong();
 				}
 				break;
-			case GREEN: break;
-			case YELLOW: break;
 			default: break;
 			}
 		}
