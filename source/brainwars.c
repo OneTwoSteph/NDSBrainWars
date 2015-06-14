@@ -93,10 +93,10 @@ void brainwars_configMain(){
 
 	// Background 0 which will always have one of the backgrounds in one of the
 	// big main_graphics and train_graphics image
-	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(1) | BG_MAP_BASE(0);
+	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG0TILE) | BG_MAP_BASE(MAINBG0MAP);
 
 	// Background 1 will be used to display game infos (score, time)
-	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(4) | BG_MAP_BASE(30);
+	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG1TILE) | BG_MAP_BASE(MAINBG1MAP);
 }
 
 void brainwars_configSub(){
@@ -107,7 +107,10 @@ void brainwars_configSub(){
 	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
 
 	// Background 0 configuration
-	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
+	BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG0TILE) | BG_MAP_BASE(SUBBG0MAP);
+
+	// Background 1 configuration
+	BGCTRL_SUB[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG1TILE) | BG_MAP_BASE(SUBBG1MAP);
 }
 
 void brainwars_start(){
@@ -162,6 +165,10 @@ void brainwars_start(){
 			}
 		}
 	}
+
+	// Initialize game music that will play all the time
+	mmStart(MOD_AURORA, MM_PLAY_LOOP);
+	mmSetModuleVolume(350);
 }
 
 void brainwars_main(){
@@ -236,13 +243,12 @@ void brainwars_main(){
 }
 
 void brainwars_main_init(){
-	// Initialize game music
-	mmStart(MOD_AURORA, MM_PLAY_LOOP);
-	mmSetModuleVolume(350);
-
 	// Copy main menu image for main screen
 	swiCopy(main_menuTiles, BG_TILE_RAM(1), main_menuTilesLen/2);
 	swiCopy(main_menuPal, BG_PALETTE, main_menuPalLen/2);
+
+	int i = 0;
+	while(i < 100000) i++;
 
 	// Put correct colors in palette (see color index in Photoshop)
 	BG_PALETTE[1] = RED;

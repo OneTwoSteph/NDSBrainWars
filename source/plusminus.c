@@ -2,300 +2,306 @@
  * plusminus.c
  *
  *  Created on: Jan 22, 2015
- *      Author: Nawaaz GS
+ *      Author: Nawaaz GS modified by Stephanie Amati
  *
  */
 
+// Modules
 #include "general.h"
 #include "info.h"
 #include "plusminus.h"
+
+// Images
 #include "plusminus_im.h"
-#include "numbers.h"
 
-static volatile int pm_score;
-static volatile int numbers[3];
-static volatile int new_num[3];
-static volatile int compare;
+// Constants
+#define POSX1 		8
+#define POSX2		12
+#define POSY		4
+#define NBW			8
+#define NBH			16
 
-static volatile int draw_timer;
-
+// Variable
 STATE state;
 
-void plusminus_timer_ISR(){
-	draw_timer++;
+int number;
+int compare;
+
+int score;
+
+int draw;					// number draw counter for timer
+int wrong;					// wrong blinking counter for timer
+
+bool occupied;				// drawing status
+
+int draw_timer;
+
+// Timer for number display
+void plusminus_timer_ISR0(){
+	// Draw nothing at the beginnin
+	if(draw == 0) plusminus_draw_number(1);
+
+	// Draw after 0.2s
+	if(draw == 1) plusminus_draw_number(0);
+
+	// Increment draw variable
+	draw++;
+
+	// If we are in the start display of 0, eras it after 1s and start game
+	// Otherwise stop timer after drawing number
+	if((score == 0) && (number == 0)){
+		if(draw == 5)  {
+			occupied = false;
+			TIMER0_CR &= ~(TIMER_ENABLE);
+			plusminus_new_number();
+		}
+	}
+	else{
+		if(draw > 1){
+			occupied = false;
+			TIMER0_CR &= ~(TIMER_ENABLE);
+		}
+	}
+}
+
+// Wrong blinking ISR
+void plusminus_timer_ISR1(){
+	// Draw for blinking effect
+	if((wrong%2) == 0) plusminus_draw_number(1);
+	else plusminus_draw_number(0);
+
+	// Increment wrong
+	wrong++;
+
+	// When already blinked 3 times, update status, disable timer and launch new
+	// number
+	if(wrong == 4){
+		occupied = false;
+		TIMER1_CR &= ~(TIMER_ENABLE);
+	}
 }
 
 void plusminus_init(int gameState) {
-	// Add BG1 and configure
-	BGCTRL_SUB[1] = BG_TILE_BASE(4) | BG_MAP_BASE(17) | BG_32x32 | BG_COLOR_16;
+	// Copy images containing numbers in BG1 and palette in second palette
+	swiCopy(plusminus_imTiles, BG_TILE_RAM_SUB(SUBBG0TILE), plusminus_imTilesLen/2);
+	swiCopy(plusminus_imPal, BG_PALETTE_SUB, plusminus_imPalLen/2);
 
-	// Copy tiles to memory. Number tiles in BG0 and game BG in BG1
-	swiCopy(numbersTiles, BG_TILE_RAM_SUB(1), numbersTilesLen/2);
-	swiCopy(plusminus_imTiles, BG_TILE_RAM_SUB(4), plusminus_imTilesLen/2);
+	// Configure palette with correct colors
+	BG_PALETTE_SUB[1] = BLUE;
+	BG_PALETTE_SUB[2] = GREY;
 
-	// Copy palette for both images
-	swiCopy(numbersPal, BG_PALETTE_SUB, numbersPalLen/2);
-	swiCopy(plusminus_imPal, &BG_PALETTE_SUB[16], plusminus_imPalLen/2);
+	BG_PALETTE_SUB[17] = GREY;
+	BG_PALETTE_SUB[18] = GREY;
 
-	// Same background color in both images
-	BG_PALETTE_SUB[1] = GREY;
-	BG_PALETTE_SUB[5] = BLACK;
-
-	BG_PALETTE_SUB[21] = GREY;
-	BG_PALETTE_SUB[22] = YELLOW;
-	BG_PALETTE_SUB[23] = YELLOW;
-	BG_PALETTE_SUB[24] = YELLOW;
-	BG_PALETTE_SUB[25] = GREY;
-	
-	// Init. Timer for interrupt
-	TIMER0_DATA = TIMER_FREQ_1024(4);
-	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
-	irqSet(IRQ_TIMER0, &plusminus_timer_ISR);
-
+	// Put grey background
 	int row, col;
 
-	// Draw Initial Field
-	for(row=0; row<32; row++){
-		for(col=0; col<32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
-			BG_MAP_RAM_SUB(17)[row*32+col] = plusminus_imMap[row*32+col] | (1<<12);
+	swiWaitForVBlank();
+	for(col = 0; col < W; col++){
+		for(row = 0; row < H; row++){
+			BG_MAP_RAM_SUB(SUBBG0MAP)[row*W + col] = plusminus_imMap[0] | (1<<12);
 		}
 	}
 
-	int i;
+	// Configure timer for initial 0 display
+	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
+	TIMER0_DATA = TIMER_FREQ_1024(5);
+	irqSet(IRQ_TIMER0, &plusminus_timer_ISR0);
+	irqEnable(IRQ_TIMER0);
 
-	for(i = 0; i < 3; i++) 	{
-		numbers[i] = rand()%10;
-		new_num[i] = 0;
-	}
+	// Configure interrupts and timer for false blinking effect every 0.123s
+	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
+	TIMER1_DATA = TIMER_FREQ_256(15);
+	irqSet(IRQ_TIMER1, &plusminus_timer_ISR1);
+	irqEnable(IRQ_TIMER1);
 
-	pm_score = 0;
-	compare = GREATER;
+	// Initialize variables
 	state = gameState;
 
-	plusminus_draw();
+	number = 0;
+	compare = GREATER;
+
+	score = 0;
+
+	draw = 0;
+	wrong = 0;
 
 	// Draw infos
 	info_init(state);
+
+	// Launch first number 0
+	plusminus_start();
+}
+
+void plusminus_start(){
+	// Set status to occupied
+	occupied = true;
+
+	// Reset drawing variable
+	draw = 0;
+
+	// Launch timer to draw block sequencially
+	TIMER0_CR |= TIMER_ENABLE;
 }
 
 void plusminus_new_number() {
-	int i, j, k;
+	// Put flag
+	occupied = true;
 
-	for(i = 0; i < 3; i++) { new_num[i] = rand()%10; }
+	// Find new number not equal to precedent one
+	int temp = 0;
 
-	j = rand()%4;
-	// Determine if new number will be a multiple, or factor of 2
-	// If yes, compute the necessary value ( * 2 or /2 )
-	if(j == 3) {
-
-		k = rand()%2;
-
-		if((k == 1) && (numbers[0] < 5)) { // if we can multiply by 2
-
-			for(i = 0; i < 3; i++) 	{ new_num[i] = 2*numbers[i]; }
-
-			if(new_num[2] > 9) {
-				new_num[2] = new_num[2]%10;
-				new_num[1]++;
-			}
-			if(new_num[1] > 9) {
-				new_num[1] = new_num[1]%10;
-				new_num[0]++;
-			}
-
-			compare = MULTIPLY;
-
-		}
-		else if((numbers[0] >= 5) && !(numbers[2]%2)) { // if divide by 2
-
-			new_num[2] = numbers[2]/2;
-
-			if(new_num[1]%2) {
-				new_num[1] = (numbers[1]-1)/2;
-				new_num[2] = new_num[2] + 5;
-			}
-			else { new_num[1] = numbers[1]/2; }
-
-			if(new_num[0]%2) {
-				new_num[0] = (numbers[0]-1)/2;
-				new_num[1] = new_num[1] + 5;
-			}
-			else { new_num[0] = numbers[0]/2; }
-
-			compare = DIVIDED;
-
-		}
-	}
-	// Or else load random number and check that it's not the same number
-	else {
-
-		if     (new_num[0] > numbers[0]) 	{ compare = GREATER; }
-		else if(new_num[0] < numbers[0])	{ compare = SMALLER; }
-		else if(new_num[1] > numbers[1])	{ compare = GREATER; }
-		else if(new_num[1] < numbers[1])	{ compare = SMALLER; }
-		else if(new_num[2] > numbers[2])	{ compare = GREATER; }
-		else 								{ compare = SMALLER; }
-
-
-	}
+	while((temp = rand()%100) == number);
 	
-	//Load generated new number into number array
-	for(i = 0; i < 3; i++) 	{ numbers[i] = new_num[i]; }
+	// Check for status of this new number
+	if(temp > number) compare = GREATER;
+	else compare = SMALLER;
 
+	// Set new number
+	number = temp;
 
+	// Reset drawing variable
+	draw = 0;
+
+	// Launch timer to draw block sequencially
+	TIMER0_CR |= TIMER_ENABLE;
 }
 
-void plusminus_draw(void) {
+void plusminus_draw_number(int palette){
+	// Check digits of the number
+	int dig1, dig2;
 
+	dig1 = number/10;
+	dig2 = number%10;
+
+	// Check if we are in double digit case or unique digit case and draw
+	// number
+	swiWaitForVBlank();
+	if(dig1 > 0){
+		// First digit
+		plusminus_draw_digit(POSX1, dig1, palette);
+
+		// Second digit
+		plusminus_draw_digit(POSX1 + NBW, dig2, palette);
+	}
+	else {
+		plusminus_draw_digit(POSX1, 0, 1);
+		plusminus_draw_digit(POSX1 + NBW, 0, 1);
+		plusminus_draw_digit(POSX2, dig2, palette);
+	}
+}
+
+void plusminus_draw_digit(int xstart, int digit, int palette){
 	int row, col;
-	
-	// Draw the proper number at the proper position
+	int x = 0;
+	int y = 0;
 
-	//First number
-	for(row = 7; row < 17; row++) {
-		for(col = 7; col < 13; col++) {
-			BG_MAP_RAM_SUB(0)[row*32+col] = numbersMap[((row-7)*60) + ((col-7)+numbers[0]*6)];
+	for(col = xstart; col < xstart + NBW; col++){
+		for(row = POSY; row < POSY + NBH; row++){
+			BG_MAP_RAM_SUB(SUBBG0MAP)[row*W+col] = plusminus_imMap[y*10*NBW + digit*NBW + x] | (palette<<12);
+			y++;
 		}
-	}
-
-	//Second number
-	for(row = 7; row < 17; row++) {
-		for(col = 13; col < 19; col++) {
-			BG_MAP_RAM_SUB(0)[row*32+col] = numbersMap[((row-7)*60) + ((col-13)+numbers[1]*6)];
-		}
-	}
-
-	//Third number
-	for(row = 7; row < 17; row++) {
-		for(col = 19; col < 25; col++) {
-			BG_MAP_RAM_SUB(0)[row*32+col] = numbersMap[((row-7)*60) + ((col-19)+numbers[2]*6)];
-		}
+		y = 0;
+		x++;
 	}
 }
 
 bool plusminus_game(bool player, int gameCounter) {
-
-	scanKeys();
-	u16 keys = (u16) keysDown();
-
-	// Stop game if START button pressed or if time crossed 15 sec
-	// Else check where pressed, and if correct
-
+	// Stop game if START button pressed or time crossed 15 sec
+	// Else check if the correct block was touched
 	int time;
+
 	time = info_get_time();
+	if(state != TRAIN) info_store_temp_score(player, gameCounter, score);
 
-	if(state != TRAIN) { info_store_temp_score(player, gameCounter, pm_score); }
-
-	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
-	else if(keys & KEY_TOUCH) {
-
-		touchPosition touch;
-		touchRead(&touch);
-
-		switch(compare){
-
-		case 1:
-			if((touch.px < 60) && (touch.py < 96)) 	{ plusminus_correct();	}
-			else									{ plusminus_wrong(); 	}
-			break;
-		case 2:
-			if((touch.px < 60) && (touch.py >= 96)) { plusminus_correct();	}
-			else									{ plusminus_wrong(); 	}
-			break;
-		case 3:
-			if((touch.px >= 200) && (touch.py < 96)) { plusminus_correct();	}
-			else if((touch.px < 60) && (touch.py < 96))
-													{ plusminus_correct();
-													  compare = GREATER;	}
-			else									{ plusminus_wrong(); 	}
-			break;
-		case 4:
-			if((touch.px >= 200) && (touch.py >= 96)) { plusminus_correct();}
-			else if((touch.px < 60) && (touch.py >= 96))
-													{ plusminus_correct();
-													  compare = SMALLER;	}
-			else									{ plusminus_wrong(); 	}
-			break;
-		default:
-			break;
-
-		}
+	// Scan the keys only the game is not in drawing
+	// mode or in error blinking mode
+	if(occupied){
+		return false;
 	}
+	else{
+		// Scan keys
+		scanKeys();
+		u16 keys = (u16) keysDown();
 
-	// Update infos
-	info_update(pm_score, state, player);
+		// Check if game stops or if answer needs to be checked
+		if((keys & KEY_START) || (time > GAMETIME)) return true;
+		else{
+			// Check how many of the active keys were pressed
+			int counter = 0;
 
-	// Return game not ended
-	return false;
+			if(keys & KEY_UP) counter ++;
+			if(keys & KEY_DOWN) counter ++;
+
+			// If both keys were pressed, it is wrong, otherwise check answer
+			if(counter > 1) plusminus_correct();
+			else if(counter == 1){
+				if((compare==GREATER) && (keys & KEY_UP)) plusminus_correct();
+				else if((compare==SMALLER) && (keys & KEY_DOWN)) plusminus_correct();
+				else plusminus_wrong();
+			}
+		}
+
+		// Update infos
+		info_update(score, state, player);
+
+		// Return game not ended
+		return false;
+	}
 }
 
-void plusminus_correct(void) {
+void plusminus_correct() {
+	// Update score
+	score++;
 
-	pm_score++;
-	// If correct, increment score,
-	// If correctly found multiple or factor, more points!
-	if(compare > 2) { pm_score = pm_score + 2; }
-	
-	// Generate CORRECT condition
-
-	int old_color = BG_PALETTE_SUB[1];
-
-	BG_PALETTE_SUB[1] = GREEN;
-	BG_PALETTE_SUB[27] = GREEN;
-
-	draw_timer = 0;
-	irqEnable(IRQ_TIMER0);
-	while(draw_timer <= 2);
-	irqDisable(IRQ_TIMER0);
-
-	BG_PALETTE_SUB[1] = old_color;
-	BG_PALETTE_SUB[27] = old_color;
-
+	// Generate new number
 	plusminus_new_number();
-	plusminus_draw();
-
 }
-void plusminus_wrong(void) {
-	// Play effect
-	mmEffect(SFX_BOING);
-	
-	// Generate WRONG condition
-	int old_color = BG_PALETTE_SUB[1];
 
-	BG_PALETTE_SUB[1] = RED;
-	BG_PALETTE_SUB[27] = RED;
+void plusminus_wrong(){
+	// Update status
+	occupied = true;
 
-	draw_timer = 0;
-	irqEnable(IRQ_TIMER0);
-	while(draw_timer <= 2);
-	irqDisable(IRQ_TIMER0);
+	// Reset wrong variable
+	wrong = 0;
 
-	BG_PALETTE_SUB[1] = old_color;
-	BG_PALETTE_SUB[27] = old_color;
+	// Launch wrong timer
+	TIMER1_CR |= TIMER_ENABLE;
 
-	plusminus_new_number();
-	plusminus_draw();
+	// Play wrong effect
+	if(wrong == 0) mmEffect(SFX_BOING);
 }
 
 void plusminus_reset(void) {
 	// Suppress infos
-	info_finish(pm_score, "plusminus", state);
+	info_finish(score, "plusminus", state);
 
+	// Draw grey screen
 	int row, col;
 
-	for(row=0; row<32; row++){
-		for(col=0; col<32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 1;
-			BG_MAP_RAM_SUB(17)[row*32+col] = plusminus_imMap[0];
+	swiWaitForVBlank();
+	for(col = 0; col < W; col++){
+		for(row = 0; row < H; row++){
+			BG_MAP_RAM_SUB(SUBBG0MAP)[row*W + col] = plusminus_imMap[0] | (1<<12);
 		}
 	}
 
+	// Disable timers
 	irqDisable(IRQ_TIMER0);
 	irqClear(IRQ_TIMER0);
 	TIMER0_CR = 0;
 
-	draw_timer = 0;
-	pm_score = 0;
-	compare = 1;
+	irqDisable(IRQ_TIMER1);
+	irqClear(IRQ_TIMER1);
+	TIMER0_CR = 1;
+
+	// Reset variable
+
+	number = 0;
+	compare = GREATER;
+
+	score = 0;
+
+	draw = 0;
+	wrong = 0;
 }

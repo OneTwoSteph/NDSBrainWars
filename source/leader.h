@@ -2,7 +2,7 @@
  * leader.h
  *
  *  Created on: Jan 20, 2015
- *      Author: Nawaaz GS
+ *      Author: Nawaaz GS modified by Stephanie Amati
  */
 
 #ifndef LEADER_H_

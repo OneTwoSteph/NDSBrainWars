@@ -59,7 +59,7 @@ int wrong;					// wrong blinking counter for timer
 bool occupied;				// drawing status
 
 // Block drawing ISR
-void leader_timer_ISR1(){
+void leader_timer_ISR0(){
 	// Draw current block every two interrupts
 	if(((draw+1)%2) == 0) {
 		// Draw block
@@ -82,7 +82,7 @@ void leader_timer_ISR1(){
 }
 
 // Wrong blinking ISR
-void leader_timer_ISR2(){
+void leader_timer_ISR1(){
 	// Draw for blinking effect
 	leader_draw_blinking();
 
@@ -100,8 +100,8 @@ void leader_timer_ISR2(){
 
 void leader_init(int gameState) {
 	// Load tiles in RAM
-	dmaCopy(fullT, (u8*)BG_TILE_RAM_SUB(1), 8*8*4/8);
-	dmaCopy(cornerT, (u8*)BG_TILE_RAM_SUB(1) + 8*8*4/8, 8*8*4/8);
+	dmaCopy(fullT, (u8*)BG_TILE_RAM_SUB(SUBBG0TILE), 8*8*4/8);
+	dmaCopy(cornerT, (u8*)BG_TILE_RAM_SUB(SUBBG0TILE) + 8*8*4/8, 8*8*4/8);
 	
 	// Set up palette colors
 	BG_PALETTE_SUB[1] = BLUE;
@@ -114,13 +114,13 @@ void leader_init(int gameState) {
 	// Configure interrupts and timer for block display every 0.4s
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
 	TIMER0_DATA = TIMER_FREQ_1024(5);
-	irqSet(IRQ_TIMER0, &leader_timer_ISR1);
+	irqSet(IRQ_TIMER0, &leader_timer_ISR0);
 	irqEnable(IRQ_TIMER0);
 	
 	// Configure interrupts and timer for false blinking effect every 0.123s
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
-	irqSet(IRQ_TIMER1, &leader_timer_ISR2);
+	irqSet(IRQ_TIMER1, &leader_timer_ISR1);
 	irqEnable(IRQ_TIMER1);
 	
 	// Initialize variables
