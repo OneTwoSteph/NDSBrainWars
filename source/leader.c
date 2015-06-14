@@ -6,6 +6,8 @@
  *
  */
 
+// Modules
+
 #include "general.h"
 #include "info.h"
 #include "leader.h"
@@ -54,8 +56,7 @@ int block;					// gives at what block the player is
 int draw;					// block drawing counter for timer
 int wrong;					// wrong blinking counter for timer
 
-// Drawing status
-bool occupied;
+bool occupied;				// drawing status
 
 // Block drawing ISR
 void leader_timer_ISR1(){

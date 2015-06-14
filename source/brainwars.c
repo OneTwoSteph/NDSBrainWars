@@ -6,23 +6,9 @@
  *
  */
 
+// Modules
 #include "general.h"
 #include "brainwars.h"
-#include "info.h"
-
-#include "start.h"
-
-#include "main_menu.h"
-#include "brainwars_train.h"
-#include "oneplayer.h"
-#include "score.h"
-#include "bestscores.h"
-#include "credits.h"
-
-#include "main_start.h"
-#include "main_graphics.h"
-#include "train_graphics.h"
-
 #include "leader.h"
 #include "eatit.h"
 #include "musical.h"
@@ -30,7 +16,23 @@
 #include "addition.h"
 #include "plusminus.h"
 #include "jankenpon.h"
+#include "info.h"
 
+// Images main screen
+#include "main_start.h"
+#include "main_menu.h"
+#include "main_exp.h"
+
+// Images sub screen
+#include "sub_start.h"
+#include "sub_menu.h"
+#include "brainwars_train.h"
+#include "oneplayer.h"
+#include "score.h"
+#include "bestscores.h"
+#include "credits.h"
+
+// Global variables
 STATE state;
 STATE select_main;
 bool state_change;
@@ -48,10 +50,12 @@ bool gameChange;
 
 int scores[7];
 
+// 1p and 2p ISR
 void brainwars_timer_ISR(){
 	timeCounter--;
 }
 
+// Initialize NDS
 void brainwars_init(){
 	// Initialize score saving in text files
 	fatInitDefault();
@@ -79,6 +83,7 @@ void brainwars_init(){
 	brainwars_start();
 }
 
+// Main screen graphics configuration
 void brainwars_configMain(){
 	// Use VRAM A
 	VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
@@ -119,15 +124,15 @@ void brainwars_start(){
 	BG_PALETTE[5] = BLACK;
 
 	// Copy start image
-	swiCopy(startTiles, BG_TILE_RAM_SUB(1), startTilesLen/2);
-	swiCopy(startPal, BG_PALETTE_SUB, startPalLen/2);
+	swiCopy(sub_startTiles, BG_TILE_RAM_SUB(1), sub_startTilesLen/2);
+	swiCopy(sub_startPal, BG_PALETTE_SUB, sub_startPalLen/2);
 
 	// Draw start screen
 	int x, y;
 
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(0)[y*W+x] = startMap[y*W+x];
+			BG_MAP_RAM_SUB(0)[y*W+x] = sub_startMap[y*W+x];
 		}
 	}
 
@@ -236,8 +241,8 @@ void brainwars_main_init(){
 	mmSetModuleVolume(350);
 
 	// Copy main menu image for main screen
-	swiCopy(main_graphicsTiles, BG_TILE_RAM(1), main_graphicsTilesLen/2);
-	swiCopy(main_graphicsPal, BG_PALETTE, main_graphicsPalLen/2);
+	swiCopy(main_menuTiles, BG_TILE_RAM(1), main_menuTilesLen/2);
+	swiCopy(main_menuPal, BG_PALETTE, main_menuPalLen/2);
 
 	// Put correct colors in palette (see color index in Photoshop)
 	BG_PALETTE[1] = RED;
@@ -247,9 +252,9 @@ void brainwars_main_init(){
 	BG_PALETTE[5] = BLACK;
 
 	// Copy tiles and palette for BG0 in sub
-	swiCopy(main_menuTiles, BG_TILE_RAM_SUB(1), main_menuTilesLen/2);
-	swiCopy(main_menuPal, BG_PALETTE_SUB, main_menuPalLen/2);
-	swiCopy(main_menuPal, &BG_PALETTE_SUB[16], main_menuPalLen/2);
+	swiCopy(sub_menuTiles, BG_TILE_RAM_SUB(1), sub_menuTilesLen/2);
+	swiCopy(sub_menuPal, BG_PALETTE_SUB, sub_menuPalLen/2);
+	swiCopy(sub_menuPal, &BG_PALETTE_SUB[16], sub_menuPalLen/2);
 
 	BG_PALETTE_SUB[1] = WHITE;
 	BG_PALETTE_SUB[5] = BLACK;
@@ -331,7 +336,7 @@ void brainwars_main_draw(){
 	swiWaitForVBlank();
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM(0)[y*W + x] = main_graphicsMap[(y + (select_main-1)*H)*W + x];
+			BG_MAP_RAM(0)[y*W + x] = main_menuMap[(y + (select_main-1)*H)*W + x];
 		}
 	}
 
@@ -342,7 +347,7 @@ void brainwars_main_draw(){
 
 	for(x=0; x<32; x++){
 		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = main_menuMap[y*L+x];
+			BG_MAP_RAM_SUB(0)[y*L+x] = sub_menuMap[y*L+x];
 		}
 	}
 
@@ -356,8 +361,8 @@ void brainwars_main_draw(){
 
 void brainwars_train_init(){
 	// Copy train menu image for main screen
-	swiCopy(train_graphicsTiles, BG_TILE_RAM(1), train_graphicsTilesLen/2);
-	swiCopy(train_graphicsPal, BG_PALETTE, train_graphicsPalLen/2);
+	swiCopy(main_expTiles, BG_TILE_RAM(1), main_expTilesLen/2);
+	swiCopy(main_expPal, BG_PALETTE, main_expPalLen/2);
 
 	// Put correct colors in palette (see color index in Photoshop)
 	BG_PALETTE[1] = RED;
@@ -629,7 +634,7 @@ void brainwars_train_draw(){
 	swiWaitForVBlank();
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM(0)[y*W + x] = train_graphicsMap[(y + selectTrain*H)*W + x];
+			BG_MAP_RAM(0)[y*W + x] = main_expMap[(y + selectTrain*H)*W + x];
 		}
 	}
 
