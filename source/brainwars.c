@@ -26,7 +26,7 @@
 // Images sub screen
 #include "sub_start.h"
 #include "sub_menu.h"
-#include "brainwars_train.h"
+#include "sub_train.h"
 #include "oneplayer.h"
 #include "score.h"
 #include "bestscores.h"
@@ -364,17 +364,20 @@ void brainwars_main_init(){
 	BG_PALETTE_SUB[0x13] = BLACKGREY;
 	BG_PALETTE_SUB[0x14] = BLACK;
 
+	// Initialize selection variable
+	select_main = TRAIN;
+
+	// Draw main menu
+	brainwars_main_draw();
+
 	// Wait 1s before activating BG1
 	while(display < 1*TIMER3F)
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
-	// Initialize selection variable
-	select_main = TRAIN;
-
-	// Draw main menu
-	brainwars_main_draw();
+	// Stop timer
+	TIMER3_CR &= ~(TIMER_ENABLE);
 }
 
 void brainwars_main_select(){
@@ -399,7 +402,7 @@ void brainwars_main_select(){
 		else select_main++;
 	}
 
-	// Check if start key pressed
+	// Check if A key pressed
 	if(keys & KEY_A){
 		// Update game state
 		state = select_main;
@@ -411,7 +414,7 @@ void brainwars_main_select(){
 	touchPosition touch;
 	touchRead(&touch);
 
-	if(keys&KEY_TOUCH){
+	if(keys & KEY_TOUCH){
 		if((touch.px>=39)&&(touch.px<=215)){
 			int ystart = 21;
 			int inter = 11;
@@ -457,63 +460,73 @@ void brainwars_main_draw(){
 	}
 
 	// Change color of the selected button
+	int YS = 2;
+	int BH = 4;
 	for(x = 0; x < W; x++){
-		for(y = (select_main-1)*MAINMENUH + MAINMENUY; y < select_main*MAINMENUH + MAINMENUY; y++){
+		for(y = (select_main-1)*BH + YS; y < select_main*BH + YS; y++){
 			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x]|(1<<12);
 		}
 	}
 }
 
 void brainwars_train_init(){
-	// Inactivate BG1 and activate BG0 while changing image
-	REG_DISPCNT &= ~(DISPLAY_BG1_ACTIVE);
-	REG_DISPCNT |= DISPLAY_BG2_ACTIVE;
+	// Launch timer to create 1s pause
+	display = 0;
+	TIMER3_CR |= TIMER_ENABLE;
+
+	// Inactivate BG1 while copying new images to  memory
+	swiWaitForVBlank();
+	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy train menu image for main screen
 	swiCopy(main_expTiles, BG_TILE_RAM(MAINBG1TILE), main_expTilesLen/2);
-	swiCopy(main_expPal, BG_PALETTE, main_expPalLen/2);
 
 	// Put correct colors in palette (see color index in Photoshop)
-	BG_PALETTE[1] = RED;
-	BG_PALETTE[2] = BLUE;
-	BG_PALETTE[3] = GREEN;
-	BG_PALETTE[4] = YELLOW;
-	BG_PALETTE[5] = WHITE;
-	BG_PALETTE[6] = GREY;
-	BG_PALETTE[7] = BLACKGREY;
-	BG_PALETTE[8] = BLACK;
+	BG_PALETTE[0x01] = RED;
+	BG_PALETTE[0x02] = BLUE;
+	BG_PALETTE[0x03] = GREEN;
+	BG_PALETTE[0x04] = YELLOW;
+	BG_PALETTE[0x05] = WHITE;
+	BG_PALETTE[0x06] = GREY;
+	BG_PALETTE[0x07] = BLACKGREY;
+	BG_PALETTE[0x08] = BLACK;
 
 	// Copy tiles and palette for BG0 in sub
-	swiCopy(brainwars_trainTiles, BG_TILE_RAM_SUB(1), brainwars_trainTilesLen/2);
-	swiCopy(brainwars_trainPal, BG_PALETTE_SUB, brainwars_trainPalLen/2);
-	swiCopy(brainwars_trainPal, &BG_PALETTE_SUB[16], brainwars_trainPalLen/2);
+	swiCopy(sub_trainTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_trainTilesLen/2);
 
-	BG_PALETTE_SUB[1] = WHITE;
-	BG_PALETTE_SUB[5] = RED;
-	BG_PALETTE_SUB[6] = BLUE;
-	BG_PALETTE_SUB[7] = GREEN;
-	BG_PALETTE_SUB[8] = BLACK;
-	BG_PALETTE_SUB[9] = GREY;
+	BG_PALETTE_SUB[0x01] = RED;
+	BG_PALETTE_SUB[0x02] = BLUE;
+	BG_PALETTE_SUB[0x03] = GREEN;
+	BG_PALETTE_SUB[0x04] = WHITE;
+	BG_PALETTE_SUB[0x05] = GREY;
+	BG_PALETTE_SUB[0x06] = BLACKGREY;
+	BG_PALETTE_SUB[0x07] = BLACK;
 
-	BG_PALETTE_SUB[17] = YELLOW;
-	BG_PALETTE_SUB[21] = RED;
-	BG_PALETTE_SUB[22] = BLUE;
-	BG_PALETTE_SUB[23] = GREEN;
-	BG_PALETTE_SUB[24] = BLACK;
-	BG_PALETTE_SUB[25] = GREY;
-
-	// Inactivate BG2 and activate BG1 again
-	REG_DISPCNT &= ~(DISPLAY_BG2_ACTIVE);
-	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
+	BG_PALETTE_SUB[0x11] = RED;
+	BG_PALETTE_SUB[0x12] = BLUE;
+	BG_PALETTE_SUB[0x13] = GREEN;
+	BG_PALETTE_SUB[0x14] = YELLOW;
+	BG_PALETTE_SUB[0x15] = GREY;
+	BG_PALETTE_SUB[0x16] = BLACKGREY;
+	BG_PALETTE_SUB[0x17] = BLACK;
 
 	// Initialize variables
 	game = NOGAME;
 	selectTrain = NOGAME;
 	gameChange = false;
 
-	// Draw training menu
+	// Draw training menu for the first time
 	brainwars_train_draw();
 
+	// Wait 1s before activating BG1
+	while(display < 1*TIMER3F)
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
+
+	// Stop timer
+	TIMER3_CR &= ~(TIMER_ENABLE);
 }
 
 void brainwars_train(){
@@ -655,6 +668,9 @@ void brainwars_train(){
 }
 
 void brainwars_train_select(){
+	// Save current selected button for drawing
+	int prevSelect = selectTrain;
+
 	// Scan keys
 	scanKeys();
 	u16 keys = (u16) keysDown();
@@ -689,7 +705,7 @@ void brainwars_train_select(){
 	touchPosition touch;
 	touchRead(&touch);
 
-	if(keys&KEY_TOUCH){
+	if(keys & KEY_TOUCH){
 		int xstart = 49;
 		int ystart = 22;
 		int interx = 18;
@@ -736,33 +752,33 @@ void brainwars_train_select(){
 		state_change = true;
 	}
 
-	// Draw updates
-	brainwars_train_draw();
+	// Draw updates only if something has changed
+	if(prevSelect != selectTrain) brainwars_train_draw();
 }
 
 void brainwars_train_draw(){
-	// Draw instructions on main
+	// Draw instructions on MAIN screen
 	int x, y;
 
 	swiWaitForVBlank();
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM(0)[y*W + x] = main_expMap[(y + selectTrain*H)*W + x];
+			BG_MAP_RAM(MAINBG1MAP)[y*W + x] = main_expMap[(y + selectTrain*H)*W + x];
 		}
 	}
 
-	// Draw training menu
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*32+x] = brainwars_trainMap[y*32+x];
+	// Draw training menu on SUB screen
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = sub_trainMap[y*W+x];
 		}
 	}
 
 	// Change color of the selected button
-	int xstart = 6;
-	int ystart = 2;
-	int inter = 1;
-	int side = 6;
+	int XS = 6;
+	int YS= 2;
+	int INTER = 1;
+	int SIDE = 6;
 
 	int row, col;
 	int x1, x2, y1, y2;
@@ -770,14 +786,14 @@ void brainwars_train_draw(){
 	row = selectTrain/3;
 	col = selectTrain%3;
 
-	x1 = xstart + col*side + col*inter;
-	x2 = x1 + side;
-	y1 = ystart + row*side + row*inter;
-	y2 = y1 + side;
+	x1 = XS + col*SIDE + col*INTER;
+	x2 = x1 + SIDE;
+	y1 = YS + row*SIDE + row*INTER;
+	y2 = y1 + SIDE;
 
-	for(x=x1; x<x2; x++){
-		for(y=y1; y<y2; y++){
-			BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(1<<12);
+	for(x = x1; x < x2; x++){
+		for(y = y1; y < y2; y++){
+			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x]|(1<<12);
 		}
 	}
 }
