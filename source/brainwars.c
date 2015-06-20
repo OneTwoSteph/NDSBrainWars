@@ -32,7 +32,12 @@
 #include "bestscores.h"
 #include "credits.h"
 
+// Shared images
+#include "load.h"
+
 // Global variables
+int display;
+
 STATE state;
 STATE select_main;
 bool state_change;
@@ -50,9 +55,25 @@ bool gameChange;
 
 int scores[7];
 
+// Tile
+u8 loadT[] = {
+	0x11,0x11,0x11,0x11,
+	0x11,0x11,0x11,0x11,
+	0x11,0x11,0x11,0x11,
+	0x11,0x11,0x11,0x11,
+	0x11,0x11,0x11,0x11,
+	0x11,0x11,0x11,0x11,
+	0x11,0x11,0x11,0x11,
+	0x11,0x11,0x11,0x11
+};
+
 // 1p and 2p ISR
 void brainwars_timer_ISR(){
 	timeCounter--;
+}
+
+void brainwars_timer_ISR3(){
+	display++;
 }
 
 // Initialize NDS
@@ -74,6 +95,15 @@ void brainwars_init(){
 	mmLoad(MOD_AURORA);
 	mmLoadEffect(SFX_DO);
 	mmLoadEffect(SFX_BOING);
+	mmLoadEffect(SFX_DUM_DUM);
+	mmLoadEffect(SFX_OULALA);
+
+	// Initialize timer for background change
+	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
+	TIMER3_DATA = TIMER_FREQ_1024(TIMER3F);
+
+	irqSet(IRQ_TIMER3, &brainwars_timer_ISR3);
+	irqEnable(IRQ_TIMER3);
 
 	// Configure main and sub engines for graphics
 	brainwars_configMain();
@@ -85,59 +115,102 @@ void brainwars_init(){
 
 // Main screen graphics configuration
 void brainwars_configMain(){
-	// Use VRAM A
+	// Use VRAM A for all the changes and B for load image
 	VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
 
 	// Activate BG0 for tile mode and BG2 for rotoscale mode
-	REG_DISPCNT = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT = MODE_0_2D | DISPLAY_BG2_ACTIVE;
 
-	// Background 0 which will always have one of the backgrounds in one of the
+	// BG0 which will always have one of the backgrounds in one of the
 	// big main_graphics and train_graphics image
 	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG0TILE) | BG_MAP_BASE(MAINBG0MAP);
 
-	// Background 1 will be used to display game infos (score, time)
+	// BG1 will be used to display game infos (score, time)
 	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG1TILE) | BG_MAP_BASE(MAINBG1MAP);
+
+	// BG2 will be used to display wait
+	BGCTRL[2] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG2TILE) | BG_MAP_BASE(MAINBG2MAP);
+
+	// Load image in BG2 which will never change (just grey background)
+	swiCopy(loadT, (u8*)BG_TILE_RAM(MAINBG2TILE), 8*8*4/8/2);
+
+	BG_PALETTE[0xf1] = GREY;
+
+	swiWaitForVBlank();
+	int row, col;
+	for(row = 0; row < H; row++){
+		for(col = 0; col < W; col++){
+			BG_MAP_RAM(MAINBG2MAP)[row*W+col] = 0 | (15<<12);
+		}
+	}
 }
 
 void brainwars_configSub(){
 	// Use VRAM C
 	VRAM_C_CR = VRAM_ENABLE| VRAM_C_SUB_BG;
 
-	// Activate BG0 for tile mode and BG1 for rotoscale mode
-	REG_DISPCNT_SUB = MODE_5_2D | DISPLAY_BG0_ACTIVE | DISPLAY_BG1_ACTIVE;
+	// Activate BG1
+	REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG2_ACTIVE;
 
-	// Background 0 configuration
+	// BG0 configuration
 	BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG0TILE) | BG_MAP_BASE(SUBBG0MAP);
 
-	// Background 1 configuration
+	// BG1 configuration
 	BGCTRL_SUB[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG1TILE) | BG_MAP_BASE(SUBBG1MAP);
+
+	// BG2 will be used to display wait
+	BGCTRL_SUB[2] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG2TILE) | BG_MAP_BASE(SUBBG2MAP);
+
+	// Load image in BG2 which will never change (just grey background)
+	swiCopy(loadT, (u8*)BG_TILE_RAM_SUB(SUBBG2TILE), 8*8*4/8/2);
+
+	BG_PALETTE_SUB[0xf1] = GREY;
+
+	swiWaitForVBlank();
+	int row, col;
+	for(row = 0; row < H; row++){
+		for(col = 0; col < W; col++){
+			BG_MAP_RAM_SUB(SUBBG2MAP)[row*W+col] = 0 | (15<<12);
+		}
+	}
 }
 
 void brainwars_start(){
-	// Copy main menu image for main screen
-	swiCopy(main_startTiles, BG_TILE_RAM(1), main_startTilesLen/2);
-	swiCopy(main_startPal, BG_PALETTE, main_startPalLen/2);
-	swiCopy(main_startMap, BG_MAP_RAM(0), main_startMapLen);
+	// Copy start image for MAIN screen in BG1 and put correct colors in palette
+	swiCopy(main_startTiles, BG_TILE_RAM(MAINBG1TILE), main_startTilesLen/2);
+	swiCopy(main_startMap, BG_MAP_RAM(MAINBG1MAP), main_startMapLen);
 
-	// Put correct colors in palette (see color index in Photoshop)
 	BG_PALETTE[1] = RED;
 	BG_PALETTE[2] = BLUE;
 	BG_PALETTE[3] = GREEN;
 	BG_PALETTE[4] = GREY;
 	BG_PALETTE[5] = BLACK;
 
-	// Copy start image
-	swiCopy(sub_startTiles, BG_TILE_RAM_SUB(1), sub_startTilesLen/2);
-	swiCopy(sub_startPal, BG_PALETTE_SUB, sub_startPalLen/2);
+	// Copy start image for SUB screen in BG1 and put correct colors in palette
+	swiCopy(sub_startTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_startTilesLen/2);
+	swiCopy(sub_startMap, BG_MAP_RAM_SUB(SUBBG1MAP), sub_startMapLen);
 
-	// Draw start screen
-	int x, y;
+	BG_PALETTE_SUB[1] = GREY;
+	BG_PALETTE_SUB[2] = BLACK;
 
-	for(x = 0; x < W; x++){
-		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(0)[y*W+x] = sub_startMap[y*W+x];
-		}
-	}
+	// Enable timer for displaying timing
+	display = 0;
+	TIMER3_CR |= TIMER_ENABLE;
+
+	// Display title on MAIN
+	while(display < 0.6*TIMER3F);
+	swiWaitForVBlank();
+	mmEffect(SFX_DUM_DUM);
+	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
+
+	// Display instructions on SUB
+	while(display < 1.2*TIMER3F);
+	swiWaitForVBlank();
+	mmEffect(SFX_OULALA);
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+
+	// Disable timer
+	TIMER3_CR &= ~(TIMER_ENABLE);
 
 	// Scan touch screen to see if it was taped and if yes, use x and y to
 	// initialize the random seed
@@ -165,10 +238,6 @@ void brainwars_start(){
 			}
 		}
 	}
-
-	// Initialize game music that will play all the time
-	mmStart(MOD_AURORA, MM_PLAY_LOOP);
-	mmSetModuleVolume(350);
 }
 
 void brainwars_main(){
@@ -243,12 +312,16 @@ void brainwars_main(){
 }
 
 void brainwars_main_init(){
-	// Copy main menu image for main screen
-	swiCopy(main_menuTiles, BG_TILE_RAM(1), main_menuTilesLen/2);
-	swiCopy(main_menuPal, BG_PALETTE, main_menuPalLen/2);
+	// Initialize game music that will play all the time
+	mmStart(MOD_AURORA, MM_PLAY_LOOP);
+	mmSetModuleVolume(350);
 
-	int i = 0;
-	while(i < 100000) i++;
+	// Inactivate BG1 and activate BG0 while changing image
+	REG_DISPCNT &= ~(DISPLAY_BG1_ACTIVE);
+	REG_DISPCNT |= DISPLAY_BG2_ACTIVE;
+
+	// Copy main menu image for main screen BG1
+	swiCopy(main_menuTiles, BG_TILE_RAM(MAINBG1TILE), main_menuTilesLen/2);
 
 	// Put correct colors in palette (see color index in Photoshop)
 	BG_PALETTE[1] = RED;
@@ -269,6 +342,10 @@ void brainwars_main_init(){
 	BG_PALETTE_SUB[17] = YELLOW;
 	BG_PALETTE_SUB[21] = BLACK;
 	BG_PALETTE_SUB[22] = GREY;
+
+	// Inactivate BG2 and activate BG1 after image was copied
+	REG_DISPCNT &= ~(DISPLAY_BG2_ACTIVE);
+	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
 	// Initialize selection variable
 	select_main = TRAIN;
@@ -366,8 +443,12 @@ void brainwars_main_draw(){
 }
 
 void brainwars_train_init(){
+	// Inactivate BG1 and activate BG0 while changing image
+	REG_DISPCNT &= ~(DISPLAY_BG1_ACTIVE);
+	REG_DISPCNT |= DISPLAY_BG2_ACTIVE;
+
 	// Copy train menu image for main screen
-	swiCopy(main_expTiles, BG_TILE_RAM(1), main_expTilesLen/2);
+	swiCopy(main_expTiles, BG_TILE_RAM(MAINBG1TILE), main_expTilesLen/2);
 	swiCopy(main_expPal, BG_PALETTE, main_expPalLen/2);
 
 	// Put correct colors in palette (see color index in Photoshop)
@@ -398,6 +479,10 @@ void brainwars_train_init(){
 	BG_PALETTE_SUB[23] = GREEN;
 	BG_PALETTE_SUB[24] = BLACK;
 	BG_PALETTE_SUB[25] = GREY;
+
+	// Inactivate BG2 and activate BG1 again
+	REG_DISPCNT &= ~(DISPLAY_BG2_ACTIVE);
+	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
 	// Initialize variables
 	game = NOGAME;

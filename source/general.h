@@ -50,15 +50,21 @@
 #define PLAYERONE		0
 #define PLAYERTWO		1
 
-#define MAINBG0MAP		0
-#define MAINBG0TILE		1
-#define MAINBG1MAP		30
-#define MAINBG1TILE		4
+#define MAINBG0TILE		4
+#define MAINBG0MAP		63
+#define MAINBG1TILE		0
+#define MAINBG1MAP		16
+#define MAINBG2TILE		3
+#define MAINBG2MAP		25
 
-#define SUBBG0MAP		0
-#define SUBBG0TILE		1
-#define SUBBG1MAP		30
-#define SUBBG1TILE		4
+#define SUBBG0TILE		4
+#define SUBBG0MAP		63
+#define SUBBG1TILE		0
+#define SUBBG1MAP		16
+#define SUBBG2TILE		3
+#define SUBBG2MAP		25
+
+#define TIMER3F			5
 
 typedef enum STATE STATE;
 enum STATE
