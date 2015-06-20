@@ -28,12 +28,11 @@
 #include "sub_menu.h"
 #include "sub_train.h"
 #include "oneplayer.h"
-#include "score.h"
-#include "bestscores.h"
-#include "credits.h"
+#include "sub_score.h"
+#include "sub_credits.h"
 
-// Shared images
-#include "load.h"
+// Other images
+#include "score.h"
 
 // Constats
 #define MAINMENUH	4
@@ -45,6 +44,7 @@ int display;
 STATE state;
 STATE select_main;
 bool state_change;
+bool changes = false;
 
 int gameCounter;
 int timeCounter;
@@ -252,6 +252,7 @@ void brainwars_start(){
 	// Set game
 	state = MAIN;
 	state_change = true;
+	changes = true;
 
 	// Initialize game music that will play all the time
 	//mmStart(MOD_AURORA, MM_PLAY_LOOP);
@@ -336,7 +337,7 @@ void brainwars_main_init(){
 
 	// Inactivate BG1 while copying new images to  memory
 	swiWaitForVBlank();
-	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
+	if(changes) REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy main menu image in BG1 for MAIN screen and put correct colors in
@@ -364,17 +365,17 @@ void brainwars_main_init(){
 	BG_PALETTE_SUB[0x13] = BLACKGREY;
 	BG_PALETTE_SUB[0x14] = BLACK;
 
-	// Initialize selection variable
-	select_main = TRAIN;
+	// Initialiye variable
+	if(changes) select_main = TRAIN;
 
 	// Draw main menu
 	brainwars_main_draw();
 
 	// Wait 1s before activating BG1
-	while(display < 1*TIMER3F)
+	while(display < PAUSE*TIMER3F)
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
-	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
+	if(changes) REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
 	// Stop timer
 	TIMER3_CR &= ~(TIMER_ENABLE);
@@ -445,10 +446,12 @@ void brainwars_main_draw(){
 	// Put correct information on MAIN screen
 	int x, y;
 
-	swiWaitForVBlank();
-	for(x = 0; x < W; x++){
-		for(y = 0; y < H; y++){
-			BG_MAP_RAM(MAINBG1MAP)[y*W + x] = main_menuMap[(y + (select_main-1)*H)*W + x];
+	if(changes){
+		swiWaitForVBlank();
+		for(x = 0; x < W; x++){
+			for(y = 0; y < H; y++){
+				BG_MAP_RAM(MAINBG1MAP)[y*W + x] = main_menuMap[(y + (select_main-1)*H)*W + x];
+			}
 		}
 	}
 
@@ -513,14 +516,14 @@ void brainwars_train_init(){
 
 	// Initialize variables
 	game = NOGAME;
-	selectTrain = NOGAME;
+	selectTrain = LEADER;
 	gameChange = false;
 
 	// Draw training menu for the first time
 	brainwars_train_draw();
 
 	// Wait 1s before activating BG1
-	while(display < 1*TIMER3F)
+	while(display < PAUSE*TIMER3F)
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
@@ -697,6 +700,7 @@ void brainwars_train_select(){
 		if(game == NOGAME){
 			state = MAIN;
 			state_change = true;
+			changes = true;
 		}
 	}
 
@@ -750,6 +754,7 @@ void brainwars_train_select(){
 	if(keys & KEY_START){
 		state = MAIN;
 		state_change = true;
+		changes = true;
 	}
 
 	// Draw updates only if something has changed
@@ -1060,40 +1065,54 @@ void brainwars_play(){
 	}
 }
 
-void brainwars_score_init(void){
+void brainwars_score_init(){
+	// Launch timer to create 1s pause
+	display = 0;
+	TIMER3_CR |= TIMER_ENABLE;
+
+	// Inactivate BG1 while copying new images to  memory
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+
 	// Copy map
-	swiCopy(bestscoresMap, BG_MAP_RAM_SUB(0), bestscoresMapLen/2);
-
-	// Copy tiles
-	swiCopy(bestscoresTiles, BG_TILE_RAM_SUB(1), bestscoresTilesLen/2);
-
-	// Copy palette
-	swiCopy(bestscoresPal, BG_PALETTE_SUB, bestscoresPalLen/2);
+	swiCopy(sub_scoreTiles, BG_MAP_RAM_SUB(SUBBG1TILE), sub_scoreTilesLen/2);
 
 	// Put correct colors in palettes
-	BG_PALETTE_SUB[5] = RED;
-	BG_PALETTE_SUB[6] = BLUE;
-	BG_PALETTE_SUB[7] = GREEN;
-	BG_PALETTE_SUB[8] = BLACK;
-	BG_PALETTE_SUB[9] = GREY;
-	BG_PALETTE_SUB[11] = GREEN;
+	BG_PALETTE_SUB[0x01] = RED;
+	BG_PALETTE_SUB[0x02] = BLUE;
+	BG_PALETTE_SUB[0x03] = GREEN;
+	BG_PALETTE_SUB[0x04] = YELLOW;
+	BG_PALETTE_SUB[0x05] = WHITE;
+	BG_PALETTE_SUB[0x06] = GREY;
+	BG_PALETTE_SUB[0x07] = BLACKGREY;
+	BG_PALETTE_SUB[0x08] = BLACK;
 
-	BG_PALETTE_SUB[21] = RED;
-	BG_PALETTE_SUB[22] = BLUE;
-	BG_PALETTE_SUB[23] = GREEN;
-	BG_PALETTE_SUB[24] = BLACK;
-	BG_PALETTE_SUB[25] = GREY;
-	BG_PALETTE_SUB[27] = YELLOW;
+	BG_PALETTE_SUB[0x11] = RED;
+	BG_PALETTE_SUB[0x12] = BLUE;
+	BG_PALETTE_SUB[0x13] = GREEN;
+	BG_PALETTE_SUB[0x14] = GREEN;
+	BG_PALETTE_SUB[0x15] = WHITE;
+	BG_PALETTE_SUB[0x16] = GREY;
+	BG_PALETTE_SUB[0x17] = BLACKGREY;
+	BG_PALETTE_SUB[0x18] = BLACK;
+
+	// Create map
+	int x, y;
+
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W + x] = sub_scoreMap[y*W + x];
+		}
+	}
 
 	// Draw score of each game
 	int i, j;
 
 	int score;
-	int color = YELLOW;
+	int palette = 0;
 
 	int digit[4];
 
-	int x, y;
 	int row, col;
 	int xstart = 7;		// x start on screen
 	int ystart = 2;		// y start on screen
@@ -1104,7 +1123,7 @@ void brainwars_score_init(void){
 
 	int xinit, yinit;
 
-	for(i=0; i<7; i++){
+	for(i = 0; i < 7; i++){
 		row = i/2;
 		col = i%2;
 
@@ -1120,11 +1139,11 @@ void brainwars_score_init(void){
 		}
 
 		// Check if higher then old score
-		if(score>scores[i]){
+		if(score > scores[i]){
 			scores[i] = score;
-			color = GREEN;
+			palette = 1;
 		}
-		else color = YELLOW;
+		else palette = 0;
 
 		// Compute digits of number
 		digit[0] = score/1000;
@@ -1135,16 +1154,24 @@ void brainwars_score_init(void){
 		// Display digits
 		yinit = ystart+row*h;
 
-		for(j=0;j<4;j++){
+		for(j= 0;j < 4;j++){
 			xinit = xstart+col*D+j*l;
 
-			for(x=xinit; x<xinit+l; x++){
-				for(y=yinit; y<yinit+1*h; y++){
-					BG_MAP_RAM_SUB(0)[y*32 + x] = bestscoresMap[(y-yinit+ystim)*32+(x-xinit)+digit[j]*l]|((color-2)<<12);
+			for(x = xinit; x < xinit + l; x++){
+				for(y = yinit; y < yinit + 1*h; y++){
+					BG_MAP_RAM_SUB(SUBBG1MAP)[y*W + x] = sub_scoreMap[(y - yinit + ystim)*W + (x-xinit) + digit[j]*l] | (palette<<12);
 				}
 			}
 		}
 	}
+
+	// Wait 1s before activating BG1
+	while(display < PAUSE*TIMER3F)
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+
+	// Stop timer
+	TIMER3_CR &= ~(TIMER_ENABLE);
 }
 
 void brainwars_score(void){
@@ -1153,21 +1180,49 @@ void brainwars_score(void){
 	u16 keys = (u16) keysDown();
 
 	// Scan if exit asked
-	if((keys & KEY_TOUCH) | (keys & KEY_A) | (keys & KEY_START)){
+	if(keys & KEY_START){
 		state = MAIN;
 		state_change = true;
+		changes = false;
 	}
 }
 
 void brainwars_credits_init(){
-	// Copy map
-	swiCopy(creditsMap, BG_MAP_RAM_SUB(0), creditsMapLen/2);
+	// Launch timer to create 1s pause
+	display = 0;
+	TIMER3_CR |= TIMER_ENABLE;
+
+	// Inactivate BG1 while copying new images to  memory
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy tiles
-	swiCopy(creditsTiles, BG_TILE_RAM_SUB(1), creditsTilesLen/2);
+	swiCopy(sub_creditsTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_creditsTilesLen/2);
 
-	// Copy palette
-	swiCopy(creditsPal, BG_PALETTE_SUB, creditsPalLen/2);
+	// Set palette colors
+	BG_PALETTE_SUB[0x01] = RED;
+	BG_PALETTE_SUB[0x02] = BLUE;
+	BG_PALETTE_SUB[0x03] = GREEN;
+	BG_PALETTE_SUB[0x04] = YELLOW;
+	BG_PALETTE_SUB[0x05] = GREY;
+	BG_PALETTE_SUB[0x06] = BLACK;
+
+	// Create map
+	int x, y;
+
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W + x] = sub_creditsMap[y*W + x];
+		}
+	}
+
+	// Wait 1s before activating BG1
+	while(display < PAUSE*TIMER3F)
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+
+	// Stop timer
+	TIMER3_CR &= ~(TIMER_ENABLE);
 }
 
 void brainwars_credits(){
@@ -1176,8 +1231,9 @@ void brainwars_credits(){
 	u16 keys = (u16) keysDown();
 
 	// Scan if exit asked
-	if((keys & KEY_TOUCH) | (keys & KEY_A) | (keys & KEY_START)){
+	if(keys & KEY_START){
 		state = MAIN;
 		state_change = true;
+		changes = false;
 	}
 }

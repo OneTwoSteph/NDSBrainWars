@@ -17,10 +17,6 @@ int main(void) {
 
     // Game infinite loop
     while(1){
-    	// Wait until screen was refreshed to continue
-    	swiWaitForVBlank();
-
-    	// Game
     	brainwars_main();
     }
 }

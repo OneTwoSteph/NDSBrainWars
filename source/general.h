@@ -65,6 +65,7 @@
 #define SUBBG2MAP		25
 
 #define TIMER3F			5
+#define PAUSE			0.6
 
 typedef enum STATE STATE;
 enum STATE
