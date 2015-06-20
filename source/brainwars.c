@@ -35,6 +35,10 @@
 // Shared images
 #include "load.h"
 
+// Constats
+#define MAINMENUH	4
+#define MAINMENUY	2
+
 // Global variables
 int display;
 
@@ -180,18 +184,18 @@ void brainwars_start(){
 	swiCopy(main_startTiles, BG_TILE_RAM(MAINBG1TILE), main_startTilesLen/2);
 	swiCopy(main_startMap, BG_MAP_RAM(MAINBG1MAP), main_startMapLen);
 
-	BG_PALETTE[1] = RED;
-	BG_PALETTE[2] = BLUE;
-	BG_PALETTE[3] = GREEN;
-	BG_PALETTE[4] = GREY;
-	BG_PALETTE[5] = BLACK;
+	BG_PALETTE[0x01] = RED;
+	BG_PALETTE[0x02] = BLUE;
+	BG_PALETTE[0x03] = GREEN;
+	BG_PALETTE[0x04] = GREY;
+	BG_PALETTE[0x05] = BLACK;
 
 	// Copy start image for SUB screen in BG1 and put correct colors in palette
 	swiCopy(sub_startTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_startTilesLen/2);
 	swiCopy(sub_startMap, BG_MAP_RAM_SUB(SUBBG1MAP), sub_startMapLen);
 
-	BG_PALETTE_SUB[1] = GREY;
-	BG_PALETTE_SUB[2] = BLACK;
+	BG_PALETTE_SUB[0x01] = GREY;
+	BG_PALETTE_SUB[0x02] = BLACK;
 
 	// Enable timer for displaying timing
 	display = 0;
@@ -203,20 +207,25 @@ void brainwars_start(){
 	mmEffect(SFX_DUM_DUM);
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
-	// Display instructions on SUB
+	// Wait before continuing
 	while(display < 1.2*TIMER3F);
-	swiWaitForVBlank();
-	mmEffect(SFX_OULALA);
-	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
-
-	// Disable timer
-	TIMER3_CR &= ~(TIMER_ENABLE);
 
 	// Scan touch screen to see if it was taped and if yes, use x and y to
 	// initialize the random seed
 	bool wait = true;
+	bool instr = true;
+	display = 0;
 
 	while(wait){
+		// Create instructions blinking effect
+		swiWaitForVBlank();
+		if((display % (int)(0.8*TIMER3F)) == 0){
+			if(instr) REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+			else REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+
+			instr = !instr;
+		}
+
 		// Scan touch screen
 		touchPosition touch;
 		scanKeys();
@@ -232,12 +241,21 @@ void brainwars_start(){
 			// game to go to main loop
 			if((touch.px > 0) && (touch.py > 0)){
 				srand(touch.px + touch.py);
-				state = MAIN;
-				state_change = true;
 				wait = false;
 			}
 		}
 	}
+
+	// Stop timer
+	TIMER3_CR &= ~(TIMER_ENABLE);
+
+	// Set game
+	state = MAIN;
+	state_change = true;
+
+	// Initialize game music that will play all the time
+	//mmStart(MOD_AURORA, MM_PLAY_LOOP);
+	//mmSetModuleVolume(350);
 }
 
 void brainwars_main(){
@@ -312,39 +330,44 @@ void brainwars_main(){
 }
 
 void brainwars_main_init(){
-	// Initialize game music that will play all the time
-	mmStart(MOD_AURORA, MM_PLAY_LOOP);
-	mmSetModuleVolume(350);
+	// Launch timer to create 1s pause
+	display = 0;
+	TIMER3_CR |= TIMER_ENABLE;
 
-	// Inactivate BG1 and activate BG0 while changing image
-	REG_DISPCNT &= ~(DISPLAY_BG1_ACTIVE);
-	REG_DISPCNT |= DISPLAY_BG2_ACTIVE;
+	// Inactivate BG1 while copying new images to  memory
+	swiWaitForVBlank();
+	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy main menu image for main screen BG1
+	// Copy main menu image in BG1 for MAIN screen and put correct colors in
+	// palette
 	swiCopy(main_menuTiles, BG_TILE_RAM(MAINBG1TILE), main_menuTilesLen/2);
 
 	// Put correct colors in palette (see color index in Photoshop)
-	BG_PALETTE[1] = RED;
-	BG_PALETTE[2] = BLUE;
-	BG_PALETTE[3] = GREEN;
-	BG_PALETTE[4] = GREY;
-	BG_PALETTE[5] = BLACK;
+	BG_PALETTE[0x01] = RED;
+	BG_PALETTE[0x02] = BLUE;
+	BG_PALETTE[0x03] = GREEN;
+	BG_PALETTE[0x04] = GREY;
+	BG_PALETTE[0x05] = BLACK;
 
-	// Copy tiles and palette for BG0 in sub
-	swiCopy(sub_menuTiles, BG_TILE_RAM_SUB(1), sub_menuTilesLen/2);
-	swiCopy(sub_menuPal, BG_PALETTE_SUB, sub_menuPalLen/2);
-	swiCopy(sub_menuPal, &BG_PALETTE_SUB[16], sub_menuPalLen/2);
+	// Copy main menu image in BG1 for SUB screenand put correct colors in
+	// palette
+	swiCopy(sub_menuTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_menuTilesLen/2);
 
-	BG_PALETTE_SUB[1] = WHITE;
-	BG_PALETTE_SUB[5] = BLACK;
-	BG_PALETTE_SUB[6] = GREY;
+	BG_PALETTE_SUB[0x01] = WHITE;
+	BG_PALETTE_SUB[0x02] = GREY;
+	BG_PALETTE_SUB[0x03] = BLACKGREY;
+	BG_PALETTE_SUB[0x04] = BLACK;
 
-	BG_PALETTE_SUB[17] = YELLOW;
-	BG_PALETTE_SUB[21] = BLACK;
-	BG_PALETTE_SUB[22] = GREY;
+	BG_PALETTE_SUB[0x11] = YELLOW;
+	BG_PALETTE_SUB[0x12] = GREY;
+	BG_PALETTE_SUB[0x13] = BLACKGREY;
+	BG_PALETTE_SUB[0x14] = BLACK;
 
-	// Inactivate BG2 and activate BG1 after image was copied
-	REG_DISPCNT &= ~(DISPLAY_BG2_ACTIVE);
+	// Wait 1s before activating BG1
+	while(display < 1*TIMER3F)
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
 	// Initialize selection variable
@@ -355,6 +378,9 @@ void brainwars_main_init(){
 }
 
 void brainwars_main_select(){
+	// Save current selected button for screen update
+	int prev_select = select_main;
+
 	// Scan keys
 	scanKeys();
 	u16 keys = (u16) keysDown();
@@ -397,8 +423,8 @@ void brainwars_main_select(){
 			if((touch.py>=ystart+3*inter+3*h)&&(touch.py<=ystart+3*inter+4*h)) touched = SCORE;
 			if((touch.py>=ystart+4*inter+4*h)&&(touch.py<=ystart+4*inter+5*h)) touched = CREDITS;
 
-			if(touched!=-1){
-				if(touched==select_main){
+			if(touched != -1){
+				if(touched == select_main){
 					// Update game state
 					state = select_main;
 					state_change = true;
@@ -408,36 +434,32 @@ void brainwars_main_select(){
 		}
 	}
 
-	// Draw updates
-	brainwars_main_draw();
+	// Update screen only if something changed
+	if(select_main != prev_select) brainwars_main_draw();
 }
 
 void brainwars_main_draw(){
-	// Put correct information on main screen in function of selection in menu
+	// Put correct information on MAIN screen
 	int x, y;
 
 	swiWaitForVBlank();
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM(0)[y*W + x] = main_menuMap[(y + (select_main-1)*H)*W + x];
+			BG_MAP_RAM(MAINBG1MAP)[y*W + x] = main_menuMap[(y + (select_main-1)*H)*W + x];
 		}
 	}
 
-	// Draw menu
-	int ystart = 2;
-	int height = 4;
-	int L = 32;			// length of the image
-
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = sub_menuMap[y*L+x];
+	// Draw menu on SUB screen
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = sub_menuMap[y*W+x];
 		}
 	}
 
 	// Change color of the selected button
-	for(x=0; x<32; x++){
-		for(y=(select_main-1)*height+ystart; y<select_main*height+ystart; y++){
-			BG_MAP_RAM_SUB(0)[y*L+x] = BG_MAP_RAM_SUB(0)[y*L+x]|(1<<12);
+	for(x = 0; x < W; x++){
+		for(y = (select_main-1)*MAINMENUH + MAINMENUY; y < select_main*MAINMENUH + MAINMENUY; y++){
+			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x]|(1<<12);
 		}
 	}
 }
