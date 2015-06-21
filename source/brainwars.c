@@ -150,6 +150,17 @@ void brainwars_start_configMain(){
 	// BG2 will be used to display grey background for inter panel pause
 	BGCTRL[2] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(BG2TILE) | BG_MAP_BASE(BG2MAP);
 
+	// Load image in BG0 which will never changer (score and timer) and put
+	// correct colors in palette
+	swiCopy(scoreTiles, BG_TILE_RAM(BG0TILE), scoreTilesLen/2);
+
+	BG_PALETTE[0x61] = RED;
+	BG_PALETTE[0x62] = BLUE;
+	BG_PALETTE[0x63] = GREEN;
+	BG_PALETTE[0x64] = GREY;
+	BG_PALETTE[0x65] = BLACKGREY;
+	BG_PALETTE[0x66] = BLACK;
+
 	// Load image in BG2 which will never change (just grey background) and use
 	// palette 15 to put grey in it
 	swiCopy(loadT, (u8*)BG_TILE_RAM(BG2TILE), 8*8*4/8/2);

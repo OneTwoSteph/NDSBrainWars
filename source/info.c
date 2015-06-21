@@ -13,8 +13,8 @@
 #include "info.h"
 
 // Images
-#include "score.h"
 #include "result.h"
+#include "score.h"
 
 /****************************************************************** Constants */
 // Palettes
@@ -54,24 +54,13 @@ void info_time_ISR3(){
 	}
 
 	// Draw
-	info_draw_time();
+	info_update_time();
 }
 
 
 /***************************************************************** Functions */
 // Initialization
 void info_init(state){
-	// Copy image in BG0 of MAIN screen
-	swiCopy(scoreTiles, BG_TILE_RAM(BG0TILE), scoreTilesLen/2);
-
-	// Put correct colors in palette
-	BG_PALETTE[0x61] = RED;
-	BG_PALETTE[0x62] = BLUE;
-	BG_PALETTE[0x63] = GREEN;
-	BG_PALETTE[0x64] = GREY;
-	BG_PALETTE[0x65] = BLACKGREY;
-	BG_PALETTE[0x66] = BLACK;
-
 	// Fill with gray
 	int x, y;
 
@@ -94,6 +83,13 @@ void info_init(state){
 		ym = ((state == TWOP) ? h : 0);
 	}
 
+	// Print initial null score and time
+	info_update_score(0, 0);
+	info_update_time();
+
+	// Activate BG0
+	REG_DISPCNT |= DISPLAY_BG0_ACTIVE;
+
 	// Initialize variables
 	gameState = state;
 
@@ -108,9 +104,6 @@ void info_init(state){
 
 	irqSet(IRQ_TIMER3, &info_time_ISR3);
 	irqEnable(IRQ_TIMER3);
-
-	// Activate BG0
-	REG_DISPCNT |= DISPLAY_BG0_ACTIVE;
 
 	// Update game counter if two player mode
 	if(gameState == TWOP) counter++;
@@ -150,9 +143,9 @@ void info_update_score(int score, int player){
 	}
 }
 
-void info_draw_time(){
+void info_update_time(){
 	// Compute time digits
-	int dig[NBDIG];
+	int dig[NBDIG+1];
 
 	dig[0] = min/10;
 	dig[1] = min-10*dig[0];
@@ -166,7 +159,7 @@ void info_draw_time(){
 	int xm, ym;
 
 	swiWaitForVBlank();	
-	for(i = 0; i <= NBDIG; i++){
+	for(i = 0; i < NBDIG+1; i++){
 		xm = dig[i]*NBW;
 		ym = YM;
 		for(x = XSTART3 + i*NBW; x < XSTART3 + (i+1)*NBW; x++){
@@ -185,21 +178,16 @@ int info_get_time(){
 }
 
 void info_finish(int score, char* game, int state){
-	// Put transparent tiles on BGO of sub since no score has to be shown for now
-	int x, y;
-	for(x=0;x<32;x++){
-		for(y=0;y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = 0;
-		}
-	}
+	// Disable BG0
+	REG_DISPCNT &= ~DISPLAY_BG0_ACTIVE;
 
 	// Disable timer
-	irqDisable(IRQ_TIMER2);
-	irqClear(IRQ_TIMER2);
-	TIMER2_CR = 0;
+	irqDisable(IRQ_TIMER3);
+	irqClear(IRQ_TIMER3);
+	TIMER3_CR = 0;
 
 	// Read into file to find if best score beated only if state not TRAIN
-	if(state!=TRAIN) info_save_score(score, game);
+	if(state != TRAIN) info_save_score(score, game);
 }
 
 void info_save_score(int score, char* game){

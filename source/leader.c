@@ -305,7 +305,7 @@ bool leader_game(bool player, int gameCounter) {
 		scanKeys();
 		u16 keys = keysDown();
 
-		if((keys & KEY_START) || (time > GAMETIME)) return true;
+		if((keys & KEY_START)) return true;
 		else if(keys & KEY_TOUCH){
 			// Check at which position the touch screen was touched
 			touchPosition touch;
