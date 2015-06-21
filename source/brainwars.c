@@ -509,6 +509,8 @@ void brainwars_train(){
 		case NOGAME: brainwars_train_init(); break;
 		default: break;
 		}
+
+		gameChange = false;
 	}
 
 	// Execute current game
@@ -634,7 +636,7 @@ void brainwars_train_draw(){
 
 	for(x = x1; x < x2; x++){
 		for(y = y1; y < y2; y++){
-			BG_MAP_RAM_SUB(BG1MAP)[y*W+x] = BG_MAP_RAM_SUB(BG1MAP)[y*W+x]|(YELLOWPAL<<12);
+			BG_MAP_RAM_SUB(BG1MAP)[y*W+x] = BG_MAP_RAM_SUB(BG1MAP)[y*W+x] | (YELLOWPAL<<12);
 		}
 	}
 }
@@ -939,7 +941,7 @@ void brainwars_score_init(){
 
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_scoreMap[y*W + x]| (YELLOWPAL<<12);
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_scoreMap[y*W + x] | (YELLOWPAL<<12);
 		}
 	}
 

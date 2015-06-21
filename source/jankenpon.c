@@ -11,6 +11,9 @@
 #include "jankenpon.h"
 #include "jankenpon_hand.h"
 
+#define BLUEPAL		6
+#define	REDPAL		7
+
 SHAPE shape;
 COLOR color;
 SHAPE U, M, D;
@@ -40,26 +43,22 @@ void jankenpon_wrong(void){
 }
 
 void jankenpon_init(int gameState){
-	// Configure Background
-	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
+	// Desactivate BG1
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy tiles to memory
-	swiCopy(jankenpon_handTiles, BG_TILE_RAM_SUB(1), jankenpon_handTilesLen);
-
-	// Copy palette
-	swiCopy(jankenpon_handPal, BG_PALETTE_SUB, jankenpon_handPalLen);
-	swiCopy(jankenpon_handPal, &BG_PALETTE_SUB[16], jankenpon_handPalLen);
+	swiCopy(jankenpon_handTiles, BG_TILE_RAM_SUB(BG0TILE), jankenpon_handTilesLen);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
-	BG_PALETTE_SUB[1] = WHITE;
-	BG_PALETTE_SUB[2] = BLUE;
-	BG_PALETTE_SUB[3] = GREY;
-	BG_PALETTE_SUB[4] = BLACK;
+	BG_PALETTE_SUB[0x61] = BLUE;
+	BG_PALETTE_SUB[0x62] = WHITE;
+	BG_PALETTE_SUB[0x63] = GREY;
+	BG_PALETTE_SUB[0x64] = BLACK;
 
-	BG_PALETTE_SUB[17] = WHITE;
-	BG_PALETTE_SUB[18] = RED;
-	BG_PALETTE_SUB[19] = GREY;
-	BG_PALETTE_SUB[20] = BLACK;
+	BG_PALETTE_SUB[0x71] = RED;
+	BG_PALETTE_SUB[0x72] = WHITE;
+	BG_PALETTE_SUB[0x73] = GREY;
+	BG_PALETTE_SUB[0x74] = BLACK;
 
 	// Set draw on screen
 	shape = rand()%3;
@@ -68,6 +67,9 @@ void jankenpon_init(int gameState){
 	M = PAPER;
 	D = ROCK;
 	jankenpon_draw();
+
+	// Activate BG0
+	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
 	// Configure interrupts and timer for false blinking effect
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
@@ -93,27 +95,28 @@ void jankenpon_draw(){
 	int height = 8;
 
 	// Draw first background with grey
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[0];
+	swiWaitForVBlank();
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = jankenpon_handMap[0] | (BLUEPAL << 12);
 		}
 	}
 
 	// If we are not in the wrong case, draw figures
-	if((wrong%2)==0){
-		for(x=0; x<32; x++){
-			for(y=0; y<24; y++){
+	if((wrong%2) == 0){
+		for(x = 0; x < W; x++){
+			for(y = 0; y < H; y++){
 				// Big hand and mini hands
-				if(x<length){
+				if(x < length){
 					switch(shape){
 					case PAPER:
-						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*L+x];
+						BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = jankenpon_handMap[y*L+x];
 						break;
 					case ROCK:
-						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*L+length+x];
+						BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = jankenpon_handMap[y*L+length+x];
 						break;
 					case SCISSOR:
-						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[y*L+2*length+x];
+						BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = jankenpon_handMap[y*L+2*length+x];
 						break;
 					default:
 						break;
@@ -122,17 +125,17 @@ void jankenpon_draw(){
 				else{
 					// First little hand
 					if(y<height)
-						BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(U*height + y)*L+3*length+(x-length)];
+						BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = jankenpon_handMap[(U*height + y)*L+3*length+(x-length)];
 					else{
 						if(y<2*height)
-							BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(M*height + (y-height))*L+3*length+(x-length)];
+							BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = jankenpon_handMap[(M*height + (y-height))*L+3*length+(x-length)];
 						else
-							BG_MAP_RAM_SUB(0)[y*32+x] = jankenpon_handMap[(D*height + (y-2*height))*L+3*length+(x-length)];
+							BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = jankenpon_handMap[(D*height + (y-2*height))*L+3*length+(x-length)];
 					}
 				}
 
 				// Color
-				BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x] | (color<<12);
+				BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = BG_MAP_RAM_SUB(0)[y*32+x] | (((color == B) ? BLUEPAL : REDPAL) << 12);
 			}
 		}
 	}
@@ -263,8 +266,7 @@ void jankenpon_reset(){
 	info_finish(score, "jankenpon", state);
 
 	// Draw nothing
-	wrong = 1;
-	jankenpon_draw();
+	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
 	// Reset all global variables
 	score = 0;

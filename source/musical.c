@@ -11,6 +11,10 @@
 #include "musical.h"
 #include "musical_tone.h"
 
+#define BLUEPAL		6
+#define	REDPAL		7
+#define GREYPAL	8
+
 mm_sound_effect sound;
 
 MUSIC music[4];
@@ -69,23 +73,37 @@ void musical_wait_ISR(){
 }
 
 void musical_init(int gameState){
-	// Copy tiles to memory
-	swiCopy(musical_toneTiles, BG_TILE_RAM_SUB(1), musical_toneTilesLen);
+	// Desactivate BG1
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy palette
-	swiCopy(musical_tonePal, BG_PALETTE_SUB, musical_tonePalLen);
-	swiCopy(musical_tonePal, &BG_PALETTE_SUB[16], musical_tonePalLen);
-	swiCopy(musical_tonePal, &BG_PALETTE_SUB[32], musical_tonePalLen);
+	// Copy tiles to memory
+	swiCopy(musical_toneTiles, BG_TILE_RAM_SUB(BG0TILE), musical_toneTilesLen);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
-	BG_PALETTE_SUB[7] = BLUE;
-	BG_PALETTE_SUB[8] = GREY;
+	BG_PALETTE_SUB[0x61] = GREY;
+	BG_PALETTE_SUB[0x62] = BLACKGREY;
+	BG_PALETTE_SUB[0x63] = BLUE;
 
-	BG_PALETTE_SUB[23] = RED;
-	BG_PALETTE_SUB[24] = GREY;
+	BG_PALETTE_SUB[0x71] = GREY;
+	BG_PALETTE_SUB[0x72] = BLACKGREY;
+	BG_PALETTE_SUB[0x73] = RED;
 
-	BG_PALETTE_SUB[39] = GREEN;
-	BG_PALETTE_SUB[40] = GREY;
+	BG_PALETTE_SUB[0x81] = GREY;
+	BG_PALETTE_SUB[0x82] = GREY;
+	BG_PALETTE_SUB[0x83] = GREY;
+
+	// Set whole BG0 in grey
+	int row, col;
+
+	swiWaitForVBlank();
+	for(row = 0; row < H; row++){
+		for(col = 0; col < W; col++){
+			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = musical_toneMap[0] | (BLUEPAL << 12);
+		}
+	}
+
+	// Activate BG0
+	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
 	// Configure interrupts and timers, timer 0 for music and timer 1 for waiting
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
@@ -280,40 +298,40 @@ void musical_draw(){
 	int x, y;
 	int xstart = 4;
 	int length = 6; 	// of the tones
-	int L = 32;			// length of the whole image
 
 	// Draw first background with grey
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*32+x] = musical_toneMap[0];
+	swiWaitForVBlank();
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = musical_toneMap[0] | (BLUEPAL << 12);
 		}
 	}
 
 	// Draw tones in function of the level
-	for(x=0; x<xstart + (level+1)*length; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*32+x] = musical_toneMap[y*L+x];
+	for(x = 0; x < xstart + (level+1)*length; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = musical_toneMap[y*W+x] | (BLUEPAL << 12);
 		}
 	}
 
-	// Draw correct tones in green
+	// Undraw correct tones
 	int i;
 
-	for(i=0;i<answer;i++){
-		if(music[i]!=wrong){
-			for(x=xstart+music[i]*length; x<xstart+(music[i]+1)*length;x++){
-				for(y=0;y<24;y++){
-					BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(GREEN<<12);
+	for(i = 0; i < answer; i++){
+		if(music[i] != wrong){
+			for(x = xstart + music[i]*length; x < xstart + (music[i]+1)*length; x++){
+				for(y = 0; y < H; y++){
+					BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = (BG_MAP_RAM_SUB(BG0MAP)[y*W+x] & 0x0fff) | (GREYPAL << 12);
 				}
 			}
 		}
 	}
 
 	// Draw false tone in red
-	if(wrong<=FA){
-		for(x=xstart+wrong*length; x<xstart+(wrong+1)*length;x++){
-			for(y=0;y<24;y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(RED<<12);
+	if(wrong <= FA){
+		for(x = xstart + wrong*length; x < xstart + (wrong+1)*length; x++){
+			for(y = 0; y < H; y++){
+				BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = (BG_MAP_RAM_SUB(BG0MAP)[y*W+x] & 0x0fff) | (REDPAL << 12);
 			}
 		}
 	}
@@ -331,13 +349,8 @@ void musical_reset(){
 	irqClear(IRQ_TIMER0);
 	irqClear(IRQ_TIMER1);
 
-	// Draw grey screen
-	int x,y;
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*32+x] = musical_toneMap[0];
-		}
-	}
+	// Desactivate BG0
+	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
 	// Reset all global variables (just to be sure)
 	score = 0;

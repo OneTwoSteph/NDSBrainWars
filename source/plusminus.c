@@ -6,7 +6,9 @@
  *
  */
 
-// Modules
+
+/******************************************************************** Modules */
+// General
 #include "general.h"
 #include "info.h"
 #include "plusminus.h"
@@ -14,13 +16,21 @@
 // Images
 #include "plusminus_im.h"
 
-// Constants
+
+/****************************************************************** Constants */
+// Display infos
 #define POSX1 		8
 #define POSX2		12
 #define POSY		4
 #define NBW			8
 #define NBH			16
 
+// Paletters
+#define NORMALPAL	6
+#define GREYPAL		7
+
+
+/*********************************************************** Global variables */
 // Variable
 STATE state;
 
@@ -36,6 +46,8 @@ bool occupied;				// drawing status
 
 int draw_timer;
 
+
+/***************************************************************** Timer ISRs */
 // Timer for number display
 void plusminus_timer_ISR0(){
 	// Draw nothing at the beginnin
@@ -67,8 +79,8 @@ void plusminus_timer_ISR0(){
 // Wrong blinking ISR
 void plusminus_timer_ISR1(){
 	// Draw for blinking effect
-	if((wrong%2) == 0) plusminus_draw_number(1);
-	else plusminus_draw_number(0);
+	if((wrong%2) == 0) plusminus_draw_number(GREYPAL);
+	else plusminus_draw_number(NORMALPAL);
 
 	// Increment wrong
 	wrong++;
@@ -81,17 +93,20 @@ void plusminus_timer_ISR1(){
 	}
 }
 
+/****************************************************************** Functions */
 void plusminus_init(int gameState) {
+	// Desacitvate BG1
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+
 	// Copy images containing numbers in BG1 and palette in second palette
 	swiCopy(plusminus_imTiles, BG_TILE_RAM_SUB(BG0TILE), plusminus_imTilesLen/2);
-	swiCopy(plusminus_imPal, BG_PALETTE_SUB, plusminus_imPalLen/2);
 
 	// Configure palette with correct colors
-	BG_PALETTE_SUB[1] = BLUE;
-	BG_PALETTE_SUB[2] = GREY;
+	BG_PALETTE_SUB[0x61] = BLUE;
+	BG_PALETTE_SUB[0x62] = GREY;
 
-	BG_PALETTE_SUB[17] = GREY;
-	BG_PALETTE_SUB[18] = GREY;
+	BG_PALETTE_SUB[0x71] = GREY;
+	BG_PALETTE_SUB[0x72] = GREY;
 
 	// Put grey background
 	int row, col;
@@ -99,9 +114,12 @@ void plusminus_init(int gameState) {
 	swiWaitForVBlank();
 	for(col = 0; col < W; col++){
 		for(row = 0; row < H; row++){
-			BG_MAP_RAM_SUB(BG0MAP)[row*W + col] = plusminus_imMap[0] | (1<<12);
+			BG_MAP_RAM_SUB(BG0MAP)[row*W + col] = plusminus_imMap[0] | (GREYPAL << 12);
 		}
 	}
+
+	//
+	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
 	// Configure timer for initial 0 display
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
@@ -276,15 +294,8 @@ void plusminus_reset(void) {
 	// Suppress infos
 	info_finish(score, "plusminus", state);
 
-	// Draw grey screen
-	int row, col;
-
-	swiWaitForVBlank();
-	for(col = 0; col < W; col++){
-		for(row = 0; row < H; row++){
-			BG_MAP_RAM_SUB(BG0MAP)[row*W + col] = plusminus_imMap[0] | (1<<12);
-		}
-	}
+	// Desactivate BG0
+	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
 	// Disable timers
 	irqDisable(IRQ_TIMER0);

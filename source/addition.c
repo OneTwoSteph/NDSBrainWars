@@ -26,12 +26,15 @@ void addition_timer_ISR(){
 }
 
 void addition_init(int gameState) {
+	// Desactivate BG1
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+
 	// Add BG1 and configure
 	BGCTRL_SUB[1] = BG_TILE_BASE(4) | BG_MAP_BASE(17) | BG_32x32 | BG_COLOR_16;
 
 	// Copy tiles to memory
-	swiCopy(numbersTiles, BG_TILE_RAM_SUB(1), numbersTilesLen/2);
-	swiCopy(addition_imTiles, BG_TILE_RAM_SUB(4), addition_imTilesLen/2);
+	swiCopy(numbersTiles, BG_TILE_RAM_SUB(BG0TILE), numbersTilesLen/2);
+	swiCopy(addition_imTiles, BG_TILE_RAM_SUB(BG0TILE), addition_imTilesLen/2);
 
 	// Copy palette
 	swiCopy(numbersPal, BG_PALETTE_SUB, numbersPalLen/2);

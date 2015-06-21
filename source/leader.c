@@ -6,19 +6,31 @@
  *
  */
 
-// Modules
 
+/******************************************************************** Modules */
+// General
 #include "general.h"
 #include "info.h"
 #include "leader.h"
 
-// Constants
-#define SIDE 6							// block side in tiles
-#define L 32							// screen side in tiles
-#define MAXB 9  						// max nb of blocks
+
+/****************************************************************** Constants */
+// Block infos
+#define SIDE 		   	6							// block side in tiles
+#define MAXB 		   	9  						// max nb of blocks
 const int block_x[3] = {6, 13, 20};		// x positions of blocks
 const int block_y[3] = {2, 9, 16};		// y positions of blocks
 
+// Palettes
+#define BLUEPAL			6
+#define REDPAL			7
+#define GREYPAL			8
+
+// Tiles
+#define FULL			0
+#define	CORNER			1
+
+/*********************************************************** Global variables */
 // Tiles with 16-colors palettes
 u8 fullT[] = {
 	0x11,0x11,0x11,0x11,
@@ -42,7 +54,7 @@ u8 cornerT[] = {
 	0x11,0x11,0x11,0x11
 };
 
-// Variables
+// Game variables
 STATE state;				// general game state
 
 TAPORDER taporder;			// order in which the blocks have to be taped
@@ -68,7 +80,7 @@ void leader_timer_ISR0(){
 		x = block_x[order[draw/2]%3];
 		y = block_y[order[draw/2]/3];
 		swiWaitForVBlank();
-		leader_draw_block(x, y, taporder);
+		leader_draw_block(x, y, ((taporder == SAME) ? BLUEPAL : REDPAL));
 	}
 
 	// Increment draw variable
@@ -99,17 +111,35 @@ void leader_timer_ISR1(){
 }
 
 void leader_init(int gameState) {
+	// Desactivate BG1
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+
 	// Load tiles in RAM
-	dmaCopy(fullT, (u8*)BG_TILE_RAM_SUB(BG0TILE), 8*8*4/8);
-	dmaCopy(cornerT, (u8*)BG_TILE_RAM_SUB(BG0TILE) + 8*8*4/8, 8*8*4/8);
-	
+	swiCopy(fullT, (u8*)BG_TILE_RAM_SUB(BG0TILE) + FULL*8*8*4/8, 8*8*4/8/2);
+	swiCopy(cornerT, (u8*)BG_TILE_RAM_SUB(BG0TILE) + CORNER*8*8*4/8, 8*8*4/8/2);
+
 	// Set up palette colors
-	BG_PALETTE_SUB[1] = BLUE;
-	BG_PALETTE_SUB[2] = GREY;
-	BG_PALETTE_SUB[17] = RED;
-	BG_PALETTE_SUB[18] = GREY;
-	BG_PALETTE_SUB[33] = GREY;
-	BG_PALETTE_SUB[34] = GREY;
+	BG_PALETTE_SUB[0x61] = BLUE;
+	BG_PALETTE_SUB[0x62] = GREY;
+
+	BG_PALETTE_SUB[0x71] = RED;
+	BG_PALETTE_SUB[0x72] = GREY;
+
+	BG_PALETTE_SUB[0x81] = GREY;
+	BG_PALETTE_SUB[0x82] = GREY;
+
+	// Set whole BG0 in grey
+	int row, col;
+
+	swiWaitForVBlank();
+	for(row = 0; row < H; row++){
+		for(col = 0; col < W; col++){
+			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = FULL | (GREYPAL << 12);
+		}
+	}
+
+	// Activate BG0
+	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
 	// Configure interrupts and timer for block display every 0.4s
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
@@ -194,9 +224,9 @@ void leader_draw_blocks(){
 	int row, col;
 
 	swiWaitForVBlank();
-	for(row = 0; row < L; row++){
-		for(col = 0; col < L; col++){
-			BG_MAP_RAM_SUB(0)[row*L+col] = 0 | (2<<12);
+	for(row = 0; row < W; row++){
+		for(col = 0; col < H; col++){
+			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = 0 | (GREYPAL<<12);
 		}
 	}
 
@@ -229,14 +259,14 @@ void leader_draw_blinking() {
 		for(i = 0; i < stop; i++){
 			x = block_x[order[i]%3];
 			y = block_y[order[i]/3];
-			leader_draw_block(x, y, 2);
+			leader_draw_block(x, y, GREYPAL);
 		}
 	}
 	else {
 		for(i=start; i<stop; i++){
 			x = block_x[order[i]%3];
 			y = block_y[order[i]/3];
-			leader_draw_block(x, y, taporder);
+			leader_draw_block(x, y, ((taporder == SAME) ? BLUEPAL : REDPAL));
 		}
 	}
 }
@@ -247,15 +277,15 @@ void leader_draw_block(int x, int y, int palette){
 	// Fill the block
 	for(col = x; col < x+SIDE; col++){
 		for(row = y; row < y+SIDE; row++){
-			BG_MAP_RAM_SUB(0)[row*L+col] = 0 | (palette<<12);
+			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = FULL | (palette << 12);
 		}
 	}
 
 	// Change the 4 corners
-	BG_MAP_RAM_SUB(0)[y*L+x] = 1 | (palette<<12);
-	BG_MAP_RAM_SUB(0)[(y+SIDE-1)*L+x] = 1 | (palette<<12) | (1<<11);
-	BG_MAP_RAM_SUB(0)[y*L+(x+SIDE-1)] = 1 | (palette<<12) | (1<<10);
-	BG_MAP_RAM_SUB(0)[(y+SIDE-1)*L+(x+SIDE-1)] = 1 | (palette<<12) | (1<<10) | (1<<11);
+	BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = CORNER | (palette<<12);
+	BG_MAP_RAM_SUB(BG0MAP)[(y+SIDE-1)*W+x] = CORNER | (palette<<12) | (1<<11);
+	BG_MAP_RAM_SUB(BG0MAP)[y*W+(x+SIDE-1)] = CORNER | (palette<<12) | (1<<10);
+	BG_MAP_RAM_SUB(BG0MAP)[(y+SIDE-1)*W+(x+SIDE-1)] = CORNER | (palette<<12) | (1<<10) | (1<<11);
 }
 
 bool leader_game(bool player, int gameCounter) {
@@ -328,7 +358,8 @@ void leader_correct(bool player){
 
 	x = block_x[order[current]%3];
 	y = block_y[order[current]/3];
-	leader_draw_block(x, y, 2);
+	swiWaitForVBlank();
+	leader_draw_block(x, y, GREYPAL);
 
 	// Update player state
 	block++;
@@ -368,13 +399,8 @@ void leader_reset() {
 	// Suppress displayed infos
 	info_finish(score, "leader", state);
 
-	// Draw nothing
-	int row, col;
-	for(row = 0; row < L; row++){
-		for(col = 0; col < L; col++){
-			BG_MAP_RAM_SUB(0)[row*L+col] = 0;
-		}
-	}
+	// Desactivate BG0
+	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
 	// Disable timers
 	irqDisable(IRQ_TIMER0);

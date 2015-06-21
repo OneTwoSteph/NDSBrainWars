@@ -11,6 +11,8 @@
 #include "eatit.h"
 #include "eatit_pacman.h"
 
+#define NORMALPAL	6
+
 ROW row;
 FOOD up[4];
 FOOD down[4];
@@ -39,23 +41,18 @@ void eatit_wrong(void){
 }
 
 void eatit_init(int gameState){
-	// Configure Background
-	BGCTRL_SUB[0] = BG_TILE_BASE(1) | BG_MAP_BASE(0) | BG_32x32 | BG_COLOR_16;
+	// Desactivate BG1
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy tiles to memory
-	swiCopy(eatit_pacmanTiles, BG_TILE_RAM_SUB(1), eatit_pacmanTilesLen);
-
-	// Copy palette
-	swiCopy(eatit_pacmanPal, BG_PALETTE_SUB, eatit_pacmanPalLen);
+	swiCopy(eatit_pacmanTiles, BG_TILE_RAM_SUB(BG0TILE), eatit_pacmanTilesLen);
 
 	// Set up palette colors
-	BG_PALETTE_SUB[1] = WHITE;
-	BG_PALETTE_SUB[3] = GREY;
-	BG_PALETTE_SUB[4] = BLACK;
-	BG_PALETTE_SUB[5] = RED;
-	BG_PALETTE_SUB[7] = GREEN;
-	BG_PALETTE_SUB[6] = BLUE;
-
+	BG_PALETTE_SUB[0x61] = WHITE;
+	BG_PALETTE_SUB[0x62] = GREY;
+	BG_PALETTE_SUB[0x63] = GREEN;
+	BG_PALETTE_SUB[0x64] = WHITE;
+	BG_PALETTE_SUB[0x65] = GREY;
 
 	// Set draw on screen
 	up[0] = CHERRY;
@@ -71,6 +68,9 @@ void eatit_init(int gameState){
 	row = FIRST;
 
 	eatit_draw();
+
+	// Activate BG0
+	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
 	// Configure interrupts and timer for false blinking effect
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
@@ -98,50 +98,51 @@ void eatit_draw(){
 	int L = 34;				// length of the whole image
 
 	// Draw first background with grey
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[0];
+	swiWaitForVBlank();
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[0] | (NORMALPAL << 12);
 		}
 	}
 
 	// If we are not in the wrong case, draw figures
 	if((wrong%2)==0){
-		for(x=0; x<32; x++){
-			for(y=0; y<24; y++){
+		for(x = 0; x < W; x++){
+			for(y = 0; y < H; y++){
 				// Up and down
 				if(y<height){
 					// 0, 1, 2, 3 position (0 = left)
 					if(x<lFood)
-						BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+x+up[0]*lFood];
+						BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[y*L+x+up[0]*lFood] | (NORMALPAL << 12);
 					else{
 						if(x<2*lFood)
-							BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-lFood)+up[1]*lFood];
+							BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[y*L+(x-lFood)+up[1]*lFood] | (NORMALPAL << 12);
 						else{
 							if(x<3*lFood)
-								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-2*lFood)+up[2]*lFood];
+								BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[y*L+(x-2*lFood)+up[2]*lFood] | (NORMALPAL << 12);
 							else{
 								if(x<4*lFood)
-									BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-3*lFood)+up[3]*lFood];
+									BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[y*L+(x-3*lFood)+up[3]*lFood] | (NORMALPAL << 12);
 								else
-									BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[y*L+(x-4*lFood)+3*lFood+row*lPac];
+									BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[y*L+(x-4*lFood)+3*lFood+row*lPac] | (NORMALPAL << 12);
 							}
 						}
 					}
 				}
 				else{
 					if(x<lFood)
-						BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+x+down[0]*lFood];
+						BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[(y-height)*L+x+down[0]*lFood] | (NORMALPAL << 12);
 					else{
 						if(x<2*lFood)
-							BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-lFood)+down[1]*lFood];
+							BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[(y-height)*L+(x-lFood)+down[1]*lFood] | (NORMALPAL << 12);
 						else{
 							if(x<3*lFood)
-								BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-2*lFood)+down[2]*lFood];
+								BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[(y-height)*L+(x-2*lFood)+down[2]*lFood] | (NORMALPAL << 12);
 							else{
 								if(x<4*lFood)
-									BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-3*lFood)+down[3]*lFood];
+									BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[(y-height)*L+(x-3*lFood)+down[3]*lFood] | (NORMALPAL << 12);
 								else
-									BG_MAP_RAM_SUB(0)[y*32+x] = eatit_pacmanMap[(y-height)*L+(x-4*lFood)+3*lFood+(row+1)%2*lPac];
+									BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_pacmanMap[(y-height)*L+(x-4*lFood)+3*lFood+(row+1)%2*lPac] | (NORMALPAL << 12);
 							}
 						}
 					}
@@ -229,9 +230,8 @@ void eatit_reset(){
 	// Suppress infos
 	info_finish(score, "eatit", state);
 
-	// Draw nothing
-	wrong = 1;
-	eatit_draw();
+	// Desactivate BG0
+	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER1);

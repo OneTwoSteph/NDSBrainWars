@@ -11,6 +11,11 @@
 #include "path.h"
 #include "path_arrow.h"
 
+#define BLUEPAL		6
+#define REDPAL		7
+#define GREENPAL	8
+#define YELLOWPAL	9
+
 DIRECTION direction;
 COLOR color;
 
@@ -39,30 +44,28 @@ void path_wrong(){
 }
 
 void path_init(int gameState){
-	// Copy tiles to memory
-	swiCopy(path_arrowTiles, BG_TILE_RAM_SUB(1), path_arrowTilesLen/2);
+	// Desactivate BG1
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy palette
-	swiCopy(path_arrowPal, BG_PALETTE_SUB, path_arrowPalLen/2);
-	swiCopy(path_arrowPal, &BG_PALETTE_SUB[16], path_arrowPalLen);
-	swiCopy(path_arrowPal, &BG_PALETTE_SUB[16*2], path_arrowPalLen);
+	// Copy tiles to memory
+	swiCopy(path_arrowTiles, BG_TILE_RAM_SUB(BG0TILE), path_arrowTilesLen/2);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
-	BG_PALETTE_SUB[5] = WHITE;
-	BG_PALETTE_SUB[6] = BLUE;
-	BG_PALETTE_SUB[7] = GREY;
+	BG_PALETTE_SUB[0x61] = BLUE;
+	BG_PALETTE_SUB[0x62] = WHITE;
+	BG_PALETTE_SUB[0x63] = GREY;
 
-	BG_PALETTE_SUB[21] = WHITE;
-	BG_PALETTE_SUB[22] = RED;
-	BG_PALETTE_SUB[23] = GREY;
+	BG_PALETTE_SUB[0x71] = RED;
+	BG_PALETTE_SUB[0x72] = WHITE;
+	BG_PALETTE_SUB[0x73] = GREY;
 
-	BG_PALETTE_SUB[37] = WHITE;
-	BG_PALETTE_SUB[38] = GREEN;
-	BG_PALETTE_SUB[39] = GREY;
+	BG_PALETTE_SUB[0x81] = GREEN;
+	BG_PALETTE_SUB[0x82] = WHITE;
+	BG_PALETTE_SUB[0x83] = GREY;
 
-	BG_PALETTE_SUB[53] = WHITE;
-	BG_PALETTE_SUB[54] = YELLOW;
-	BG_PALETTE_SUB[55] = GREY;
+	BG_PALETTE_SUB[0x91] = YELLOW;
+	BG_PALETTE_SUB[0x92] = WHITE;
+	BG_PALETTE_SUB[0x93] = GREY;
 
 	// Set initial random direction and color
 	direction = rand()%4;
@@ -70,6 +73,9 @@ void path_init(int gameState){
 
 	// Set draw on screen
 	path_draw();
+
+	// Activate BG0
+	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
 	// Configure interrupts and timer for false blinking effect
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
@@ -93,36 +99,37 @@ void path_draw(){
 	int L = 32;	// length of the image
 
 	// Draw first background with grey
-	for(x=0; x<32; x++){
-		for(y=0; y<24; y++){
-			BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[0];
+	swiWaitForVBlank();
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*H+x] = path_arrowMap[0] | (BLUEPAL << 12);
 		}
 	}
 
 	// If we are not in the wrong case, draw figures
-	if((wrong%2)==0){
-		for(x=0; x<32; x++){
-			for(y=0; y<24; y++){
+	if((wrong%2) == 0){
+		for(x = 0; x < W; x++){
+			for(y = 0; y < H; y++){
 				// Direction
 				switch(direction){
 				case RIGHT:
-					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+32+4)*L+x];
+					BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_arrowMap[(y+32+4)*L+x];
 					break;
 				case LEFT:
-					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+32+4)*L+(31-x)]^(1<<10);
+					BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_arrowMap[(y+32+4)*L+(31-x)]^(1<<10);
 					break;
 				case UP:
-					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(y+4)*L+x];
+					BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_arrowMap[(y+4)*L+x];
 					break;
 				case DOWN:
-					BG_MAP_RAM_SUB(0)[y*32+x] = path_arrowMap[(31-4-y)*L+x]^(1<<11);
+					BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_arrowMap[(31-4-y)*L+x]^(1<<11);
 					break;
 				default:
 					break;
 				}
 
 				// Color
-				BG_MAP_RAM_SUB(0)[y*32+x] = BG_MAP_RAM_SUB(0)[y*32+x]|(color<<12);
+				BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = BG_MAP_RAM_SUB(BG0MAP)[y*W+x] | ((color+6) << 12);
 			}
 		}
 	}
@@ -233,9 +240,8 @@ void path_reset(){
 	// Suppress infos
 	info_finish(score, "path", state);
 
-	// Draw nothing
-	wrong = 1;
-	path_draw();
+	// Desactivate BG0
+	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER1);

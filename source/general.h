@@ -35,12 +35,12 @@
 #define HP			  192				// height of screen in pixels
 
 // Backgrounds memory infos
-#define BG0TILE		4
-#define BG0MAP		63
-#define BG1TILE		0
-#define BG1MAP		16
-#define BG2TILE		3
-#define BG2MAP		25
+#define BG0TILE		1
+#define BG0MAP		0
+#define BG1TILE		3
+#define BG1MAP		3
+#define BG2TILE		5
+#define BG2MAP		6
 
 
 // Colors
