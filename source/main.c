@@ -8,12 +8,16 @@
  */
 
 
+/******************************************************************** Modules */
+//General
 #include "general.h"
 #include "brainwars.h"
 
+
+/*********************************************************************** Main */
 int main(void) {
     // Initialize game
-    brainwars_init();
+    brainwars_start_init();
 
     // Game infinite loop
     while(1){

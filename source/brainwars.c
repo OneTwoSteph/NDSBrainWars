@@ -6,9 +6,14 @@
  *
  */
 
-// Modules
-#include "general.h"
+
+/******************************************************************** Modules */
+// General
 #include "brainwars.h"
+#include "general.h"
+#include "info.h"
+
+// Games
 #include "leader.h"
 #include "eatit.h"
 #include "musical.h"
@@ -16,14 +21,15 @@
 #include "addition.h"
 #include "plusminus.h"
 #include "jankenpon.h"
-#include "info.h"
 
-// Images main screen
+
+/********************************************************************* Images */
+// MAIN screen
 #include "main_start.h"
 #include "main_menu.h"
 #include "main_exp.h"
 
-// Images sub screen
+// SUB screen
 #include "sub_start.h"
 #include "sub_menu.h"
 #include "sub_train.h"
@@ -31,35 +37,17 @@
 #include "sub_score.h"
 #include "sub_credits.h"
 
-// Other images
+// Other
 #include "score.h"
 
-// Constats
-#define MAINMENUH	4
-#define MAINMENUY	2
 
-// Global variables
+/****************************************************************** Constants */
+
+
+/*********************************************************** Global variables */
+// Display
 int display;
 
-STATE state;
-STATE select_main;
-bool state_change;
-bool changes = false;
-
-int gameCounter;
-int timeCounter;
-
-bool twoPlayers;
-bool gamePlayer;
-
-GAME oldgame;
-GAME game;
-GAME selectTrain;
-bool gameChange;
-
-int scores[7];
-
-// Tile
 u8 loadT[] = {
 	0x11,0x11,0x11,0x11,
 	0x11,0x11,0x11,0x11,
@@ -71,21 +59,46 @@ u8 loadT[] = {
 	0x11,0x11,0x11,0x11
 };
 
+// Game state
+STATE state;
+bool stateChange;
+STATE selectMain;
+
+// Training state
+GAME oldgame;
+GAME game;
+GAME selectTrain;
+bool gameChange;
+
+// 1p and 2p state
+int gameCounter;
+int timeCounter;
+bool twoPlayers;
+bool gamePlayer;
+
+// Score
+int scores[7];
+
+
+/***************************************************************** Timer ISRs */
+// Display timer
+void brainwars_timer_ISR3(){
+	display++;
+}
+
 // 1p and 2p ISR
 void brainwars_timer_ISR(){
 	timeCounter--;
 }
 
-void brainwars_timer_ISR3(){
-	display++;
-}
 
+/********************************************************************** Start */
 // Initialize NDS
-void brainwars_init(){
+void brainwars_start_init(){
 	// Initialize score saving in text files
 	fatInitDefault();
 
-	// Read initial best scores in files to initialize scores array
+	// Read saved best scores in files to initialize scores array
 	scores[0] = info_get_score("leader");
 	scores[1] = info_get_score("eatit");
 	scores[2] = info_get_score("musical");
@@ -109,38 +122,37 @@ void brainwars_init(){
 	irqSet(IRQ_TIMER3, &brainwars_timer_ISR3);
 	irqEnable(IRQ_TIMER3);
 
-	// Configure main and sub engines for graphics
-	brainwars_configMain();
-	brainwars_configSub();
+	// Configure MAIN and SUB screens
+	brainwars_start_configMain();
+	brainwars_start_configSub();
 
 	// Launch the start screen before game starts
 	brainwars_start();
 }
 
-// Main screen graphics configuration
-void brainwars_configMain(){
-	// Use VRAM A for all the changes and B for load image
+// MAIN screen configuration
+void brainwars_start_configMain(){
+	// Use VRAM A
 	VRAM_A_CR = VRAM_ENABLE | VRAM_A_MAIN_BG;
 
-	// Activate BG0 for tile mode and BG2 for rotoscale mode
-	REG_DISPCNT = MODE_0_2D | DISPLAY_BG2_ACTIVE;
+	// Activate mode 0 for mode tiles on all backgrounds
+	REG_DISPCNT = MODE_0_2D;
 
-	// BG0 which will always have one of the backgrounds in one of the
-	// big main_graphics and train_graphics image
+	// BG0 will be used to display game infos (score and timer)
 	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG0TILE) | BG_MAP_BASE(MAINBG0MAP);
 
-	// BG1 will be used to display game infos (score, time)
+	// BG1 will be used to display main graphics
 	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG1TILE) | BG_MAP_BASE(MAINBG1MAP);
 
-	// BG2 will be used to display wait
+	// BG2 will be used to display grey background for inter panel pause
 	BGCTRL[2] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG2TILE) | BG_MAP_BASE(MAINBG2MAP);
 
-	// Load image in BG2 which will never change (just grey background)
+	// Load image in BG2 which will never change (just grey background) and use
+	// palette 15 to put grey in it
 	swiCopy(loadT, (u8*)BG_TILE_RAM(MAINBG2TILE), 8*8*4/8/2);
 
 	BG_PALETTE[0xf1] = GREY;
 
-	swiWaitForVBlank();
 	int row, col;
 	for(row = 0; row < H; row++){
 		for(col = 0; col < W; col++){
@@ -149,28 +161,29 @@ void brainwars_configMain(){
 	}
 }
 
-void brainwars_configSub(){
+// SUB screen configuration
+void brainwars_start_configSub(){
 	// Use VRAM C
 	VRAM_C_CR = VRAM_ENABLE| VRAM_C_SUB_BG;
 
-	// Activate BG1
-	REG_DISPCNT_SUB = MODE_0_2D | DISPLAY_BG2_ACTIVE;
+	// Activate mode 0 to use all backgrounds in tiles mode
+	REG_DISPCNT_SUB = MODE_0_2D;
 
-	// BG0 configuration
+	// BG0 will be used for the games graphics
 	BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG0TILE) | BG_MAP_BASE(SUBBG0MAP);
 
-	// BG1 configuration
+	// BG1 will be used to display main graphics
 	BGCTRL_SUB[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG1TILE) | BG_MAP_BASE(SUBBG1MAP);
 
-	// BG2 will be used to display wait
+	// BG2 will be used to display grey background for inter panel pause
 	BGCTRL_SUB[2] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG2TILE) | BG_MAP_BASE(SUBBG2MAP);
 
-	// Load image in BG2 which will never change (just grey background)
+	// Load image in BG2 which will never change (just grey background) and use
+	// palette 15 to put grey in it
 	swiCopy(loadT, (u8*)BG_TILE_RAM_SUB(SUBBG2TILE), 8*8*4/8/2);
 
 	BG_PALETTE_SUB[0xf1] = GREY;
 
-	swiWaitForVBlank();
 	int row, col;
 	for(row = 0; row < H; row++){
 		for(col = 0; col < W; col++){
@@ -179,7 +192,17 @@ void brainwars_configSub(){
 	}
 }
 
+// Start
 void brainwars_start(){
+	// Launch timer for panel change pause
+	display = 0;
+	TIMER3_CR |= TIMER_ENABLE;
+
+	// Activate BG2 for grey background
+	swiWaitForVBlank();
+	REG_DISPCNT |= DISPLAY_BG2_ACTIVE;
+	REG_DISPCNT_SUB |= DISPLAY_BG2_ACTIVE;
+
 	// Copy start image for MAIN screen in BG1 and put correct colors in palette
 	swiCopy(main_startTiles, BG_TILE_RAM(MAINBG1TILE), main_startTilesLen/2);
 	swiCopy(main_startMap, BG_MAP_RAM(MAINBG1MAP), main_startMapLen);
@@ -197,17 +220,13 @@ void brainwars_start(){
 	BG_PALETTE_SUB[0x01] = GREY;
 	BG_PALETTE_SUB[0x02] = BLACK;
 
-	// Enable timer for displaying timing
-	display = 0;
-	TIMER3_CR |= TIMER_ENABLE;
-
-	// Display title on MAIN
+	// Display title on MAIN after 0.6 seconds
 	while(display < 0.6*TIMER3F);
 	swiWaitForVBlank();
-	mmEffect(SFX_DUM_DUM);
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
+	mmEffect(SFX_DUM_DUM);
 
-	// Wait before continuing
+	// Wait more 0.6s before continuing
 	while(display < 1.2*TIMER3F);
 
 	// Scan touch screen to see if it was taped and if yes, use x and y to
@@ -217,28 +236,24 @@ void brainwars_start(){
 	display = 0;
 
 	while(wait){
-		// Create instructions blinking effect
-		swiWaitForVBlank();
+		// Create instructions blinking effect (0.8s)
 		if((display % (int)(0.8*TIMER3F)) == 0){
+			swiWaitForVBlank();
 			if(instr) REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 			else REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
 			instr = !instr;
 		}
 
-		// Scan touch screen
+		// Scan touch screen and if touch screen was touched, check for position
 		touchPosition touch;
 		scanKeys();
 		u16 keys = keysDown();
 
-		// If touch screen was touched, check for position
 		if(keys & KEY_TOUCH) {
-			// Read the touched position
 			touchRead(&touch);
 
-			// Check if it wasn't a false touch and if not, initialize
-			// random number generation and finish the initialization of the
-			// game to go to main loop
+			// Use position touched to initialize random number seed
 			if((touch.px > 0) && (touch.py > 0)){
 				srand(touch.px + touch.py);
 				wait = false;
@@ -249,95 +264,25 @@ void brainwars_start(){
 	// Stop timer
 	TIMER3_CR &= ~(TIMER_ENABLE);
 
-	// Set game
-	state = MAIN;
-	state_change = true;
-	changes = true;
-
 	// Initialize game music that will play all the time
 	//mmStart(MOD_AURORA, MM_PLAY_LOOP);
 	//mmSetModuleVolume(350);
+
+	// Launch main menu
+	brainwars_main_init();
 }
 
-void brainwars_main(){
-	// Check in which state the game is
-	switch(state){
-	case MAIN:
-		// Check if state just changed
-		if(state_change){
-			state_change = false;
-			brainwars_main_init();
-		}
 
-		// Execute action of the state
-		brainwars_main_select();
-
-		break;
-	case TRAIN:
-		// Check if state just changed
-		if(state_change){
-			state_change = false;
-			brainwars_train_init();
-		}
-
-		// Execute action of state
-		brainwars_train();
-
-		break;
-	case ONEP:
-		// Check if state just changed
-		if(state_change){
-			state_change = false;
-			brainwars_1p_init();
-		}
-
-		// Execute action of state
-		brainwars_play();
-
-		break;
-	case TWOP:
-		if(state_change){
-			state_change = false;
-			brainwars_2p_init();
-		}
-
-		brainwars_play();
-
-		break;
-	case SCORE:
-		// Check if state just changed
-		if(state_change){
-			state_change = false;
-			brainwars_score_init();
-		}
-
-		// Execute action of state
-		brainwars_score();
-
-		break;
-	case CREDITS:
-		// Check if state just changed
-		if(state_change){
-			state_change = false;
-			brainwars_credits_init();
-		}
-
-		// Execute action of state
-		brainwars_credits();
-		break;
-	default:
-		break;
-	}
-}
-
+/****************************************************************** Main menu */
+// Initialization
 void brainwars_main_init(){
 	// Launch timer to create 1s pause
 	display = 0;
 	TIMER3_CR |= TIMER_ENABLE;
 
-	// Inactivate BG1 while copying new images to  memory
+	// Inactivate BG1 while copying new images to memory
 	swiWaitForVBlank();
-	if(changes) REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy main menu image in BG1 for MAIN screen and put correct colors in
@@ -351,7 +296,7 @@ void brainwars_main_init(){
 	BG_PALETTE[0x04] = GREY;
 	BG_PALETTE[0x05] = BLACK;
 
-	// Copy main menu image in BG1 for SUB screenand put correct colors in
+	// Copy main menu image in BG1 for SUB screen and put correct colors in
 	// palette
 	swiCopy(sub_menuTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_menuTilesLen/2);
 
@@ -365,8 +310,10 @@ void brainwars_main_init(){
 	BG_PALETTE_SUB[0x13] = BLACKGREY;
 	BG_PALETTE_SUB[0x14] = BLACK;
 
-	// Initialiye variable
-	if(changes) select_main = TRAIN;
+	// Initialize menu variable
+	state = MAIN;
+	selectMain = TRAIN;
+	stateChange = false;
 
 	// Draw main menu
 	brainwars_main_draw();
@@ -375,87 +322,94 @@ void brainwars_main_init(){
 	while(display < PAUSE*TIMER3F)
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
-	if(changes) REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
 	// Stop timer
 	TIMER3_CR &= ~(TIMER_ENABLE);
 }
 
-void brainwars_main_select(){
-	// Save current selected button for screen update
-	int prev_select = select_main;
+// Main function
+void brainwars_main(){
+	// Check if state changed an initialize module in function of new state
+	if(stateChange){
+		switch(state){
+		case MAIN: brainwars_main_init(); break;
+		case TRAIN: brainwars_train_init(); break;
+		case ONEP: brainwars_1p_init(); break;
+		case TWOP: brainwars_2p_init(); break;
+		case SCORE: brainwars_score_init(); break;
+		case CREDITS: brainwars_credits_init(); break;
+		default: break;
+		}
 
-	// Scan keys
+		stateChange = false;
+	}
+
+	// Execute correct module in function of state
+	switch(state){
+	case MAIN: brainwars_main_select(); break;
+	case TRAIN: brainwars_train(); break;
+	case ONEP: brainwars_play(); break;
+	case TWOP: brainwars_play(); break;
+	case SCORE: brainwars_score(); break;
+	case CREDITS: brainwars_credits(); break;
+	default: break;
+	}
+}
+
+// Selection in main menu
+void brainwars_main_select(){
+	// Scan keys and touchscreen
 	scanKeys();
 	u16 keys = (u16) keysDown();
-
-	// Check if up key pressed
-	if(keys & KEY_UP){
-		// Update selected button
-		if(select_main==TRAIN) select_main = CREDITS;
-		else select_main--;
-	}
-
-	// Check if down key pressed
-	if(keys & KEY_DOWN){
-		// Update selected button
-		if(select_main==CREDITS) select_main = TRAIN;
-		else select_main++;
-	}
-
-	// Check if A key pressed
-	if(keys & KEY_A){
-		// Update game state
-		state = select_main;
-		state_change = true;
-	}
-
-	// Check if touchscreen was touched
-	STATE touched = -1;
 	touchPosition touch;
 	touchRead(&touch);
 
-	if(keys & KEY_TOUCH){
+	// Check if up or down was pressed or if touchscreen was touched
+	int option = -1;
+
+	if(keys & KEY_UP){
+		if(selectMain == TRAIN) option = CREDITS;
+		else option = selectMain - 1;
+	}
+	else if(keys & KEY_DOWN) option = (((selectMain-1) + 1) % 5) + 1;
+	else if(keys & KEY_A) option = selectMain;
+	else if(keys & KEY_TOUCH){
 		if((touch.px>=39)&&(touch.px<=215)){
-			int ystart = 21;
-			int inter = 11;
-			int h = 21;
+			int ystart = 21, inter = 11, h = 21;
 
-			if((touch.py>=ystart)&&(touch.py<=ystart+h)) touched = TRAIN;
-			if((touch.py>=ystart+inter+h)&&(touch.py<=ystart+inter+2*h)) touched = ONEP;
-			if((touch.py>=ystart+2*inter+2*h)&&(touch.py<=ystart+2*inter+3*h)) touched = TWOP;
-			if((touch.py>=ystart+3*inter+3*h)&&(touch.py<=ystart+3*inter+4*h)) touched = SCORE;
-			if((touch.py>=ystart+4*inter+4*h)&&(touch.py<=ystart+4*inter+5*h)) touched = CREDITS;
-
-			if(touched != -1){
-				if(touched == select_main){
-					// Update game state
-					state = select_main;
-					state_change = true;
-				}
-				else select_main = touched;
-			}
+			if((touch.py >= ystart) && (touch.py <= ystart+h)) option = TRAIN;
+			if((touch.py >= ystart+inter+h) && (touch.py <= ystart+inter+2*h)) option = ONEP;
+			if((touch.py >= ystart+2*inter+2*h) && (touch.py <= ystart+2*inter+3*h)) option = TWOP;
+			if((touch.py >= ystart+3*inter+3*h) && (touch.py <= ystart+3*inter+4*h)) option = SCORE;
+			if((touch.py >= ystart+4*inter+4*h) && (touch.py <= ystart+4*inter+5*h)) option = CREDITS;
 		}
 	}
 
-	// Update screen only if something changed
-	if(select_main != prev_select) brainwars_main_draw();
+	// Check if an option in menu was chosen or changed
+	if(option == selectMain){
+		state = selectMain;
+		stateChange = true;
+	}
+	else if(option != -1){
+		selectMain = option;
+		brainwars_main_draw();
+	}
 }
 
+// Draw
 void brainwars_main_draw(){
-	// Put correct information on MAIN screen
+	// Put correct information on MAIN screen BG1
 	int x, y;
 
-	if(changes){
-		swiWaitForVBlank();
-		for(x = 0; x < W; x++){
-			for(y = 0; y < H; y++){
-				BG_MAP_RAM(MAINBG1MAP)[y*W + x] = main_menuMap[(y + (select_main-1)*H)*W + x];
-			}
+	swiWaitForVBlank();
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM(MAINBG1MAP)[y*W + x] = main_menuMap[(y + (selectMain-1)*H)*W + x];
 		}
 	}
 
-	// Draw menu on SUB screen
+	// Draw menu on SUB screen BG1
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
 			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = sub_menuMap[y*W+x];
@@ -463,15 +417,17 @@ void brainwars_main_draw(){
 	}
 
 	// Change color of the selected button
-	int YS = 2;
-	int BH = 4;
+	int YS = 2, BH = 4;
+
 	for(x = 0; x < W; x++){
-		for(y = (select_main-1)*BH + YS; y < select_main*BH + YS; y++){
+		for(y = (selectMain-1)*BH + YS; y < selectMain*BH + YS; y++){
 			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x]|(1<<12);
 		}
 	}
 }
 
+
+/***************************************************************** Train menu */
 void brainwars_train_init(){
 	// Launch timer to create 1s pause
 	display = 0;
@@ -482,10 +438,9 @@ void brainwars_train_init(){
 	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy train menu image for main screen
+	// Copy train menu tiles and palette for BG1 of MAIN screen
 	swiCopy(main_expTiles, BG_TILE_RAM(MAINBG1TILE), main_expTilesLen/2);
 
-	// Put correct colors in palette (see color index in Photoshop)
 	BG_PALETTE[0x01] = RED;
 	BG_PALETTE[0x02] = BLUE;
 	BG_PALETTE[0x03] = GREEN;
@@ -495,7 +450,7 @@ void brainwars_train_init(){
 	BG_PALETTE[0x07] = BLACKGREY;
 	BG_PALETTE[0x08] = BLACK;
 
-	// Copy tiles and palette for BG0 in sub
+	// Copy tiles and palette for BG1 of SUB screen
 	swiCopy(sub_trainTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_trainTilesLen/2);
 
 	BG_PALETTE_SUB[0x01] = RED;
@@ -699,8 +654,7 @@ void brainwars_train_select(){
 		// Exit case
 		if(game == NOGAME){
 			state = MAIN;
-			state_change = true;
-			changes = true;
+			stateChange = true;
 		}
 	}
 
@@ -743,7 +697,7 @@ void brainwars_train_select(){
 				// Exit case
 				if(game == NOGAME){
 					state = MAIN;
-					state_change = true;
+					stateChange = true;
 				}
 			}
 			else selectTrain = touched;
@@ -753,8 +707,7 @@ void brainwars_train_select(){
 	// Check if start pressed
 	if(keys & KEY_START){
 		state = MAIN;
-		state_change = true;
-		changes = true;
+		stateChange = true;
 	}
 
 	// Draw updates only if something has changed
@@ -1052,7 +1005,7 @@ void brainwars_play(){
 
 			info_draw_final_score(state);
 			state = MAIN;
-			state_change = true;
+			stateChange = true;
 		}
 		else {
 			gameCounter++;
@@ -1182,8 +1135,7 @@ void brainwars_score(void){
 	// Scan if exit asked
 	if(keys & KEY_START){
 		state = MAIN;
-		state_change = true;
-		changes = false;
+		stateChange = true;
 	}
 }
 
@@ -1233,7 +1185,6 @@ void brainwars_credits(){
 	// Scan if exit asked
 	if(keys & KEY_START){
 		state = MAIN;
-		state_change = true;
-		changes = false;
+		stateChange = true;
 	}
-}
+}                                                           

@@ -6,9 +6,9 @@
  *
  */
 
-void brainwars_init(void);
-void brainwars_configMain(void);
-void brainwars_configSub(void);
+void brainwars_start_init(void);
+void brainwars_start_configMain(void);
+void brainwars_start_configSub(void);
 void brainwars_start(void);
 
 void brainwars_main(void);
