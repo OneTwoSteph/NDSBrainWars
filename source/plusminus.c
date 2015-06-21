@@ -83,7 +83,7 @@ void plusminus_timer_ISR1(){
 
 void plusminus_init(int gameState) {
 	// Copy images containing numbers in BG1 and palette in second palette
-	swiCopy(plusminus_imTiles, BG_TILE_RAM_SUB(SUBBG0TILE), plusminus_imTilesLen/2);
+	swiCopy(plusminus_imTiles, BG_TILE_RAM_SUB(BG0TILE), plusminus_imTilesLen/2);
 	swiCopy(plusminus_imPal, BG_PALETTE_SUB, plusminus_imPalLen/2);
 
 	// Configure palette with correct colors
@@ -99,7 +99,7 @@ void plusminus_init(int gameState) {
 	swiWaitForVBlank();
 	for(col = 0; col < W; col++){
 		for(row = 0; row < H; row++){
-			BG_MAP_RAM_SUB(SUBBG0MAP)[row*W + col] = plusminus_imMap[0] | (1<<12);
+			BG_MAP_RAM_SUB(BG0MAP)[row*W + col] = plusminus_imMap[0] | (1<<12);
 		}
 	}
 
@@ -198,7 +198,7 @@ void plusminus_draw_digit(int xstart, int digit, int palette){
 
 	for(col = xstart; col < xstart + NBW; col++){
 		for(row = POSY; row < POSY + NBH; row++){
-			BG_MAP_RAM_SUB(SUBBG0MAP)[row*W+col] = plusminus_imMap[y*10*NBW + digit*NBW + x] | (palette<<12);
+			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = plusminus_imMap[y*10*NBW + digit*NBW + x] | (palette<<12);
 			y++;
 		}
 		y = 0;
@@ -282,7 +282,7 @@ void plusminus_reset(void) {
 	swiWaitForVBlank();
 	for(col = 0; col < W; col++){
 		for(row = 0; row < H; row++){
-			BG_MAP_RAM_SUB(SUBBG0MAP)[row*W + col] = plusminus_imMap[0] | (1<<12);
+			BG_MAP_RAM_SUB(BG0MAP)[row*W + col] = plusminus_imMap[0] | (1<<12);
 		}
 	}
 

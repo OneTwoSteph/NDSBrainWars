@@ -42,7 +42,10 @@
 
 
 /****************************************************************** Constants */
-
+// Palettes IDs
+#define NORMALPAL		0
+#define YELLOWPAL		1
+#define GREENPAL		2
 
 /*********************************************************** Global variables */
 // Display
@@ -117,7 +120,7 @@ void brainwars_start_init(){
 
 	// Initialize timer for background change
 	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-	TIMER3_DATA = TIMER_FREQ_1024(TIMER3F);
+	TIMER3_DATA = TIMER_FREQ_1024(TIMERF);
 
 	irqSet(IRQ_TIMER3, &brainwars_timer_ISR3);
 	irqEnable(IRQ_TIMER3);
@@ -139,24 +142,24 @@ void brainwars_start_configMain(){
 	REG_DISPCNT = MODE_0_2D;
 
 	// BG0 will be used to display game infos (score and timer)
-	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG0TILE) | BG_MAP_BASE(MAINBG0MAP);
+	BGCTRL[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(BG0TILE) | BG_MAP_BASE(BG0MAP);
 
 	// BG1 will be used to display main graphics
-	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG1TILE) | BG_MAP_BASE(MAINBG1MAP);
+	BGCTRL[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(BG1TILE) | BG_MAP_BASE(BG1MAP);
 
 	// BG2 will be used to display grey background for inter panel pause
-	BGCTRL[2] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(MAINBG2TILE) | BG_MAP_BASE(MAINBG2MAP);
+	BGCTRL[2] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(BG2TILE) | BG_MAP_BASE(BG2MAP);
 
 	// Load image in BG2 which will never change (just grey background) and use
 	// palette 15 to put grey in it
-	swiCopy(loadT, (u8*)BG_TILE_RAM(MAINBG2TILE), 8*8*4/8/2);
+	swiCopy(loadT, (u8*)BG_TILE_RAM(BG2TILE), 8*8*4/8/2);
 
 	BG_PALETTE[0xf1] = GREY;
 
 	int row, col;
 	for(row = 0; row < H; row++){
 		for(col = 0; col < W; col++){
-			BG_MAP_RAM(MAINBG2MAP)[row*W+col] = 0 | (15<<12);
+			BG_MAP_RAM(BG2MAP)[row*W+col] = 0 | (15<<12);
 		}
 	}
 }
@@ -170,24 +173,24 @@ void brainwars_start_configSub(){
 	REG_DISPCNT_SUB = MODE_0_2D;
 
 	// BG0 will be used for the games graphics
-	BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG0TILE) | BG_MAP_BASE(SUBBG0MAP);
+	BGCTRL_SUB[0] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(BG0TILE) | BG_MAP_BASE(BG0MAP);
 
 	// BG1 will be used to display main graphics
-	BGCTRL_SUB[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG1TILE) | BG_MAP_BASE(SUBBG1MAP);
+	BGCTRL_SUB[1] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(BG1TILE) | BG_MAP_BASE(BG1MAP);
 
 	// BG2 will be used to display grey background for inter panel pause
-	BGCTRL_SUB[2] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(SUBBG2TILE) | BG_MAP_BASE(SUBBG2MAP);
+	BGCTRL_SUB[2] = BG_32x32 | BG_COLOR_16 | BG_TILE_BASE(BG2TILE) | BG_MAP_BASE(BG2MAP);
 
 	// Load image in BG2 which will never change (just grey background) and use
 	// palette 15 to put grey in it
-	swiCopy(loadT, (u8*)BG_TILE_RAM_SUB(SUBBG2TILE), 8*8*4/8/2);
+	swiCopy(loadT, (u8*)BG_TILE_RAM_SUB(BG2TILE), 8*8*4/8/2);
 
 	BG_PALETTE_SUB[0xf1] = GREY;
 
 	int row, col;
 	for(row = 0; row < H; row++){
 		for(col = 0; col < W; col++){
-			BG_MAP_RAM_SUB(SUBBG2MAP)[row*W+col] = 0 | (15<<12);
+			BG_MAP_RAM_SUB(BG2MAP)[row*W+col] = 0 | (15<<12);
 		}
 	}
 }
@@ -204,8 +207,8 @@ void brainwars_start(){
 	REG_DISPCNT_SUB |= DISPLAY_BG2_ACTIVE;
 
 	// Copy start image for MAIN screen in BG1 and put correct colors in palette
-	swiCopy(main_startTiles, BG_TILE_RAM(MAINBG1TILE), main_startTilesLen/2);
-	swiCopy(main_startMap, BG_MAP_RAM(MAINBG1MAP), main_startMapLen);
+	swiCopy(main_startTiles, BG_TILE_RAM(BG1TILE), main_startTilesLen/2);
+	swiCopy(main_startMap, BG_MAP_RAM(BG1MAP), main_startMapLen);
 
 	BG_PALETTE[0x01] = RED;
 	BG_PALETTE[0x02] = BLUE;
@@ -214,20 +217,20 @@ void brainwars_start(){
 	BG_PALETTE[0x05] = BLACK;
 
 	// Copy start image for SUB screen in BG1 and put correct colors in palette
-	swiCopy(sub_startTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_startTilesLen/2);
-	swiCopy(sub_startMap, BG_MAP_RAM_SUB(SUBBG1MAP), sub_startMapLen);
+	swiCopy(sub_startTiles, BG_TILE_RAM_SUB(BG1TILE), sub_startTilesLen/2);
+	swiCopy(sub_startMap, BG_MAP_RAM_SUB(BG1MAP), sub_startMapLen);
 
 	BG_PALETTE_SUB[0x01] = GREY;
 	BG_PALETTE_SUB[0x02] = BLACK;
 
 	// Display title on MAIN after 0.6 seconds
-	while(display < 0.6*TIMER3F);
+	while(display < PAUSE*TIMERF);
 	swiWaitForVBlank();
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 	mmEffect(SFX_DUM_DUM);
 
 	// Wait more 0.6s before continuing
-	while(display < 1.2*TIMER3F);
+	while(display < 1.2*TIMERF);
 
 	// Scan touch screen to see if it was taped and if yes, use x and y to
 	// initialize the random seed
@@ -237,7 +240,7 @@ void brainwars_start(){
 
 	while(wait){
 		// Create instructions blinking effect (0.8s)
-		if((display % (int)(0.8*TIMER3F)) == 0){
+		if((display % (int)(0.8*TIMERF)) == 0){
 			swiWaitForVBlank();
 			if(instr) REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 			else REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
@@ -287,7 +290,7 @@ void brainwars_main_init(){
 
 	// Copy main menu image in BG1 for MAIN screen and put correct colors in
 	// palette
-	swiCopy(main_menuTiles, BG_TILE_RAM(MAINBG1TILE), main_menuTilesLen/2);
+	swiCopy(main_menuTiles, BG_TILE_RAM(BG1TILE), main_menuTilesLen/2);
 
 	// Put correct colors in palette (see color index in Photoshop)
 	BG_PALETTE[0x01] = RED;
@@ -298,7 +301,7 @@ void brainwars_main_init(){
 
 	// Copy main menu image in BG1 for SUB screen and put correct colors in
 	// palette
-	swiCopy(sub_menuTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_menuTilesLen/2);
+	swiCopy(sub_menuTiles, BG_TILE_RAM_SUB(BG1TILE), sub_menuTilesLen/2);
 
 	BG_PALETTE_SUB[0x01] = WHITE;
 	BG_PALETTE_SUB[0x02] = GREY;
@@ -319,7 +322,7 @@ void brainwars_main_init(){
 	brainwars_main_draw();
 
 	// Wait 1s before activating BG1
-	while(display < PAUSE*TIMER3F)
+	while(display < PAUSE*TIMERF)
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
@@ -408,14 +411,14 @@ void brainwars_main_draw(){
 	swiWaitForVBlank();
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM(MAINBG1MAP)[y*W + x] = main_menuMap[(y + (selectMain-1)*H)*W + x];
+			BG_MAP_RAM(BG1MAP)[y*W + x] = main_menuMap[(y + (selectMain-1)*H)*W + x];
 		}
 	}
 
 	// Draw menu on SUB screen BG1
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = sub_menuMap[y*W+x];
+			BG_MAP_RAM_SUB(BG1MAP)[y*W+x] = sub_menuMap[y*W+x];
 		}
 	}
 
@@ -424,13 +427,14 @@ void brainwars_main_draw(){
 
 	for(x = 0; x < W; x++){
 		for(y = (selectMain-1)*BH + YS; y < selectMain*BH + YS; y++){
-			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x]|(YELLOWPAL<<12);
+			BG_MAP_RAM_SUB(BG1MAP)[y*W+x] = BG_MAP_RAM_SUB(BG1MAP)[y*W+x]|(YELLOWPAL<<12);
 		}
 	}
 }
 
 
-/***************************************************************** Train menu */
+/******************************************************************* Training */
+// Initialize
 void brainwars_train_init(){
 	// Launch timer to create 1s pause
 	display = 0;
@@ -442,7 +446,7 @@ void brainwars_train_init(){
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy train menu tiles and palette for BG1 of MAIN screen
-	swiCopy(main_expTiles, BG_TILE_RAM(MAINBG1TILE), main_expTilesLen/2);
+	swiCopy(main_expTiles, BG_TILE_RAM(BG1TILE), main_expTilesLen/2);
 
 	BG_PALETTE[0x01] = RED;
 	BG_PALETTE[0x02] = BLUE;
@@ -454,7 +458,7 @@ void brainwars_train_init(){
 	BG_PALETTE[0x08] = BLACK;
 
 	// Copy tiles and palette for BG1 of SUB screen
-	swiCopy(sub_trainTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_trainTilesLen/2);
+	swiCopy(sub_trainTiles, BG_TILE_RAM_SUB(BG1TILE), sub_trainTilesLen/2);
 
 	BG_PALETTE_SUB[0x01] = RED;
 	BG_PALETTE_SUB[0x02] = BLUE;
@@ -481,7 +485,7 @@ void brainwars_train_init(){
 	brainwars_train_draw();
 
 	// Wait 1s before activating BG1
-	while(display < PAUSE*TIMER3F)
+	while(display < PAUSE*TIMERF)
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
@@ -490,6 +494,7 @@ void brainwars_train_init(){
 	TIMER3_CR &= ~(TIMER_ENABLE);
 }
 
+// Main function
 void brainwars_train(){
 	// Check if game has changed and initialize correct module
 	if(gameChange){
@@ -539,6 +544,7 @@ void brainwars_train(){
 	}
 }
 
+// Select menu
 void brainwars_train_select(){
 	// Scan keys and touchscreen
 	scanKeys();
@@ -552,7 +558,7 @@ void brainwars_train_select(){
 	if(keys & KEY_RIGHT) option = (selectTrain+1) % 8;
 	else if(keys & KEY_LEFT) option = (selectTrain+7) % 8;
 	else if(keys & KEY_DOWN) option  = (selectTrain+3) % 8;
-	else if(keys & KEY_UP) option = (selectTrain+5)%8;
+	else if(keys & KEY_UP) option = (selectTrain+5) % 8;
 	else if(keys & KEY_A) option = selectTrain;
 	else if(keys & KEY_TOUCH){
 		int i;
@@ -594,6 +600,7 @@ void brainwars_train_select(){
 	}
 }
 
+// Draw
 void brainwars_train_draw(){
 	// Draw instructions on MAIN screen
 	int x, y;
@@ -601,23 +608,19 @@ void brainwars_train_draw(){
 	swiWaitForVBlank();
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM(MAINBG1MAP)[y*W + x] = main_expMap[(y + selectTrain*H)*W + x];
+			BG_MAP_RAM(BG1MAP)[y*W + x] = main_expMap[(y + selectTrain*H)*W + x];
 		}
 	}
 
 	// Draw training menu on SUB screen
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = sub_trainMap[y*W+x];
+			BG_MAP_RAM_SUB(BG1MAP)[y*W+x] = sub_trainMap[y*W+x];
 		}
 	}
 
 	// Change color of the selected button
-	int XS = 6;
-	int YS= 2;
-	int INTER = 1;
-	int SIDE = 6;
-
+	int XS = 6, YS = 2, INTER = 1, SIDE = 6;
 	int row, col;
 	int x1, x2, y1, y2;
 
@@ -631,11 +634,13 @@ void brainwars_train_draw(){
 
 	for(x = x1; x < x2; x++){
 		for(y = y1; y < y2; y++){
-			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x]|(YELLOWPAL<<12);
+			BG_MAP_RAM_SUB(BG1MAP)[y*W+x] = BG_MAP_RAM_SUB(BG1MAP)[y*W+x]|(YELLOWPAL<<12);
 		}
 	}
 }
 
+
+/***************************************************************** One player */
 void brainwars_1p_init(){
 	// Initialize global variables
 	game = NOGAME;
@@ -908,33 +913,33 @@ void brainwars_score_init(){
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy map
-	swiCopy(sub_scoreTiles, BG_MAP_RAM_SUB(SUBBG1TILE), sub_scoreTilesLen/2);
+	swiCopy(sub_scoreTiles, BG_MAP_RAM_SUB(BG1TILE), sub_scoreTilesLen/2);
 
 	// Put correct colors in palettes
-	BG_PALETTE_SUB[0x01] = RED;
-	BG_PALETTE_SUB[0x02] = BLUE;
-	BG_PALETTE_SUB[0x03] = GREEN;
-	BG_PALETTE_SUB[0x04] = YELLOW;
-	BG_PALETTE_SUB[0x05] = WHITE;
-	BG_PALETTE_SUB[0x06] = GREY;
-	BG_PALETTE_SUB[0x07] = BLACKGREY;
-	BG_PALETTE_SUB[0x08] = BLACK;
-
 	BG_PALETTE_SUB[0x11] = RED;
 	BG_PALETTE_SUB[0x12] = BLUE;
 	BG_PALETTE_SUB[0x13] = GREEN;
-	BG_PALETTE_SUB[0x14] = GREEN;
+	BG_PALETTE_SUB[0x14] = YELLOW;
 	BG_PALETTE_SUB[0x15] = WHITE;
 	BG_PALETTE_SUB[0x16] = GREY;
 	BG_PALETTE_SUB[0x17] = BLACKGREY;
 	BG_PALETTE_SUB[0x18] = BLACK;
+
+	BG_PALETTE_SUB[0x21] = RED;
+	BG_PALETTE_SUB[0x22] = BLUE;
+	BG_PALETTE_SUB[0x23] = GREEN;
+	BG_PALETTE_SUB[0x24] = GREEN;
+	BG_PALETTE_SUB[0x25] = WHITE;
+	BG_PALETTE_SUB[0x26] = GREY;
+	BG_PALETTE_SUB[0x27] = BLACKGREY;
+	BG_PALETTE_SUB[0x28] = BLACK;
 
 	// Create map
 	int x, y;
 
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W + x] = sub_scoreMap[y*W + x];
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_scoreMap[y*W + x]| (YELLOWPAL<<12);
 		}
 	}
 
@@ -974,9 +979,9 @@ void brainwars_score_init(){
 		// Check if higher then old score
 		if(score > scores[i]){
 			scores[i] = score;
-			palette = 1;
+			palette = GREENPAL;
 		}
-		else palette = 0;
+		else palette = YELLOWPAL;
 
 		// Compute digits of number
 		digit[0] = score/1000;
@@ -992,14 +997,14 @@ void brainwars_score_init(){
 
 			for(x = xinit; x < xinit + l; x++){
 				for(y = yinit; y < yinit + 1*h; y++){
-					BG_MAP_RAM_SUB(SUBBG1MAP)[y*W + x] = sub_scoreMap[(y - yinit + ystim)*W + (x-xinit) + digit[j]*l] | (palette<<12);
+					BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_scoreMap[(y - yinit + ystim)*W + (x-xinit) + digit[j]*l] | (palette<<12);
 				}
 			}
 		}
 	}
 
 	// Wait 1s before activating BG1
-	while(display < PAUSE*TIMER3F)
+	while(display < PAUSE*TIMERF)
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 
@@ -1029,7 +1034,7 @@ void brainwars_credits_init(){
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy tiles
-	swiCopy(sub_creditsTiles, BG_TILE_RAM_SUB(SUBBG1TILE), sub_creditsTilesLen/2);
+	swiCopy(sub_creditsTiles, BG_TILE_RAM_SUB(BG1TILE), sub_creditsTilesLen/2);
 
 	// Set palette colors
 	BG_PALETTE_SUB[0x01] = RED;
@@ -1044,12 +1049,12 @@ void brainwars_credits_init(){
 
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W + x] = sub_creditsMap[y*W + x];
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_creditsMap[y*W + x];
 		}
 	}
 
 	// Wait 1s before activating BG1
-	while(display < PAUSE*TIMER3F)
+	while(display < PAUSE*TIMERF)
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 

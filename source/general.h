@@ -6,6 +6,11 @@
  *
  */
 
+#ifndef GENERAL_H_
+#define GENERAL_H_
+
+/******************************************************************** Modules */
+// NDS
 #include <nds.h>
 #include <maxmod9.h>
 #include "soundbank.h"
@@ -15,19 +20,30 @@
 #include <dirent.h>
 #include "string.h"
 
+// C
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include <stdbool.h>
 
-#define W			   32
-#define H 			   24
 
-#define NBMAIN			6
+/****************************************************************** Constants */
+// Screen dimensions
+#define W			   32				// width of screen in tiles
+#define H 			   24				// height of screen in tile
+#define WP			  256				// width of screen in pixels
+#define HP			  192				// height of screen in pixels
 
-#define NORMALPAL		0
-#define YELLOWPAL		1
+// Backgrounds memory infos
+#define BG0TILE		4
+#define BG0MAP		63
+#define BG1TILE		0
+#define BG1MAP		16
+#define BG2TILE		3
+#define BG2MAP		25
 
+
+// Colors
 #define BLACK 		ARGB16(1,11,11,11)
 #define BLACKGREY 	ARGB16(1,21,21,21)
 #define GREY		ARGB16(1,28,28,28)
@@ -36,6 +52,13 @@
 #define RED			ARGB16(1,31,13,22)
 #define GREEN 		ARGB16(1,7,22,14)
 #define YELLOW 		ARGB16(1,31,26,0)
+
+// Display pause infos
+#define TIMERF			5
+#define PAUSE			0.6
+
+// Game level tresholds
+#define LEADERLEVEL		4
 
 #define PATHMEDIUM 		4
 #define PATHHARD 		8
@@ -46,30 +69,14 @@
 #define JANKENPONMEDIUM 4
 #define JANKENPONHARD 	8
 
-#define LEADERLEVEL		4
-
+// 1p and 2p info
 #define GAMETIME		20
 
 #define PLAYERONE		0
 #define PLAYERTWO		1
 
-#define MAINBG0TILE		4
-#define MAINBG0MAP		63
-#define MAINBG1TILE		0
-#define MAINBG1MAP		16
-#define MAINBG2TILE		3
-#define MAINBG2MAP		25
 
-#define SUBBG0TILE		4
-#define SUBBG0MAP		63
-#define SUBBG1TILE		0
-#define SUBBG1MAP		16
-#define SUBBG2TILE		3
-#define SUBBG2MAP		25
-
-#define TIMER3F			5
-#define PAUSE			0.6
-
+/*************************************************************** Enumerations */
 typedef enum STATE STATE;
 enum STATE
 {
@@ -174,3 +181,5 @@ enum TAPORDER
 	SAME = 0,
 	INVERSE = 1
 };
+
+#endif /* GENERAL_H_ */

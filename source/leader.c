@@ -100,8 +100,8 @@ void leader_timer_ISR1(){
 
 void leader_init(int gameState) {
 	// Load tiles in RAM
-	dmaCopy(fullT, (u8*)BG_TILE_RAM_SUB(SUBBG0TILE), 8*8*4/8);
-	dmaCopy(cornerT, (u8*)BG_TILE_RAM_SUB(SUBBG0TILE) + 8*8*4/8, 8*8*4/8);
+	dmaCopy(fullT, (u8*)BG_TILE_RAM_SUB(BG0TILE), 8*8*4/8);
+	dmaCopy(cornerT, (u8*)BG_TILE_RAM_SUB(BG0TILE) + 8*8*4/8, 8*8*4/8);
 	
 	// Set up palette colors
 	BG_PALETTE_SUB[1] = BLUE;
