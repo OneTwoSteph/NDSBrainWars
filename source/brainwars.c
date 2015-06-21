@@ -376,13 +376,16 @@ void brainwars_main_select(){
 	else if(keys & KEY_A) option = selectMain;
 	else if(keys & KEY_TOUCH){
 		if((touch.px>=39)&&(touch.px<=215)){
+			int i;
 			int ystart = 21, inter = 11, h = 21;
 
-			if((touch.py >= ystart) && (touch.py <= ystart+h)) option = TRAIN;
-			if((touch.py >= ystart+inter+h) && (touch.py <= ystart+inter+2*h)) option = ONEP;
-			if((touch.py >= ystart+2*inter+2*h) && (touch.py <= ystart+2*inter+3*h)) option = TWOP;
-			if((touch.py >= ystart+3*inter+3*h) && (touch.py <= ystart+3*inter+4*h)) option = SCORE;
-			if((touch.py >= ystart+4*inter+4*h) && (touch.py <= ystart+4*inter+5*h)) option = CREDITS;
+			// Loop to see which option was touched
+			for(i = 0; i < 5; i++){
+				if((touch.py >= ystart+i*inter+i*h) && (touch.py <= ystart+i*inter+(i+1)*h)){
+					option = i + 1;
+					break;
+				}
+			}
 		}
 	}
 
@@ -421,7 +424,7 @@ void brainwars_main_draw(){
 
 	for(x = 0; x < W; x++){
 		for(y = (selectMain-1)*BH + YS; y < selectMain*BH + YS; y++){
-			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x]|(1<<12);
+			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x]|(YELLOWPAL<<12);
 		}
 	}
 }
@@ -488,194 +491,77 @@ void brainwars_train_init(){
 }
 
 void brainwars_train(){
-	// Check in which game we are training
+	// Check if game has changed and initialize correct module
+	if(gameChange){
+		switch(game){
+		case LEADER: leader_init(state); break;
+		case EATIT: eatit_init(state); break;
+		case MUSICAL: musical_init(state); break;
+		case PATH: path_init(state); break;
+		case ADDITION: addition_init(state); break;
+		case PLUSMINUS: plusminus_init(state); break;
+		case JANKENPON: jankenpon_init(state); break;
+		case NOGAME: brainwars_train_init(); break;
+		default: break;
+		}
+	}
+
+	// Execute current game
+	int gameEnd = false;
 	switch(game){
-	case LEADER:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			leader_init(state);
+	case LEADER: gameEnd = leader_game(0,0); break;
+	case EATIT: gameEnd = eatit_game(0,0); break;
+	case MUSICAL: gameEnd = musical_game(0,0); break;
+	case PATH: gameEnd = path_game(0,0); break;
+	case ADDITION: gameEnd = addition_game(0,0); break;
+	case PLUSMINUS: gameEnd = plusminus_game(0,0); break;
+	case JANKENPON: gameEnd = jankenpon_game(0,0); break;
+	case NOGAME: brainwars_train_select(); break;
+	default: break;
+	}
+
+	// Check if current game was ended and reset game if it is the case
+	if(gameEnd){
+		switch(game){
+		case LEADER: leader_reset(); break;
+		case EATIT: eatit_reset(); break;
+		case MUSICAL: musical_reset(); break;
+		case PATH: path_reset(); break;
+		case ADDITION: addition_reset(); break;
+		case PLUSMINUS: plusminus_reset(); break;
+		case JANKENPON: jankenpon_reset(); break;
+		case NOGAME: break;
+		default: break;
 		}
 
-		// Execute action of game
-		gameChange = leader_game(0,0);
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			leader_reset();
-		}
-
-		break;
-	case EATIT:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			eatit_init(state);
-		}
-
-		// Execute action of game
-		gameChange = eatit_game(0,0);
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			eatit_reset();
-		}
-
-		break;
-	case MUSICAL:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			musical_init(state);
-		}
-
-		// Execute action of game
-		gameChange = musical_game(0,0);
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			musical_reset();
-		}
-
-		break;
-	case PATH:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			path_init(state);
-		}
-
-		// Execute action of game
-		gameChange = path_game(0,0);
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			path_reset();
-		}
-
-		break;
-	case ADDITION:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			addition_init(state);
-		}
-
-		// Execute action of game
-		gameChange = addition_game(0,0);
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			addition_reset();
-		}
-
-		break;
-	case PLUSMINUS:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			plusminus_init(state);
-		}
-
-		// Execute action of game
-		gameChange = plusminus_game(0,0);
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			plusminus_reset();
-		}
-
-		break;
-	case JANKENPON:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			jankenpon_init(state);
-		}
-
-		// Execute action of game
-		gameChange = jankenpon_game(0,0);
-
-		// Check if game ended
-		if(gameChange){
-			game = NOGAME;
-			jankenpon_reset();
-		}
-
-		break;
-	case NOGAME:
-		// Check if game just changed
-		if(gameChange){
-			gameChange = false;
-			brainwars_train_init();
-		}
-
-		// Execute action of state
-		brainwars_train_select();
-
-		break;
-	default:
-		break;
+		game = NOGAME;
+		gameChange = true;
 	}
 }
 
 void brainwars_train_select(){
-	// Save current selected button for drawing
-	int prevSelect = selectTrain;
-
-	// Scan keys
+	// Scan keys and touchscreen
 	scanKeys();
 	u16 keys = (u16) keysDown();
-
-	// Check if right key pressed
-	if(keys & KEY_RIGHT) selectTrain = (selectTrain+1)%8;
-
-	// Check if left key pressed
-	if(keys & KEY_LEFT) selectTrain = (selectTrain+7)%8;
-
-	// Check if down key pressed
-	if(keys & KEY_DOWN) selectTrain = (selectTrain+3)%8;
-
-	// Check if up key pressed
-	if(keys & KEY_UP) selectTrain = (selectTrain+5)%8;
-
-	// Check if start key pressed
-	if(keys & KEY_A){
-		// Update game state
-		game = selectTrain;
-		gameChange = true;
-
-		// Exit case
-		if(game == NOGAME){
-			state = MAIN;
-			stateChange = true;
-		}
-	}
-
-	// Check if touchscreen was touched
-	GAME touched = -1;
 	touchPosition touch;
 	touchRead(&touch);
 
-	if(keys & KEY_TOUCH){
-		int xstart = 49;
-		int ystart = 22;
-		int interx = 18;
-		int intery = 15;
-		int side = 40;
+	// Check if an option was selected with buttons or touching the screen
+	int option = -1;
 
+	if(keys & KEY_RIGHT) option = (selectTrain+1) % 8;
+	else if(keys & KEY_LEFT) option = (selectTrain+7) % 8;
+	else if(keys & KEY_DOWN) option  = (selectTrain+3) % 8;
+	else if(keys & KEY_UP) option = (selectTrain+5)%8;
+	else if(keys & KEY_A) option = selectTrain;
+	else if(keys & KEY_TOUCH){
 		int i;
 		int row, col;
+		int xstart = 49, ystart = 22, interx = 18, intery = 15, side = 40;
 		int x1, x2, y1, y2;
 
-		// Loop on the games square position
-		for(i=0;i<8;i++){
+		// Loop on the options square to see which one was touched
+		for(i = 0; i < 8; i++){
 			row = i/3;
 			col = i%3;
 
@@ -684,34 +570,28 @@ void brainwars_train_select(){
 			y1 = ystart + row*side + row*intery;
 			y2 = y1 + side;
 
-			if((touch.px>=x1)&&(touch.px<=x2)&&(touch.py>=y1)&&(touch.py<=y2))
-				touched = i;
-		}
-
-		if(touched!=-1){
-			if(touched==selectTrain){
-				// Update game state
-				game = selectTrain;
-				gameChange = true;
-
-				// Exit case
-				if(game == NOGAME){
-					state = MAIN;
-					stateChange = true;
-				}
+			if((touch.px >= x1) && (touch.px <= x2) && (touch.py >= y1) && (touch.py <= y2)){
+				option = i;
+				break;
 			}
-			else selectTrain = touched;
 		}
 	}
 
-	// Check if start pressed
-	if(keys & KEY_START){
-		state = MAIN;
-		stateChange = true;
+	// Check if an option was selected or chosen
+	if(option == selectTrain){
+		if(option == NOGAME){
+			state = MAIN;
+			stateChange = true;
+		}
+		else{
+			game = selectTrain;
+			gameChange = true;
+		}
 	}
-
-	// Draw updates only if something has changed
-	if(prevSelect != selectTrain) brainwars_train_draw();
+	else if(option != -1){
+		selectTrain = option;
+		brainwars_train_draw();
+	}
 }
 
 void brainwars_train_draw(){
@@ -751,7 +631,7 @@ void brainwars_train_draw(){
 
 	for(x = x1; x < x2; x++){
 		for(y = y1; y < y2; y++){
-			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x]|(1<<12);
+			BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x] = BG_MAP_RAM_SUB(SUBBG1MAP)[y*W+x]|(YELLOWPAL<<12);
 		}
 	}
 }
@@ -1187,4 +1067,4 @@ void brainwars_credits(){
 		state = MAIN;
 		stateChange = true;
 	}
-}                                                           
+}                                                  

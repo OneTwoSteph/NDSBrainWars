@@ -20,10 +20,13 @@
 #include <math.h>
 #include <stdbool.h>
 
-#define W	32
-#define H 	24
+#define W			   32
+#define H 			   24
 
-#define NBMAIN	6
+#define NBMAIN			6
+
+#define NORMALPAL		0
+#define YELLOWPAL		1
 
 #define BLACK 		ARGB16(1,11,11,11)
 #define BLACKGREY 	ARGB16(1,21,21,21)
