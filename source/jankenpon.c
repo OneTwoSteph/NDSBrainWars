@@ -207,9 +207,6 @@ bool jankenpon_game(bool player, int gameCounter){
 		}
 	}
 
-	// Update infos
-	info_update(score, state, player);
-
 	// Return true for the game to continue
 	return false;
 }
@@ -217,6 +214,9 @@ bool jankenpon_game(bool player, int gameCounter){
 void jankenpon_next(){
 	// Increment score
 	score++;
+
+	// Update infos
+	info_update_score(score, 0);
 
 	// Check level
 	if(score == JANKENPONMEDIUM) level = MEDIUM;

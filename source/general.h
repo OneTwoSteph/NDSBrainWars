@@ -70,11 +70,13 @@
 #define JANKENPONHARD 	8
 
 // 1p and 2p info
-#define GAMETIME		20
+#define GAMETIME	    20
 
-#define PLAYERONE		0
-#define PLAYERTWO		1
-
+// Players
+#define P1               0
+#define P2               1
+#define PLAYERONE        0
+#define PLAYERTWO        1
 
 /*************************************************************** Enumerations */
 typedef enum STATE STATE;

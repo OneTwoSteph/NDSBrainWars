@@ -340,9 +340,6 @@ bool leader_game(bool player, int gameCounter) {
 			}
 		}
 
-		// Update infos (has to do it n every loop because updates time)
-		info_update(score, state, player);
-
 		// Return false because game not ended
 		return false;
 	}
@@ -370,7 +367,7 @@ void leader_correct(bool player){
 		score++;
 
 		// Update displayed score
-		info_update(score, state, player);
+		info_update_score(score, player);
 
 		// Update level
 		level = score/LEADERLEVEL;

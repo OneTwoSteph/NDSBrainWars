@@ -190,9 +190,6 @@ bool eatit_game(bool player, int gameCounter){
 		}
 	}
 
-	// Update infos
-	info_update(score, state, player);
-
 	// Return true for the game to continue
 	return false;
 }
@@ -200,6 +197,9 @@ bool eatit_game(bool player, int gameCounter){
 void eatit_next(void){
 	// Increment score
 	score++;
+
+	// Update infos
+	info_update_score(score, 0);
 
 	// Random food for up[0] and down[0]
 	int nb1, nb2;

@@ -230,16 +230,18 @@ bool musical_game(bool player, int gameCounter){
 	// Play effect if tone was false
 	//if(wrong<=FA) mmEffect(SFX_BOING);
 
-	// Update infos
-	info_update(score, state, player);
-
 	// Return false (the game is note finished)
 	return false;
 }
 
 void musical_next(){
 	// Increment score only if precedent game wasn't wrong
-	if(wrong>FA) score++;
+	if(wrong>FA){ 
+		score++;
+
+		// Update infos
+		info_update_score(score, 0);
+	}
 	else wrong = FA+1;
 
 	// Check level

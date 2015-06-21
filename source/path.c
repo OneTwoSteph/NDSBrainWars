@@ -201,9 +201,6 @@ bool path_game(bool player, int gameCounter){
 		}
 	}
 
-	// Update infos
-	info_update(score, state, player);
-
 	// In the case the player was wrong, wait until wrong blinking ends
 	while(wrong != 0);
 
@@ -215,6 +212,9 @@ bool path_game(bool player, int gameCounter){
 void path_next(){
 	// Increment score
 	score++;
+
+	// Update infos
+	info_update_score(score, 0);
 
 	// Check level
 	if(score == PATHMEDIUM) level = MEDIUM;

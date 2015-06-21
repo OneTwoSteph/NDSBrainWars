@@ -157,9 +157,6 @@ bool addition_game(bool player, int gameCounter) {
 		}
 	}
 
-	// Update infos
-	info_update(add_score, state, player);
-
 	// Return false because game did not end
 	return false;
 
@@ -254,6 +251,9 @@ void addition_add_num(int num) {
 
 void addition_correct() {
 	add_score++;
+
+	// Update infos
+	info_update_score(add_score, 0);
 
 	int old_color = BG_PALETTE_SUB[1];
 

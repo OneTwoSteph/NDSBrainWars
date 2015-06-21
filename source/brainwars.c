@@ -85,7 +85,7 @@ int scores[7];
 
 /***************************************************************** Timer ISRs */
 // Display timer
-void brainwars_timer_ISR3(){
+void brainwars_timer_ISR2(){
 	display++;
 }
 
@@ -119,11 +119,11 @@ void brainwars_start_init(){
 	mmLoadEffect(SFX_OULALA);
 
 	// Initialize timer for background change
-	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-	TIMER3_DATA = TIMER_FREQ_1024(TIMERF);
+	TIMER2_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
+	TIMER2_DATA = TIMER_FREQ_1024(TIMERF);
 
-	irqSet(IRQ_TIMER3, &brainwars_timer_ISR3);
-	irqEnable(IRQ_TIMER3);
+	irqSet(IRQ_TIMER2, &brainwars_timer_ISR2);
+	irqEnable(IRQ_TIMER2);
 
 	// Configure MAIN and SUB screens
 	brainwars_start_configMain();
@@ -199,7 +199,7 @@ void brainwars_start_configSub(){
 void brainwars_start(){
 	// Launch timer for panel change pause
 	display = 0;
-	TIMER3_CR |= TIMER_ENABLE;
+	TIMER2_CR |= TIMER_ENABLE;
 
 	// Activate BG2 for grey background
 	swiWaitForVBlank();
@@ -226,28 +226,21 @@ void brainwars_start(){
 	// Display title on MAIN after 0.6 seconds
 	while(display < PAUSE*TIMERF);
 	swiWaitForVBlank();
-	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 	mmEffect(SFX_DUM_DUM);
+	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
 	// Wait more 0.6s before continuing
 	while(display < 1.2*TIMERF);
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+
+	// Stop timer
+	TIMER2_CR &= ~(TIMER_ENABLE);
 
 	// Scan touch screen to see if it was taped and if yes, use x and y to
 	// initialize the random seed
 	bool wait = true;
-	bool instr = true;
-	display = 0;
 
 	while(wait){
-		// Create instructions blinking effect (0.8s)
-		if((display % (int)(0.8*TIMERF)) == 0){
-			swiWaitForVBlank();
-			if(instr) REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
-			else REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
-
-			instr = !instr;
-		}
-
 		// Scan touch screen and if touch screen was touched, check for position
 		touchPosition touch;
 		scanKeys();
@@ -264,9 +257,6 @@ void brainwars_start(){
 		}
 	}
 
-	// Stop timer
-	TIMER3_CR &= ~(TIMER_ENABLE);
-
 	// Initialize game music that will play all the time
 	//mmStart(MOD_AURORA, MM_PLAY_LOOP);
 	//mmSetModuleVolume(350);
@@ -281,7 +271,7 @@ void brainwars_start(){
 void brainwars_main_init(){
 	// Launch timer to create 1s pause
 	display = 0;
-	TIMER3_CR |= TIMER_ENABLE;
+	TIMER2_CR |= TIMER_ENABLE;
 
 	// Inactivate BG1 while copying new images to memory
 	swiWaitForVBlank();
@@ -322,13 +312,13 @@ void brainwars_main_init(){
 	brainwars_main_draw();
 
 	// Wait 1s before activating BG1
-	while(display < PAUSE*TIMERF)
+	while(display < PAUSE*TIMERF);
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
 	// Stop timer
-	TIMER3_CR &= ~(TIMER_ENABLE);
+	TIMER2_CR &= ~(TIMER_ENABLE);
 }
 
 // Main function
@@ -438,7 +428,7 @@ void brainwars_main_draw(){
 void brainwars_train_init(){
 	// Launch timer to create 1s pause
 	display = 0;
-	TIMER3_CR |= TIMER_ENABLE;
+	TIMER2_CR |= TIMER_ENABLE;
 
 	// Inactivate BG1 while copying new images to  memory
 	swiWaitForVBlank();
@@ -485,13 +475,13 @@ void brainwars_train_init(){
 	brainwars_train_draw();
 
 	// Wait 1s before activating BG1
-	while(display < PAUSE*TIMERF)
+	while(display < PAUSE*TIMERF);
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
 	// Stop timer
-	TIMER3_CR &= ~(TIMER_ENABLE);
+	TIMER2_CR &= ~(TIMER_ENABLE);
 }
 
 // Main function
@@ -908,14 +898,14 @@ void brainwars_play(){
 void brainwars_score_init(){
 	// Launch timer to create 1s pause
 	display = 0;
-	TIMER3_CR |= TIMER_ENABLE;
+	TIMER2_CR |= TIMER_ENABLE;
 
 	// Inactivate BG1 while copying new images to  memory
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy map
-	swiCopy(sub_scoreTiles, BG_MAP_RAM_SUB(BG1TILE), sub_scoreTilesLen/2);
+	// Copy tiles
+	swiCopy(sub_scoreTiles, BG_TILE_RAM_SUB(BG1TILE), sub_scoreTilesLen/2);
 
 	// Put correct colors in palettes
 	BG_PALETTE_SUB[0x11] = RED;
@@ -941,7 +931,7 @@ void brainwars_score_init(){
 
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_scoreMap[y*W + x] | (YELLOWPAL<<12);
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_scoreMap[y*W + x] | (YELLOWPAL << 12);
 		}
 	}
 
@@ -949,7 +939,7 @@ void brainwars_score_init(){
 	int i, j;
 
 	int score;
-	int palette = 0;
+	int palette = GREENPAL;
 
 	int digit[4];
 
@@ -1006,12 +996,12 @@ void brainwars_score_init(){
 	}
 
 	// Wait 1s before activating BG1
-	while(display < PAUSE*TIMERF)
+	while(display < PAUSE*TIMERF);
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 
 	// Stop timer
-	TIMER3_CR &= ~(TIMER_ENABLE);
+	TIMER2_CR &= ~(TIMER_ENABLE);
 }
 
 void brainwars_score(void){
@@ -1029,7 +1019,7 @@ void brainwars_score(void){
 void brainwars_credits_init(){
 	// Launch timer to create 1s pause
 	display = 0;
-	TIMER3_CR |= TIMER_ENABLE;
+	TIMER2_CR |= TIMER_ENABLE;
 
 	// Inactivate BG1 while copying new images to  memory
 	swiWaitForVBlank();
@@ -1056,12 +1046,12 @@ void brainwars_credits_init(){
 	}
 
 	// Wait 1s before activating BG1
-	while(display < PAUSE*TIMERF)
+	while(display < PAUSE*TIMERF);
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 
 	// Stop timer
-	TIMER3_CR &= ~(TIMER_ENABLE);
+	TIMER2_CR &= ~(TIMER_ENABLE);
 }
 
 void brainwars_credits(){
@@ -1074,4 +1064,4 @@ void brainwars_credits(){
 		state = MAIN;
 		stateChange = true;
 	}
-}                                                  
+}

@@ -260,9 +260,6 @@ bool plusminus_game(bool player, int gameCounter) {
 			}
 		}
 
-		// Update infos
-		info_update(score, state, player);
-
 		// Return game not ended
 		return false;
 	}
@@ -271,6 +268,9 @@ bool plusminus_game(bool player, int gameCounter) {
 void plusminus_correct() {
 	// Update score
 	score++;
+
+	// Update infos
+	info_update_score(score, 0);
 
 	// Generate new number
 	plusminus_new_number();

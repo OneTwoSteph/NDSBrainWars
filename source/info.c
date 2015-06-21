@@ -6,20 +6,44 @@
  *
  */
 
+
+/******************************************************************** Modules */
+// General
 #include "general.h"
 #include "info.h"
-#include "score.h"
 
+// Images
+#include "score.h"
 #include "result.h"
+
+/****************************************************************** Constants */
+// Palettes
+#define NORMALPAL			6
+
+// Display
+#define XSTART1 			4
+#define XSTART2 			11
+#define XSTART3				23
+#define YSTART 				20
+#define NBW					1
+#define NBH					2
+#define YM 					6
+#define NBDIG 				4
+
+
+/*********************************************************** Global variables */
+STATE gameState;
 
 int sec, min;
 
-static volatile int score_p1[3];
-static volatile int score_p2[3];
+int score_p1[3];
+int score_p2[3];
 
-int counter = 0;
+int counter;
 
-void info_time_ISR(){
+
+/***************************************************************** Timer ISRs */
+void info_time_ISR3(){
 	// Update sec
 	sec++;
 
@@ -28,134 +52,130 @@ void info_time_ISR(){
 		sec = 0;
 		min++;
 	}
+
+	// Draw
+	info_draw_time();
 }
 
+
+/***************************************************************** Functions */
+// Initialization
 void info_init(state){
-	// Put correct colors in end of bitmap palette for the tiles
-	swiCopy(scorePal, &BG_PALETTE[16*15], scorePalLen/2);
+	// Copy image in BG0 of MAIN screen
+	swiCopy(scoreTiles, BG_TILE_RAM(BG0TILE), scoreTilesLen/2);
 
-	// Draw score and time titles
+	// Put correct colors in palette
+	BG_PALETTE[0x61] = RED;
+	BG_PALETTE[0x62] = BLUE;
+	BG_PALETTE[0x63] = GREEN;
+	BG_PALETTE[0x64] = GREY;
+	BG_PALETTE[0x65] = BLACKGREY;
+	BG_PALETTE[0x66] = BLACK;
+
+	// Fill with gray
 	int x, y;
-	int ystart = 17;
-	int ymid = 20;
-	int h = 3;			// Height at which the titles are in image
 
-	for(x=0; x<32;x++){
-		for(y=ystart; y<ymid;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+(state-1)*h)*32+x]|(15<<12);
+	for(x = 0; x < W; x++){
+		for(y = YSTART; y < H; y++){
+			BG_MAP_RAM(BG0MAP)[y*W + x] = scoreMap[32] | (NORMALPAL << 12);
 		}
 	}
+
+	// Draw score and time titles
+	int ystart = 17;
+	int h = 3;
+	int ym = ((state == TWOP) ? h : 0);
+
+	for(x = 0; x < W; x++){
+		for(y = ystart; y < ystart + h; y++){
+			BG_MAP_RAM(BG0MAP)[y*W + x] = scoreMap[ym*W + x] | (NORMALPAL << 12);
+			ym++;
+		}
+		ym = ((state == TWOP) ? h : 0);
+	}
+
+	// Initialize variables
+	gameState = state;
 
 	sec = 0;
 	min = 0;
 
-	// Initialize the timer only if state is not TRAIN
-	if(state!=TRAIN){
+	counter = 0;
 
-		TIMER2_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
-		TIMER2_DATA = TIMER_FREQ_1024(1);
+	// Initialize the timer
+	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
+	TIMER3_DATA = TIMER_FREQ_1024(1);
 
-		irqSet(IRQ_TIMER2, &info_time_ISR);
-		irqEnable(IRQ_TIMER2);
-	}
+	irqSet(IRQ_TIMER3, &info_time_ISR3);
+	irqEnable(IRQ_TIMER3);
 
-	// Draw empty initial values
-	int player;
-	if(state==TWOP){
-		player = counter%2;
-		if(player==0){
-			info_update(score_p1[counter/2], state, false);
-			info_update(0, state, true);
-		}
-		else{
-			info_update(score_p1[counter/2], state, false);
-			info_update(0, state, true);
-		}
-	}
-	else info_update(0, state, false);
+	// Activate BG0
+	REG_DISPCNT |= DISPLAY_BG0_ACTIVE;
 
 	// Update game counter if two player mode
-	if(state==TWOP) counter++;
+	if(gameState == TWOP) counter++;
 }
 
-void info_update(int score, int state, bool player){
+void info_update_score(int score, int player){
+	// Update score
+	if(player == 1) score_p2[0] = score;
+	else score_p1[0] = score;
+
+	// Compute score's digits
+	int dig[NBDIG];
+
+	dig[0] = score/1000;
+	dig[1] = (score-1000*dig[0])/100;
+	dig[2] = (score-1000*dig[0]-100*dig[1])/10;
+	dig[3] = (score-1000*dig[0]-100*dig[1]-10*dig[2]);
+
+	// Draw scores
+	int i;
 	int x, y;
-	int xstart = 1;
-	int ystart = 20;
-	int length = 2;
-	int h = 9;		// height above numbers in image score
-	if(player) xstart = 11;
+	int xm, ym;
+	int xstart = ((player == 1) ? XSTART2 : XSTART1);
 
-	// Draw score
-	int dig1, dig2, dig3, dig4;
-
-	dig1 = score/1000;
-	dig2 = (score-1000*dig1)/100;
-	dig3 = (score-1000*dig1-100*dig2)/10;
-	dig4 = (score-1000*dig1-100*dig2-10*dig3);
-
-	for(x=xstart; x<xstart+length;x++){
-		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+h)*32+dig1*length+x-xstart+1]|(15<<12);
+	swiWaitForVBlank();
+	for(i = 0; i < NBDIG; i++){
+		xm = dig[i]*NBW;
+		ym = YM;
+		for(x = xstart + i*NBW; x < xstart + (i+1)*NBW; x++){
+			for(y = YSTART; y < YSTART + NBH; y++){
+				BG_MAP_RAM(BG0MAP)[y*W + x] = scoreMap[ym*W + xm] | (NORMALPAL << 12);
+				ym++;
+			}
+			ym = YM;
+			xm++;
 		}
 	}
+}
 
-	for(x=xstart+length; x<xstart+2*length;x++){
-		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+h)*32+dig2*length+(x-xstart-length+1)]|(15<<12);
-		}
-	}
+void info_draw_time(){
+	// Compute time digits
+	int dig[NBDIG];
 
-	for(x=xstart+2*length; x<xstart+3*length;x++){
-		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+h)*32+dig3*length+(x-xstart-2*length+1)]|(15<<12);
-		}
-	}
+	dig[0] = min/10;
+	dig[1] = min-10*dig[0];
+	dig[2] = 10;
+	dig[3] = sec/10;
+	dig[4] = sec-10*dig[3];
 
-	for(x=xstart+3*length; x<xstart+4*length;x++){
-		for(y=ystart; y<24;y++){
-			BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+h)*32+dig4*length+(x-xstart-3*length+1)]|(15<<12);
-		}
-	}
+	// Draw time
+	int i;
+	int x, y;
+	int xm, ym;
 
-	// Draw time only if state not TRAIN
-	if(state!=TRAIN){
-		int dot = 1;
-		int xstart = 22;
-
-		dig1 = min/10;
-		dig2 = min-10*dig1;
-		dig3 = sec/10;
-		dig4 = sec-10*dig3;
-
-		for(x=xstart; x<xstart+length;x++){
-			for(y=ystart; y<24;y++){
-				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig1*length+(x-xstart+1)]|(15<<12);
+	swiWaitForVBlank();	
+	for(i = 0; i <= NBDIG; i++){
+		xm = dig[i]*NBW;
+		ym = YM;
+		for(x = XSTART3 + i*NBW; x < XSTART3 + (i+1)*NBW; x++){
+			for(y = YSTART; y < YSTART + NBH; y++){
+				BG_MAP_RAM(BG0MAP)[y*W + x] = scoreMap[ym*W + xm] | (NORMALPAL << 12);
+				ym++;
 			}
-		}
-
-		for(x=xstart+length; x<xstart+2*length;x++){
-			for(y=ystart; y<24;y++){
-				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig2*length+(x-length-xstart+1)]|(15<<12);
-			}
-		}
-
-		for(x=xstart+2*length; x<xstart+2*length+dot;x++){
-			for(y=ystart; y<24;y++){
-				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+10*length+(x-2*length-xstart+1)]|(15<<12);
-			}
-		}
-
-		for(x=xstart+2*length+dot; x<xstart+3*length+dot;x++){
-			for(y=ystart; y<24;y++){
-				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig3*length+(x-2*length-xstart-dot+1)]|(15<<12);
-			}
-		}
-
-		for(x=xstart+3*length+dot; x<xstart+4*length+dot;x++){
-			for(y=ystart; y<24;y++){
-				BG_MAP_RAM(25)[y*32 + x] = scoreMap[(y-ystart+H)*32+dig4*length+(x-3*length-xstart-dot+1)]|(15<<12);
-			}
+			ym = YM;
+			xm++;
 		}
 	}
 }
