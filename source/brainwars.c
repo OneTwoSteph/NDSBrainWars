@@ -583,10 +583,10 @@ void brainwars_train_select(){
 	// Check if an option was selected with buttons or touching the screen
 	int option = -1;
 
-	if(keys & KEY_RIGHT) option = (selectTrain+1) % 8;
-	else if(keys & KEY_LEFT) option = (selectTrain+7) % 8;
-	else if(keys & KEY_DOWN) option  = (selectTrain+3) % 8;
-	else if(keys & KEY_UP) option = (selectTrain+5) % 8;
+	if(keys & KEY_RIGHT) option = (selectTrain+1) % 7;
+	else if(keys & KEY_LEFT) option = (selectTrain+6) % 7;
+	else if(keys & KEY_DOWN) option  = (selectTrain+2) % 7;
+	else if(keys & KEY_UP) option = (selectTrain+5) % 7;
 	else if(keys & KEY_A) option = selectTrain;
 	else if(keys & KEY_TOUCH){
 		int i;
@@ -595,7 +595,7 @@ void brainwars_train_select(){
 		int x1, x2, y1, y2;
 
 		// Loop on the options square to see which one was touched
-		for(i = 0; i < 8; i++){
+		for(i = 0; i < 7; i++){
 			row = i/3;
 			col = i%3;
 
@@ -612,15 +612,9 @@ void brainwars_train_select(){
 	}
 
 	// Check if an option was selected or chosen
-	if(option == selectTrain){
-		if(option == NOGAME){
-			state = MAIN;
-			stateChange = true;
-		}
-		else{
-			trainGame = selectTrain;
-			trainGameChange = true;
-		}
+	if(option == selectTrain){	
+		trainGame = selectTrain;
+		trainGameChange = true;
 	}
 	else if(option != -1){
 		selectTrain = option;
