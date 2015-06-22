@@ -10,7 +10,6 @@
 /******************************************************************** Modules */
 // General
 #include "general.h"
-#include "info.h"
 #include "musical.h"
 
 // Image
@@ -38,9 +37,6 @@ enum MUSIC
 
 
 /*********************************************************** Global variables */
-// Global game variables
-STATE state;
-
 // Sound variable
 mm_sound_effect sound;
 
@@ -100,7 +96,7 @@ void musical_timer_ISR1(){
 
 /****************************************************************** Functions */
 // Initialization
-void musical_init(int gameState){
+void musical_init(){
 	// Desactivate BG1
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
@@ -146,8 +142,6 @@ void musical_init(int gameState){
 	sound.panning = 128;         				// centered panning
 
 	// Set global variables
-	state = gameState;
-
 	int i;
 
 	for(i = 0; i < 4; i++){
@@ -170,9 +164,6 @@ void musical_init(int gameState){
 
 	// Launch first music
 	musical_next();
-
-	// Draw infos
-	info_init(state);
 }
 
 // Create next music
@@ -278,22 +269,14 @@ void musical_draw_tone(int tone, int palette){
 }
 
 // Main function
-bool musical_game(bool player, int gameCounter){
-	// Stop game if START button pressed or time crossed 15 sec
-	int time;
-	time = info_get_time();
-
-	if(state != TRAIN) { info_store_temp_score(player, gameCounter, score); }
-
-	if(occupied) return false;
-	else{
+int musical_game(){
+	if(!occupied){
 		// Scan keys
 		scanKeys();
 		u16 keys = (u16) keysDown();
 
 		// Check which key was pressed or where the touchscreen was touched
-		if(keys & KEY_START) return true;
-		else if(keys & KEY_TOUCH){
+		if(keys & KEY_TOUCH){
 				// Find position touched on touchscreen
 				touchPosition touch;
 				touchRead(&touch);
@@ -325,8 +308,8 @@ bool musical_game(bool player, int gameCounter){
 		}
 	}
 
-	// Return false (the game is note finished)
-	return false;
+	// Return score
+	return score;
 }
 
 // Correct function
@@ -341,9 +324,6 @@ void musical_correct(){
 	if(answer > level){
 		// Increment score
 		score++;
-
-		// Update infos
-		info_update_score(score, 0);
 
 		// Check level
 		if(score > MUSICALHARD) level = HARD;
@@ -374,9 +354,6 @@ void musical_wrong(){
 
 // Reset
 void musical_reset(){
-	// Suppress infos display
-	info_finish(score, "musical", state);
-
 	// Disable timers
 	TIMER0_CR = 0;
 	TIMER1_CR = 0;

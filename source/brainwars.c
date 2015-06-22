@@ -54,19 +54,6 @@
 #define PSTARTY		6
 #define PINT 		2
 
-typedef enum GAME GAME;
-enum GAME
-{
-	LEADER = 0,
-	EATIT = 1,
-	MUSICAL = 2,
-	PATH = 3,
-	ADDITION = 4,
-	PLUSMINUS = 5,
-	JANKENPON = 6,
-	NOGAME = 7,
-};
-
 typedef enum PSTATE PSTATE;
 enum PSTATE
 {
@@ -523,14 +510,16 @@ void brainwars_train_init(){
 void brainwars_train(){
 	// Check if game has changed and initialize correct module
 	if(trainGameChange){
+		if(trainGame != NOGAME) info_init(state);
+
 		switch(trainGame){
-		case LEADER: leader_init(state); break;
-		case EATIT: eatit_init(state); break;
-		case MUSICAL: musical_init(state); break;
-		case PATH: path_init(state); break;
-		case ADDITION: addition_init(state); break;
-		case PLUSMINUS: plusminus_init(state); break;
-		case JANKENPON: jankenpon_init(state); break;
+		case LEADER: leader_init(); break;
+		case EATIT: eatit_init(); break;
+		case MUSICAL: musical_init(); break;
+		case PATH: path_init(); break;
+		case ADDITION: addition_init(); break;
+		case PLUSMINUS: plusminus_init(); break;
+		case JANKENPON: jankenpon_init(); break;
 		case NOGAME: brainwars_train_init(); break;
 		default: break;
 		}
@@ -539,35 +528,49 @@ void brainwars_train(){
 	}
 
 	// Execute current game
-	int trainGameEnd = false;
+	int score;
 	switch(trainGame){
-	case LEADER: trainGameEnd = leader_game(0,0); break;
-	case EATIT: trainGameEnd = eatit_game(0,0); break;
-	case MUSICAL: trainGameEnd = musical_game(0,0); break;
-	case PATH: trainGameEnd = path_game(0,0); break;
-	case ADDITION: trainGameEnd = addition_game(0,0); break;
-	case PLUSMINUS: trainGameEnd = plusminus_game(0,0); break;
-	case JANKENPON: trainGameEnd = jankenpon_game(0,0); break;
+	case LEADER: score = leader_game(); break;
+	case EATIT: score = eatit_game(); break;
+	case MUSICAL: score = musical_game(); break;
+	case PATH: score = path_game(); break;
+	case ADDITION: score = addition_game(); break;
+	case PLUSMINUS: score = plusminus_game(); break;
+	case JANKENPON: score = jankenpon_game(); break;
 	case NOGAME: brainwars_train_select(); break;
 	default: break;
 	}
 
-	// Check if current game was ended and reset game if it is the case
-	if(trainGameEnd){
-		switch(trainGame){
-		case LEADER: leader_reset(); break;
-		case EATIT: eatit_reset(); break;
-		case MUSICAL: musical_reset(); break;
-		case PATH: path_reset(); break;
-		case ADDITION: addition_reset(); break;
-		case PLUSMINUS: plusminus_reset(); break;
-		case JANKENPON: jankenpon_reset(); break;
-		case NOGAME: break;
-		default: break;
-		}
+	// Check if game has to end
+	if(trainGame != NOGAME){
+		// Update infos
+		info_update_score(score, 0);
 
-		trainGame = NOGAME;
-		trainGameChange = true;
+		// Scan keys
+		u16 keys = (u16) keysDown();
+
+		// Check if start was pressed and stop current game if yes
+		if(keys & KEY_START){
+			// Reset infos
+			info_finish(score, trainGame, state);
+
+			// Stop games
+			switch(trainGame){
+			case LEADER: leader_reset(); break;
+			case EATIT: eatit_reset(); break;
+			case MUSICAL: musical_reset(); break;
+			case PATH: path_reset(); break;
+			case ADDITION: addition_reset(); break;
+			case PLUSMINUS: plusminus_reset(); break;
+			case JANKENPON: jankenpon_reset(); break;
+			case NOGAME: break;
+			default: break;
+			}
+
+			// Reset train state
+			trainGame = NOGAME;
+			trainGameChange = true;
+		}
 	}
 }
 

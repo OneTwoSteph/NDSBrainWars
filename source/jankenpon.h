@@ -6,9 +6,14 @@
  *
  */
 
+#ifndef JANKENPON_H_
+#define JANKENPON_H_
+
 void jankenpon_wrong(void);
-void jankenpon_init(int gameState);
+void jankenpon_init(void);
 void jankenpon_draw(void);
-bool jankenpon_game(bool player, int gameCounter);
+int jankenpon_game(void);
 void jankenpon_next(void);
 void jankenpon_reset(void);
+
+#endif /* JANKENPON_H_ */

@@ -30,6 +30,8 @@
 #define YM 					6
 #define NBDIG 				4
 
+// Game names
+const char *names[7] = {"leader", "eatit", "musical", "path", "addition", "plusminus", "jankenpon"};
 
 /*********************************************************** Global variables */
 STATE gameState;
@@ -99,6 +101,7 @@ void info_init(state){
 
 	// Print initial null score and time
 	info_update_score(0, 0);
+	info_update_time();
 
 	// Activate BG0
 	REG_DISPCNT |= DISPLAY_BG0_ACTIVE;
@@ -175,7 +178,7 @@ int info_get_time(){
 	return 60*min+sec;
 }
 
-void info_finish(int score, char* game, int state){
+void info_finish(int score, int game, int state){
 	// Disable BG0
 	REG_DISPCNT &= ~DISPLAY_BG0_ACTIVE;
 
@@ -188,14 +191,14 @@ void info_finish(int score, char* game, int state){
 	if(state != TRAIN) info_save_score(score, game);
 }
 
-void info_save_score(int score, char* game){
+void info_save_score(int score, int game){
 	FILE* file;
 	char name[20] = "/";
 	int max_score;
 	bool write = false;
 
 	// Open file
-	strcat(name, game);
+	strcat(name, names[game]);
 	strcat(name, ".txt");
 	file = fopen(name, "r");
 

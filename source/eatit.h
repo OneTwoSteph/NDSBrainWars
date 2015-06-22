@@ -9,12 +9,12 @@
 #ifndef EATIT_H_
 #define EATIT_H_
 
-void eatit_init(int gameState);
+void eatit_init(void);
 void eatit_next(void);
 void eatit_draw_pacman(void);
 void eatit_draw_food(void);
 void eatit_draw_blinking(void);
-bool eatit_game(bool player, int gameCounter);
+int eatit_game(void);
 void eatit_correct(void);
 void eatit_wrong(void);
 void eatit_reset(void);

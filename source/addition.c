@@ -10,7 +10,6 @@
 /******************************************************************** Modules */
  // General
 #include "general.h"
-#include "info.h"
 #include "addition.h"
 
  // Image
@@ -44,9 +43,6 @@
 
 
 /*********************************************************** Global variables */
-// Global game
-STATE state;
-
 // Game infos
 int number;
 
@@ -101,7 +97,7 @@ void addition_timer_ISR1(){
 
 /****************************************************************** Functions */
 // Initialization
-void addition_init(int gameState) {
+void addition_init() {
 	// Desactivate BG1
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
@@ -144,9 +140,6 @@ void addition_init(int gameState) {
 	irqSet(IRQ_TIMER1, &addition_timer_ISR1);
 	irqEnable(IRQ_TIMER1);
 
-	// Initialize variables
-	state = gameState;
-
 	number = MINNB;
 
 	counter = 0;
@@ -163,9 +156,6 @@ void addition_init(int gameState) {
 
 	// Launch first number
 	addition_next();
-
-	// Draw infos
-	info_init(state);
 }
 
 void addition_next() {
@@ -265,21 +255,13 @@ void addition_draw_digit(int xstart, int digit, int palette){
 	}
 }
 
-bool addition_game(bool player, int gameCounter) {
-	// Stop game if START button pressed or time crossed 15 sec
-	int time;
-	time = info_get_time();
-
-	if(state != TRAIN) info_store_temp_score(player, gameCounter, score); 
-
+int addition_game() {
 	// Scan keys only if game not occupied
-	if(occupied) return false;
-	else{
+	if(!occupied){
 		scanKeys();
 		u16 keys = (u16) keysDown();
 
-		if(keys & KEY_START) return true;
-		else if(keys & KEY_TOUCH) {
+		if(keys & KEY_TOUCH) {
 			// Check what number was touched
 			touchPosition touch;
 			touchRead(&touch);
@@ -306,15 +288,18 @@ bool addition_game(bool player, int gameCounter) {
 				   (touch.py < (YSTARTP + 3*(SIDEP + INTP) + SIDEP))) nb = 0;
 			}
 
-			// Check number which was touched
+			// Check if previous touched number was touched
 			if(nb != -1){
 				// Check if number already touched and go out if yes, 
 				// otherwise continue
 				int i;
 				for(i = 0; i < counter; i++){
-					if(nb == numbers[i]) return false;
+					if(nb == numbers[i]) nb = -1;
 				}
+			}
 
+			// Check if touched number ok
+			if(nb != -1){
 				// Save touched number
 				touchedNb = nb;
 
@@ -333,10 +318,10 @@ bool addition_game(bool player, int gameCounter) {
 				else addition_wrong();	
 			}
 		}
-
-		// Return false because game did not end
-		return false;
 	}
+
+	// Return score
+	return score;
 }
 
 void addition_correct() {
@@ -350,9 +335,6 @@ void addition_correct() {
 	if(counter >= 3){
 		// Increment score
 		score++;
-
-		// Update infos
-		info_update_score(score, 0);
 
 		// Launch next number
 		addition_next();
@@ -377,9 +359,6 @@ void addition_wrong() {
 }
 
 void addition_reset() {
-	// Suppress infos
-	info_finish(score, "addition", state);
-
 	// Disable timers
 	TIMER0_CR = 0;
 	TIMER1_CR = 0;

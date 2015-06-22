@@ -29,11 +29,12 @@
 #define NORMALPAL	6
 #define GREYPAL		7
 
+// Game
+#define GREATER 	1
+#define SMALLER 	2
+
 
 /*********************************************************** Global variables */
-// Variable
-STATE state;
-
 int number;
 int compare;
 
@@ -94,7 +95,7 @@ void plusminus_timer_ISR1(){
 }
 
 /****************************************************************** Functions */
-void plusminus_init(int gameState) {
+void plusminus_init() {
 	// Desacitvate BG1
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
@@ -134,8 +135,6 @@ void plusminus_init(int gameState) {
 	irqEnable(IRQ_TIMER1);
 
 	// Initialize variables
-	state = gameState;
-
 	number = 0;
 	compare = GREATER;
 
@@ -143,9 +142,6 @@ void plusminus_init(int gameState) {
 
 	draw = 0;
 	wrong = 0;
-
-	// Draw infos
-	info_init(state);
 
 	// Launch first number 0
 	plusminus_start();
@@ -224,53 +220,37 @@ void plusminus_draw_digit(int xstart, int digit, int palette){
 	}
 }
 
-bool plusminus_game(bool player, int gameCounter) {
-	// Stop game if START button pressed or time crossed 15 sec
-	// Else check if the correct block was touched
-	int time;
-
-	time = info_get_time();
-	if(state != TRAIN) info_store_temp_score(player, gameCounter, score);
-
+int plusminus_game() {
 	// Scan the keys only the game is not in drawing
 	// mode or in error blinking mode
-	if(occupied){
-		return false;
-	}
-	else{
+	if(!occupied){
 		// Scan keys
 		scanKeys();
 		u16 keys = (u16) keysDown();
 
-		// Check if game stops or if answer needs to be checked
-		if((keys & KEY_START) || (time > GAMETIME)) return true;
-		else{
-			// Check how many of the active keys were pressed
-			int counter = 0;
+		// Check how many of the active keys were pressed
+		int counter = 0;
 
-			if(keys & KEY_UP) counter ++;
-			if(keys & KEY_DOWN) counter ++;
+		if(keys & KEY_UP) counter ++;
+		if(keys & KEY_DOWN) counter ++;
 
-			// If both keys were pressed, it is wrong, otherwise check answer
-			if(counter > 1) plusminus_correct();
-			else if(counter == 1){
-				if((compare==GREATER) && (keys & KEY_UP)) plusminus_correct();
-				else if((compare==SMALLER) && (keys & KEY_DOWN)) plusminus_correct();
-				else plusminus_wrong();
-			}
+		// If both keys were pressed, it is wrong, otherwise check answer
+		if(counter > 1) plusminus_correct();
+		else if(counter == 1){
+			if((compare==GREATER) && (keys & KEY_UP)) plusminus_correct();
+			else if((compare==SMALLER) && (keys & KEY_DOWN)) plusminus_correct();
+			else plusminus_wrong();
 		}
-
-		// Return game not ended
-		return false;
+		
 	}
+
+	// Return score
+	return score;
 }
 
 void plusminus_correct() {
 	// Update score
 	score++;
-
-	// Update infos
-	info_update_score(score, 0);
 
 	// Generate new number
 	plusminus_new_number();
@@ -291,9 +271,6 @@ void plusminus_wrong(){
 }
 
 void plusminus_reset(void) {
-	// Suppress infos
-	info_finish(score, "plusminus", state);
-
 	// Desactivate BG0
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 

@@ -42,8 +42,6 @@ int score;
 int wrong;
 LEVEL level;
 
-STATE state;
-
 void path_wrong(){
 	// Play effect
 	if(wrong == 0) mmEffect(SFX_BOING);
@@ -62,7 +60,7 @@ void path_wrong(){
 	path_draw();
 }
 
-void path_init(int gameState){
+void path_init(){
 	// Desactivate BG1
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
@@ -107,10 +105,6 @@ void path_init(int gameState){
 	score = 0;
 	wrong = 0;
 	level = EASY;
-	state = gameState;
-
-	// Draw infos
-	info_init(state);
 }
 
 void path_draw(){
@@ -154,77 +148,68 @@ void path_draw(){
 	}
 }
 
-bool path_game(bool player, int gameCounter){
+int path_game(){
 	// Scan keys to find pressed ones
 	scanKeys();
 	u16 keys = (u16) keysDown();
 
-	// Stop game if START button pressed or time crossed 15 sec
-	int time;
-	time = info_get_time();
+	// Check how many keys were pressed
+	int counter = 0;
+	if(keys & KEY_RIGHT) counter++;
+	if(keys & KEY_LEFT) counter++;
+	if(keys & KEY_UP) counter++;
+	if(keys & KEY_DOWN) counter++;
+	if(keys & KEY_A) counter++;
+	if(keys & KEY_B) counter++;
+	if(keys & KEY_X) counter++;
+	if(keys & KEY_Y) counter++;
 
-	if(state != TRAIN) { info_store_temp_score(player, gameCounter, score); }
-
-	if((keys & KEY_START) || (time > GAMETIME)) return true;
-	else{
-		// Check how many keys were pressed
-		int counter = 0;
-		if(keys & KEY_RIGHT) counter++;
-		if(keys & KEY_LEFT) counter++;
-		if(keys & KEY_UP) counter++;
-		if(keys & KEY_DOWN) counter++;
-		if(keys & KEY_A) counter++;
-		if(keys & KEY_B) counter++;
-		if(keys & KEY_X) counter++;
-		if(keys & KEY_Y) counter++;
-
-		// Decide what to do in function of how many keys were pressed
-		// If several keys, wrong
-		// If one key, check if ok
-		// If no key, do nothing
-		if(counter > 1) path_wrong();
-		else if(counter == 1){
-			// Check  if the key which was pressed is correct
-			switch(color){
-			case B:
-				if((keys & KEY_RIGHT) && (direction == RIGHT)) path_next();
-				else if((keys & KEY_LEFT) && (direction == LEFT)) path_next();
-				else if((keys & KEY_UP) && (direction == UP)) path_next();
-				else if((keys & KEY_DOWN) && (direction == DOWN)) path_next();
-				else path_wrong();
-				break;
-			case R:
-				if((keys & KEY_RIGHT) && (direction == LEFT))  path_next();
-				else if((keys & KEY_LEFT) && (direction == RIGHT)) path_next();
-				else if((keys & KEY_UP) && (direction == DOWN)) path_next();
-				else if((keys & KEY_DOWN) && (direction == UP)) path_next();
-				else path_wrong();
-				break;
-			case G:
-				if((keys & KEY_A) && (direction == RIGHT)) path_next();
-				else if((keys & KEY_Y) && (direction == LEFT)) path_next();
-				else if((keys & KEY_X) && (direction == UP)) path_next();
-				else if((keys & KEY_B) && (direction == DOWN)) path_next();
-				else path_wrong();
-				break;
-			case Y:
-				if((keys & KEY_A) && (direction == LEFT)) path_next();
-				else if((keys & KEY_Y) && (direction == RIGHT)) path_next();
-				else if((keys & KEY_X) && (direction == DOWN)) path_next();
-				else if((keys & KEY_B) && (direction == UP)) path_next();
-				else path_wrong();
-				break;
-			default:
-				break;
-			}
+	// Decide what to do in function of how many keys were pressed
+	// If several keys, wrong
+	// If one key, check if ok
+	// If no key, do nothing
+	if(counter > 1) path_wrong();
+	else if(counter == 1){
+		// Check  if the key which was pressed is correct
+		switch(color){
+		case B:
+			if((keys & KEY_RIGHT) && (direction == RIGHT)) path_next();
+			else if((keys & KEY_LEFT) && (direction == LEFT)) path_next();
+			else if((keys & KEY_UP) && (direction == UP)) path_next();
+			else if((keys & KEY_DOWN) && (direction == DOWN)) path_next();
+			else path_wrong();
+			break;
+		case R:
+			if((keys & KEY_RIGHT) && (direction == LEFT))  path_next();
+			else if((keys & KEY_LEFT) && (direction == RIGHT)) path_next();
+			else if((keys & KEY_UP) && (direction == DOWN)) path_next();
+			else if((keys & KEY_DOWN) && (direction == UP)) path_next();
+			else path_wrong();
+			break;
+		case G:
+			if((keys & KEY_A) && (direction == RIGHT)) path_next();
+			else if((keys & KEY_Y) && (direction == LEFT)) path_next();
+			else if((keys & KEY_X) && (direction == UP)) path_next();
+			else if((keys & KEY_B) && (direction == DOWN)) path_next();
+			else path_wrong();
+			break;
+		case Y:
+			if((keys & KEY_A) && (direction == LEFT)) path_next();
+			else if((keys & KEY_Y) && (direction == RIGHT)) path_next();
+			else if((keys & KEY_X) && (direction == DOWN)) path_next();
+			else if((keys & KEY_B) && (direction == UP)) path_next();
+			else path_wrong();
+			break;
+		default:
+			break;
 		}
 	}
 
 	// In the case the player was wrong, wait until wrong blinking ends
 	while(wrong != 0);
 
-	// Return with game not ended
-	return false;
+	// Return score
+	return score;
 }
 
 
@@ -256,9 +241,6 @@ void path_next(){
 }
 
 void path_reset(){
-	// Suppress infos
-	info_finish(score, "path", state);
-
 	// Desactivate BG0
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 

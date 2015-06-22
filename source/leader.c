@@ -10,7 +10,6 @@
 /******************************************************************** Modules */
 // General
 #include "general.h"
-#include "info.h"
 #include "leader.h"
 
 
@@ -62,9 +61,6 @@ u8 cornerT[] = {
 
 
 /*********************************************************** Global variables */
-// Game variables
-STATE state;				// general game state
-
 TAPORDER taporder;			// order in which the blocks have to be taped
 int order[MAXB];			// order of the blocks
 
@@ -123,7 +119,7 @@ void leader_timer_ISR1(){
 
 /****************************************************************** Functions */
 // Initialization
-void leader_init(int gameState) {
+void leader_init() {
 	// Desactivate BG1
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
@@ -167,8 +163,6 @@ void leader_init(int gameState) {
 	irqEnable(IRQ_TIMER1);
 	
 	// Initialize variables
-	state = gameState;
-
 	taporder = SAME;
 	int i;
 	for(i = 0; i < MAXB; i++) order[i] = i;
@@ -182,9 +176,6 @@ void leader_init(int gameState) {
 	wrong = 0;
 
 	occupied = false;
-
-	// Draw infos
-	info_init(state);
 
 	// Launch first configuration
 	leader_new_config();
@@ -306,23 +297,13 @@ void leader_draw_block(int x, int y, int palette){
 }
 
 // Main function
-bool leader_game(bool player, int gameCounter) {
-	// Stop game if START button pressed or time crossed 15 sec
-	// Else check if the correct block was touched
-	int time;
-
-	time = info_get_time();
-	if(state != TRAIN) info_store_temp_score(player, gameCounter, score);
-
+int leader_game() {
 	// Scan the keys and the touch screen only the game is not in block drawing
 	// or blinking mode
-	if(occupied) return false;
-	else{
-		scanKeys();
+	if(!occupied){
 		u16 keys = keysDown();
 
-		if((keys & KEY_START)) return true;
-		else if(keys & KEY_TOUCH){
+		if(keys & KEY_TOUCH){
 			// Check at which position the touch screen was touched
 			touchPosition touch;
 			touchRead(&touch);
@@ -345,7 +326,7 @@ bool leader_game(bool player, int gameCounter) {
 
 				if((touch.px > xl) && (touch.px < xr) && (touch.py > yh) && (touch.py < yl)){
 					if(i == current) {
-						leader_correct(player);
+						leader_correct();
 						break;
 					}
 					else {
@@ -355,14 +336,14 @@ bool leader_game(bool player, int gameCounter) {
 				}
 			}
 		}
-
-		// Return false because game not ended
-		return false;
 	}
+
+	// Return score
+	return score;
 }
 
 // Correct answer
-void leader_correct(bool player){
+void leader_correct(){
 	// Erase taped block
 	int x, y;
 	int current;
@@ -382,9 +363,6 @@ void leader_correct(bool player){
 	if(block == (nb_blocks)) {
 		// Update score
 		score++;
-
-		// Update displayed score
-		info_update_score(score, player);
 
 		// Update level
 		level = score/LEADERLEVEL;
@@ -412,9 +390,6 @@ void leader_wrong(){
 
 // Reset game 
 void leader_reset() {
-	// Suppress displayed infos
-	info_finish(score, "leader", state);
-
 	// Desactivate BG0
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 

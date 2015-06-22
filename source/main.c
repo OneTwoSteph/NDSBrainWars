@@ -22,5 +22,6 @@ int main(void) {
     // Game infinite loop
     while(1){
     	brainwars_main();
+    	scanKeys();
     }
 }

@@ -10,7 +10,6 @@
 /******************************************************************** Modules */
 // General
 #include "general.h"
-#include "info.h"
 #include "eatit.h"
 
 // Image
@@ -46,9 +45,6 @@ enum FOOD
 
 
 /*********************************************************** Global variables */
-// Global game variable
-STATE state;
-
 // Game variables
 ROW row;
 FOOD up[4];
@@ -82,7 +78,7 @@ void eatit_timer_ISR1(void){
 
 /****************************************************************** Functions */
 // Initialization
-void eatit_init(int gameState){
+void eatit_init(){
 	// Desactivate BG1
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
@@ -132,10 +128,6 @@ void eatit_init(int gameState){
 	// Set global variables
 	score = 0;
 	wrong = 0;
-	state = gameState;
-
-	// Draw infos
-	info_init(state);
 
 	// Activate BG0 of SUB to draw first configuration
 	swiWaitForVBlank();
@@ -240,36 +232,27 @@ void eatit_draw_blinking(){
 }
 
 // Main function
-bool eatit_game(bool player, int gameCounter){
-	// Stop game if START button pressed or time crossed 15 sec
-	int time;
-	time = info_get_time();
-
-	if(state != TRAIN) { info_store_temp_score(player, gameCounter, score); }
-
-	if(occupied) return false;
-	else{
+int eatit_game(){
+	if(!occupied){
 		// Scan keys
 		scanKeys();
 		u16 keys = (u16) keysDown();
 
 		// Check which key was pressed and if it is correct or false
-		if(keys & KEY_START) return true;
-		else{
-			int counter = 0;
-			if(keys & KEY_UP) counter++;
-			if(keys & KEY_DOWN) counter++;
+		int counter = 0;
+		if(keys & KEY_UP) counter++;
+		if(keys & KEY_DOWN) counter++;
 
-			if(counter == 1){
-				row = ((keys & KEY_UP) ? UP : DOWN); 
-				if(((keys & KEY_UP) && ((up[0] == MONSTER) || (down[0] == CHERRY))) || 
-				   ((keys & KEY_DOWN) && ((down[0] == MONSTER) || (up[0] == CHERRY)))) eatit_wrong();
-				else eatit_correct();
-			}
+		if(counter == 1){
+			row = ((keys & KEY_UP) ? UP : DOWN); 
+			if(((keys & KEY_UP) && ((up[0] == MONSTER) || (down[0] == CHERRY))) || 
+			   ((keys & KEY_DOWN) && ((down[0] == MONSTER) || (up[0] == CHERRY)))) eatit_wrong();
+			else eatit_correct();
 		}
-
-		return false;
 	}
+
+	// Return the score
+	return score;
 }
 
 // Correct answer
@@ -280,9 +263,6 @@ void eatit_correct(){
 
 	// Increment score
 	score++;
-
-	// Update infos
-	info_update_score(score, 0);
 
 	// Launch next config
 	eatit_next();
@@ -308,9 +288,6 @@ void eatit_wrong(){
 
 // Reset game
 void eatit_reset(){
-	// Suppress infos
-	info_finish(score, "eatit", state);
-
 	// Desactivate BG0
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 

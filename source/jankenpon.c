@@ -10,7 +10,6 @@
 /******************************************************************** Modules */
  // General
 #include "general.h"
-#include "info.h"
 #include "jankenpon.h"
 
 // Image
@@ -58,8 +57,6 @@ int score;
 int wrong;
 LEVEL level;
 
-STATE state;
-
 void jankenpon_wrong(void){
 	// Play effect
 	if(wrong == 0) mmEffect(SFX_BOING);
@@ -78,7 +75,7 @@ void jankenpon_wrong(void){
 	jankenpon_draw();
 }
 
-void jankenpon_init(int gameState){
+void jankenpon_init(){
 	// Desactivate BG1
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
@@ -118,10 +115,6 @@ void jankenpon_init(int gameState){
 	score = 0;
 	wrong = 0;
 	level = EASY;
-	state = gameState;
-
-	// Draw infos
-	info_init(state);
 }
 
 void jankenpon_draw(){
@@ -177,82 +170,70 @@ void jankenpon_draw(){
 	}
 }
 
-bool jankenpon_game(bool player, int gameCounter){
+int jankenpon_game(){
 	// Scan keys
 	scanKeys();
 	u16 keys = (u16) keysDown();
 
-	// Stop game if START button pressed or time crossed 15 sec
-	int time;
-	time = info_get_time();
+	// If touchscreen was touched, check if correct
+	if(keys & KEY_TOUCH){
+		// Find position touched on touchscreen
+		touchPosition touch;
+		touchRead(&touch);
 
-	if(state != TRAIN) { info_store_temp_score(player, gameCounter, score); }
+		// Define circle center and radius in pixels
+		// 1, 2 ,3 corresponds to scissor, paper, rock (like on the image)
+		double r = 25;
+		double cx = 208;
+		double cy1 = 34;
+		double cy2 = 98;
+		double cy3 = 162;
 
-	if(keys & KEY_START) { return true; }
-	else{
-		// If touchscreen was touched, check if correct
-		if(keys & KEY_TOUCH){
-			// Find position touched on touchscreen
-			touchPosition touch;
-			touchRead(&touch);
-
-			// Define circle center and radius in pixels
-			// 1, 2 ,3 corresponds to scissor, paper, rock (like on the image)
-			double r = 25;
-			double cx = 208;
-			double cy1 = 34;
-			double cy2 = 98;
-			double cy3 = 162;
-
-			// Check if touched correct symbol
-			switch(color){
-			case B:
-				if((pow(cx - touch.px, 2) + pow(cy1 - touch.py,2)) < pow(r,2)){
-					if((U+1)%3 == shape) jankenpon_next();
-					else jankenpon_wrong();
-				}
-
-				if((pow(cx - touch.px, 2) + pow(cy2 - touch.py,2)) < pow(r,2)){
-					if((M+1)%3 == shape) jankenpon_next();
-					else jankenpon_wrong();
-				}
-
-				if((pow(cx - touch.px, 2) + pow(cy3 - touch.py,2)) < pow(r,2)){
-					if((D+1)%3 == shape) jankenpon_next();
-					else jankenpon_wrong();
-				}
-				break;
-			case R:
-				if((pow(cx - touch.px, 2) + pow(cy1 - touch.py,2)) < pow(r,2)){
-					if(U == (shape+1)%3) jankenpon_next();
-					else jankenpon_wrong();
-				}
-
-				if((pow(cx - touch.px, 2) + pow(cy2 - touch.py,2)) < pow(r,2)){
-					if(M == (shape+1)%3) jankenpon_next();
-					else jankenpon_wrong();
-				}
-
-				if((pow(cx - touch.px, 2) + pow(cy3 - touch.py,2)) < pow(r,2)){
-					if(D == (shape+1)%3) jankenpon_next();
-					else jankenpon_wrong();
-				}
-				break;
-			default: break;
+		// Check if touched correct symbol
+		switch(color){
+		case B:
+			if((pow(cx - touch.px, 2) + pow(cy1 - touch.py,2)) < pow(r,2)){
+				if((U+1)%3 == shape) jankenpon_next();
+				else jankenpon_wrong();
 			}
+
+			if((pow(cx - touch.px, 2) + pow(cy2 - touch.py,2)) < pow(r,2)){
+				if((M+1)%3 == shape) jankenpon_next();
+				else jankenpon_wrong();
+			}
+
+			if((pow(cx - touch.px, 2) + pow(cy3 - touch.py,2)) < pow(r,2)){
+				if((D+1)%3 == shape) jankenpon_next();
+				else jankenpon_wrong();
+			}
+			break;
+		case R:
+			if((pow(cx - touch.px, 2) + pow(cy1 - touch.py,2)) < pow(r,2)){
+				if(U == (shape+1)%3) jankenpon_next();
+				else jankenpon_wrong();
+			}
+
+			if((pow(cx - touch.px, 2) + pow(cy2 - touch.py,2)) < pow(r,2)){
+				if(M == (shape+1)%3) jankenpon_next();
+				else jankenpon_wrong();
+			}
+
+			if((pow(cx - touch.px, 2) + pow(cy3 - touch.py,2)) < pow(r,2)){
+				if(D == (shape+1)%3) jankenpon_next();
+				else jankenpon_wrong();
+			}
+			break;
+		default: break;
 		}
 	}
 
-	// Return true for the game to continue
-	return false;
+	// Return score
+	return score;
 }
 
 void jankenpon_next(){
 	// Increment score
 	score++;
-
-	// Update infos
-	info_update_score(score, 0);
 
 	// Check level
 	if(score == JANKENPONMEDIUM) level = MEDIUM;
@@ -298,9 +279,6 @@ void jankenpon_next(){
 }
 
 void jankenpon_reset(){
-	// Suppress infos
-	info_finish(score, "jankenpon", state);
-
 	// Draw nothing
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
