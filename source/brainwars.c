@@ -304,12 +304,13 @@ void brainwars_main_init(){
 	// palette
 	swiCopy(main_menuTiles, BG_TILE_RAM(BG1TILE), main_menuTilesLen/2);
 
-	// Put correct colors in palette (see color index in Photoshop)
+	// Put correct colors in palette
 	BG_PALETTE[0x01] = RED;
 	BG_PALETTE[0x02] = BLUE;
 	BG_PALETTE[0x03] = GREEN;
-	BG_PALETTE[0x04] = GREY;
-	BG_PALETTE[0x05] = BLACK;
+	BG_PALETTE[0x04] = YELLOW;
+	BG_PALETTE[0x05] = GREY;
+	BG_PALETTE[0x06] = BLACK;
 
 	// Copy main menu image in BG1 for SUB screen and put correct colors in
 	// palette
@@ -585,8 +586,8 @@ void brainwars_train_select(){
 
 	if(keys & KEY_RIGHT) option = (selectTrain+1) % 7;
 	else if(keys & KEY_LEFT) option = (selectTrain+6) % 7;
-	else if(keys & KEY_DOWN) option  = (selectTrain+2) % 7;
-	else if(keys & KEY_UP) option = (selectTrain+5) % 7;
+	else if(keys & KEY_DOWN) option  = (selectTrain+3) % 7;
+	else if(keys & KEY_UP) option = (selectTrain+4) % 7;
 	else if(keys & KEY_A) option = selectTrain;
 	else if(keys & KEY_TOUCH){
 		int i;
@@ -609,6 +610,10 @@ void brainwars_train_select(){
 				break;
 			}
 		}
+	}
+	else if(keys & KEY_START){
+		state = MAIN;
+		stateChange = true;
 	}
 
 	// Check if an option was selected or chosen
