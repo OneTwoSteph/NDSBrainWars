@@ -258,7 +258,6 @@ void addition_draw_digit(int xstart, int digit, int palette){
 int addition_game() {
 	// Scan keys only if game not occupied
 	if(!occupied){
-		scanKeys();
 		u16 keys = (u16) keysDown();
 
 		if(keys & KEY_TOUCH) {

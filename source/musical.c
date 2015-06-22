@@ -272,7 +272,6 @@ void musical_draw_tone(int tone, int palette){
 int musical_game(){
 	if(!occupied){
 		// Scan keys
-		scanKeys();
 		u16 keys = (u16) keysDown();
 
 		// Check which key was pressed or where the touchscreen was touched

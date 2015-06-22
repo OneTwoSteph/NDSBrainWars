@@ -290,11 +290,9 @@ void info_draw_final_score(STATE state){
 				}
 			}
 		}
-		scanKeys();
 		keys = keysDown();
 
 		while(!(keys & KEY_START)){
-			scanKeys();
 			keys = keysDown();
 		}
 
@@ -385,11 +383,9 @@ void info_draw_final_score(STATE state){
 
 
 
-		scanKeys();
 		keys = keysDown();
 
 		while(!(keys & KEY_START)){
-			scanKeys();
 			keys = keysDown();
 		}
 

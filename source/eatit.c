@@ -235,7 +235,6 @@ void eatit_draw_blinking(){
 int eatit_game(){
 	if(!occupied){
 		// Scan keys
-		scanKeys();
 		u16 keys = (u16) keysDown();
 
 		// Check which key was pressed and if it is correct or false

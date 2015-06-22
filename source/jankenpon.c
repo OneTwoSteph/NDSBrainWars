@@ -172,7 +172,6 @@ void jankenpon_draw(){
 
 int jankenpon_game(){
 	// Scan keys
-	scanKeys();
 	u16 keys = (u16) keysDown();
 
 	// If touchscreen was touched, check if correct

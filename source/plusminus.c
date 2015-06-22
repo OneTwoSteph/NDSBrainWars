@@ -225,7 +225,6 @@ int plusminus_game() {
 	// mode or in error blinking mode
 	if(!occupied){
 		// Scan keys
-		scanKeys();
 		u16 keys = (u16) keysDown();
 
 		// Check how many of the active keys were pressed

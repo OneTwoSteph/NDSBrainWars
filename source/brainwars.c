@@ -264,8 +264,8 @@ void brainwars_start(){
 
 	while(wait){
 		// Scan touch screen and if touch screen was touched, check for position
-		touchPosition touch;
 		scanKeys();
+		touchPosition touch;
 		u16 keys = keysDown();
 
 		if(keys & KEY_TOUCH) {
@@ -375,7 +375,6 @@ void brainwars_main(){
 // Selection in main menu
 void brainwars_main_select(){
 	// Scan keys and touchscreen
-	scanKeys();
 	u16 keys = (u16) keysDown();
 	touchPosition touch;
 	touchRead(&touch);
@@ -577,7 +576,6 @@ void brainwars_train(){
 // Select menu
 void brainwars_train_select(){
 	// Scan keys and touchscreen
-	scanKeys();
 	u16 keys = (u16) keysDown();
 	touchPosition touch;
 	touchRead(&touch);
@@ -912,7 +910,6 @@ void brainwars_score_init(){
 
 void brainwars_score(void){
 	// Scan keys
-	scanKeys();
 	u16 keys = (u16) keysDown();
 
 	// Scan if exit asked
@@ -964,7 +961,6 @@ void brainwars_credits_init(){
 
 void brainwars_credits(){
 	// Scan keys
-	scanKeys();
 	u16 keys = (u16) keysDown();
 
 	// Scan if exit asked

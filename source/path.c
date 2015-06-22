@@ -120,6 +120,7 @@ void path_draw(){
 	}
 
 	// If we are not in the wrong case, draw figures
+	swiWaitForVBlank();
 	if((wrong%2) == 0){
 		for(x = 0; x < W; x++){
 			for(y = 0; y < H; y++){
@@ -150,7 +151,6 @@ void path_draw(){
 
 int path_game(){
 	// Scan keys to find pressed ones
-	scanKeys();
 	u16 keys = (u16) keysDown();
 
 	// Check how many keys were pressed
