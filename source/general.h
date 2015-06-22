@@ -90,72 +90,6 @@ enum STATE
     CREDITS = 5
 };
 
-typedef enum GAME GAME;
-enum GAME
-{
-	LEADER = 0,
-	EATIT = 1,
-	MUSICAL = 2,
-	PATH = 3,
-	ADDITION = 4,
-	PLUSMINUS = 5,
-	JANKENPON = 6,
-	NOGAME = 7,
-};
-
-typedef enum COLOR COLOR;
-enum COLOR
-{
-    B = 0,
-    R = 1,
-    G = 2,
-    Y = 3,
-    N = 4
-};
-
-typedef enum DIRECTION DIRECTION;
-enum DIRECTION
-{
-    RIGHT = 0,
-    LEFT = 1,
-    UP = 2,
-    DOWN = 3
-};
-
-typedef enum SHAPE SHAPE;
-enum SHAPE
-{
-    SCISSOR = 0,
-    PAPER = 1,
-    ROCK = 2
-};
-
-typedef enum ORDER ORDER;
-enum ORDER
-{
-    SPR = 0,
-    RSP = 1,
-    PRS = 2,
-    PSR = 3,
-    RPS = 4,
-    SRP = 5,
-};
-
-typedef enum ROW ROW;
-enum ROW
-{
-    FIRST = 0,
-    SECOND = 1,
-};
-
-typedef enum FOOD FOOD;
-enum FOOD
-{
-    EMPTY = 0,
-    MONSTER = 1,
-    CHERRY = 2
-};
-
 typedef enum MUSIC MUSIC;
 enum MUSIC
 {
@@ -175,13 +109,6 @@ enum LEVEL
     VERHARD = 4,
     EXTREME = 5,
     PRO = 6
-};
-
-typedef enum TAPORDER TAPORDER;
-enum TAPORDER
-{
-	SAME = 0,
-	INVERSE = 1
 };
 
 #endif /* GENERAL_H_ */

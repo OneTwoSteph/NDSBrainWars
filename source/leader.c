@@ -30,7 +30,13 @@ const int block_y[3] = {2, 9, 16};		// y positions of blocks
 #define FULL			0
 #define	CORNER			1
 
-/*********************************************************** Global variables */
+typedef enum TAPORDER TAPORDER;
+enum TAPORDER
+{
+	SAME = 0,
+	INVERSE = 1
+};
+
 // Tiles with 16-colors palettes
 u8 fullT[] = {
 	0x11,0x11,0x11,0x11,
@@ -54,6 +60,8 @@ u8 cornerT[] = {
 	0x11,0x11,0x11,0x11
 };
 
+
+/*********************************************************** Global variables */
 // Game variables
 STATE state;				// general game state
 
@@ -70,6 +78,8 @@ int wrong;					// wrong blinking counter for timer
 
 bool occupied;				// drawing status
 
+
+/***************************************************************** Timer ISRs */
 // Block drawing ISR
 void leader_timer_ISR0(){
 	// Draw current block every two interrupts
@@ -110,6 +120,9 @@ void leader_timer_ISR1(){
 	}
 }
 
+
+/****************************************************************** Functions */
+// Initialization
 void leader_init(int gameState) {
 	// Desactivate BG1
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
@@ -177,6 +190,7 @@ void leader_init(int gameState) {
 	leader_new_config();
 }
 
+// New configuration
 void leader_new_config() {
 	// Set status to occupied
 	occupied = true;
@@ -219,6 +233,7 @@ void leader_new_config() {
 	leader_draw_blocks();
 }
 
+// Draw configuration
 void leader_draw_blocks(){
 	// Set whole background to grey
 	int row, col;
@@ -237,6 +252,7 @@ void leader_draw_blocks(){
 	TIMER0_CR |= TIMER_ENABLE;
 }
 
+// Draw wrong case
 void leader_draw_blinking() {
 	// Draw or undraw only the blocks that weren't taped yet
 	int start, stop;
@@ -271,6 +287,7 @@ void leader_draw_blinking() {
 	}
 }
 
+// Draw one block
 void leader_draw_block(int x, int y, int palette){
 	int row, col;
 
@@ -288,6 +305,7 @@ void leader_draw_block(int x, int y, int palette){
 	BG_MAP_RAM_SUB(BG0MAP)[(y+SIDE-1)*W+(x+SIDE-1)] = CORNER | (palette<<12) | (1<<10) | (1<<11);
 }
 
+// Main function
 bool leader_game(bool player, int gameCounter) {
 	// Stop game if START button pressed or time crossed 15 sec
 	// Else check if the correct block was touched
@@ -298,9 +316,7 @@ bool leader_game(bool player, int gameCounter) {
 
 	// Scan the keys and the touch screen only the game is not in block drawing
 	// or blinking mode
-	if(occupied){
-		return false;
-	}
+	if(occupied) return false;
 	else{
 		scanKeys();
 		u16 keys = keysDown();
@@ -345,6 +361,7 @@ bool leader_game(bool player, int gameCounter) {
 	}
 }
 
+// Correct answer
 void leader_correct(bool player){
 	// Erase taped block
 	int x, y;
@@ -378,6 +395,7 @@ void leader_correct(bool player){
 	}
 }
 
+// Wrong answer
 void leader_wrong(){
 	// Update status
 	occupied = true;
@@ -392,6 +410,7 @@ void leader_wrong(){
 	if(wrong == 0) mmEffect(SFX_BOING);
 }
 
+// Reset game 
 void leader_reset() {
 	// Suppress displayed infos
 	info_finish(score, "leader", state);

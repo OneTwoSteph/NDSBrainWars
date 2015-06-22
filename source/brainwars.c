@@ -47,6 +47,19 @@
 #define YELLOWPAL		1
 #define GREENPAL		2
 
+typedef enum GAME GAME;
+enum GAME
+{
+	LEADER = 0,
+	EATIT = 1,
+	MUSICAL = 2,
+	PATH = 3,
+	ADDITION = 4,
+	PLUSMINUS = 5,
+	JANKENPON = 6,
+	NOGAME = 7,
+};
+
 /*********************************************************** Global variables */
 // Display
 int display;

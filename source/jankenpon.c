@@ -6,13 +6,49 @@
  *
  */
 
+
+/******************************************************************** Modules */
+ // General
 #include "general.h"
 #include "info.h"
 #include "jankenpon.h"
+
+// Image
 #include "jankenpon_hand.h"
 
 #define BLUEPAL		6
 #define	REDPAL		7
+
+
+/****************************************************************** Constants */
+typedef enum SHAPE SHAPE;
+enum SHAPE
+{
+    SCISSOR = 0,
+    PAPER = 1,
+    ROCK = 2
+};
+
+typedef enum ORDER ORDER;
+enum ORDER
+{
+    SPR = 0,
+    RSP = 1,
+    PRS = 2,
+    PSR = 3,
+    RPS = 4,
+    SRP = 5,
+};
+
+typedef enum COLOR COLOR;
+enum COLOR
+{
+    B = 0,
+    R = 1,
+    G = 2,
+    Y = 3,
+    N = 4
+};
 
 SHAPE shape;
 COLOR color;

@@ -16,6 +16,25 @@
 #define GREENPAL	8
 #define YELLOWPAL	9
 
+typedef enum DIRECTION DIRECTION;
+enum DIRECTION
+{
+    RIGHT = 0,
+    LEFT = 1,
+    UP = 2,
+    DOWN = 3
+};
+
+typedef enum COLOR COLOR;
+enum COLOR
+{
+    B = 0,
+    R = 1,
+    G = 2,
+    Y = 3,
+    N = 4
+};
+
 DIRECTION direction;
 COLOR color;
 
