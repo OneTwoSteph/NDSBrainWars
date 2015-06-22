@@ -24,11 +24,10 @@ void brainwars_train(void);
 void brainwars_train_select(void);
 void brainwars_train_draw(void);
 
-void brainwars_1p_init(void);
-void brainwars_2p_init(void);
-void brainwars_next_game(void);
-void brainwars_wait_next(void);
-void brainwars_play(void);
+void brainwars_p_init(void);
+void brainwars_p(void);
+void brainwars_p_sel(void);
+void brainwars_p_draw_block(int game, int pos);
 
 void brainwars_score_init(void);
 void brainwars_score(void);

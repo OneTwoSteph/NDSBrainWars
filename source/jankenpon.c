@@ -188,7 +188,7 @@ bool jankenpon_game(bool player, int gameCounter){
 
 	if(state != TRAIN) { info_store_temp_score(player, gameCounter, score); }
 
-	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
+	if(keys & KEY_START) { return true; }
 	else{
 		// If touchscreen was touched, check if correct
 		if(keys & KEY_TOUCH){

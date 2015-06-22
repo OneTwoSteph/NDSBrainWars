@@ -83,13 +83,6 @@ void info_init(state){
 		ym = ((state == TWOP) ? h : 0);
 	}
 
-	// Print initial null score and time
-	info_update_score(0, 0);
-	info_update_time();
-
-	// Activate BG0
-	REG_DISPCNT |= DISPLAY_BG0_ACTIVE;
-
 	// Initialize variables
 	gameState = state;
 
@@ -101,9 +94,14 @@ void info_init(state){
 	// Initialize the timer
 	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
 	TIMER3_DATA = TIMER_FREQ_1024(1);
-
 	irqSet(IRQ_TIMER3, &info_time_ISR3);
 	irqEnable(IRQ_TIMER3);
+
+	// Print initial null score and time
+	info_update_score(0, 0);
+
+	// Activate BG0
+	REG_DISPCNT |= DISPLAY_BG0_ACTIVE;
 
 	// Update game counter if two player mode
 	if(gameState == TWOP) counter++;
