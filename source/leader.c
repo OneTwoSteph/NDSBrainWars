@@ -98,8 +98,8 @@ void leader_timer_ISR0(){
 
 	// When blocks are all drawn, update flag and unable timer
 	if(draw == (nb_blocks*2)) {
-		occupied = false;
 		TIMER0_CR &= ~(TIMER_ENABLE);
+		occupied = false;
 	}
 }
 
@@ -407,7 +407,7 @@ void leader_wrong(){
 	TIMER1_CR |= TIMER_ENABLE;
 
 	// Play wrong effect
-	if(wrong == 0) mmEffect(SFX_BOING);
+	mmEffect(SFX_BOING);
 }
 
 // Reset game 

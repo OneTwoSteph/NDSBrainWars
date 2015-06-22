@@ -167,12 +167,9 @@ void brainwars_start_configMain(){
 	// correct colors in palette
 	swiCopy(scoreTiles, BG_TILE_RAM(BG0TILE), scoreTilesLen/2);
 
-	BG_PALETTE[0x61] = RED;
-	BG_PALETTE[0x62] = BLUE;
-	BG_PALETTE[0x63] = GREEN;
-	BG_PALETTE[0x64] = GREY;
-	BG_PALETTE[0x65] = BLACKGREY;
-	BG_PALETTE[0x66] = BLACK;
+	BG_PALETTE[0x61] = GREY;
+	BG_PALETTE[0x62] = BLACKGREY;
+	BG_PALETTE[0x63] = BLACK;
 
 	// Load image in BG2 which will never change (just grey background) and use
 	// palette 15 to put grey in it

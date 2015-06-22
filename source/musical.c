@@ -6,34 +6,232 @@
  *
  */
 
+
+/******************************************************************** Modules */
+// General
 #include "general.h"
 #include "info.h"
 #include "musical.h"
-#include "musical_tone.h"
 
-#define BLUEPAL		6
-#define	REDPAL		7
-#define GREYPAL	8
+// Image
+#include "musical_im.h"
 
-mm_sound_effect sound;
 
-MUSIC music[4];
-int answer;
-int tonenb;
+/****************************************************************** Constants */
+// Palettes
+#define NORMALPAL	6
+#define GREYPAL		7
 
-bool ready;
-MUSIC wrong;
-int score;
-LEVEL level;
+// Image infos
+#define XSTART 		4
+#define WT 			6
 
+// Music
+typedef enum MUSIC MUSIC;
+enum MUSIC
+{
+	DO = 0,
+	RE = 1,
+	MI = 2,
+	FA = 3
+};
+
+
+/*********************************************************** Global variables */
+// Global game variables
 STATE state;
 
-void musical_play(){
-	//Disable Timer
-	TIMER0_CR &= ~(TIMER_ENABLE);
+// Sound variable
+mm_sound_effect sound;
 
+// Game variables
+MUSIC music[4];
+
+// Game state
+int score;
+LEVEL level;
+int answer;
+MUSIC wrongTone;
+
+// Timer variables
+int tonenb;
+MUSIC wrong;
+
+// Drawing status
+bool occupied;
+
+
+/***************************************************************** Timer ISRs */
+// Music playing ISR
+void musical_timer_ISR0(){
+	// Play current tone only if not first time (to let a small pause)
+	if(tonenb == 1){
+		musical_draw_tones();
+	}
+	if(tonenb > 1) musical_play_tone();
+
+	// Increase tone
+	tonenb++;
+
+	// Disable timer when last tone reached
+	if(tonenb > (level+2)){
+		TIMER0_CR &= ~(TIMER_ENABLE);
+		occupied = false;
+	}
+}
+
+// Wrong blinking ISR
+void musical_timer_ISR1(){
+	// Draw for blinking effect
+	musical_draw_tone(wrongTone, ((wrong%2) == 0) ? GREYPAL : NORMALPAL);
+
+	// Increment wrong
+	wrong++;
+
+	// When already blinked 3 times, update status, disable timer and launch new
+	// config
+	if(wrong == 6){
+		TIMER1_CR &= ~(TIMER_ENABLE);
+		occupied = false;
+		musical_next();
+	}
+}
+
+
+/****************************************************************** Functions */
+// Initialization
+void musical_init(int gameState){
+	// Desactivate BG1
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+
+	// Copy tiles to memory
+	swiCopy(musical_imTiles, BG_TILE_RAM_SUB(BG0TILE), musical_imTilesLen);
+
+	// Set up palette colors (palette contains back, arrow, circle in this order)
+	BG_PALETTE_SUB[0x61] = GREY;
+	BG_PALETTE_SUB[0x62] = BLACKGREY;
+	BG_PALETTE_SUB[0x63] = BLUE;
+
+	BG_PALETTE_SUB[0x71] = GREY;
+	BG_PALETTE_SUB[0x72] = GREY;
+	BG_PALETTE_SUB[0x73] = GREY;
+
+	// Put whole screen in grey 
+	int x, y;
+
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*W + x] = musical_imMap[0] | (NORMALPAL << 12);
+		}
+	}
+
+	// Configure music timer
+	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
+	TIMER0_DATA = TIMER_FREQ_1024(4);
+	irqSet(IRQ_TIMER0, &musical_timer_ISR0);
+	irqEnable(IRQ_TIMER0);
+
+	// Configure wrong blinking timer
+	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
+	TIMER1_DATA = TIMER_FREQ_256(15);
+	irqSet(IRQ_TIMER1, &musical_timer_ISR1);
+	irqEnable(IRQ_TIMER1);
+
+	// Initialize sound parameters
+	sound.id = SFX_DO;
+	sound.rate    =	(int)(1.0f * (1<<10));		// rate
+	sound.handle  = 0;           				// 0 = allocate new handle
+	sound.volume  = 255;         				// Max volumen
+	sound.panning = 128;         				// centered panning
+
+	// Set global variables
+	state = gameState;
+
+	int i;
+
+	for(i = 0; i < 4; i++){
+		music[i] = i;
+	}
+
+	score = 0;
+	level = EASY;
+	answer = 0;
+	wrongTone = DO;
+
+	tonenb = 0;
+	wrong = 0;
+
+	occupied = false;
+
+	// Activate BG0
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
+
+	// Launch first music
+	musical_next();
+
+	// Draw infos
+	info_init(state);
+}
+
+// Create next music
+void musical_next(){
+	// Save previous first tone
+	int prevTone = music[0];
+
+	// Random numbers for the tone sequence (music) depending on the level
+	switch(level){
+	case VERYEASY:
+		break;
+	case EASY:
+		while((music[0] = rand()%2) == prevTone);
+		while((music[1] = rand()%2) == music[0]);
+
+		break;
+	case MEDIUM:
+		while((music[0] = rand()%3) == prevTone);
+		while((music[1] = rand()%3) == music[0])
+		music[2] = music[0];
+		while((music[2] == music[0]) || (music[2] == music[1])) music[2] = rand()%3;
+
+		break;
+	case HARD:
+		while((music[0] = rand()%4) == prevTone);
+		while((music[1] = rand()%4) == music[0]);
+		music[2] = music[0];
+		while((music[2] == music[0]) || (music[2] == music[1])) music[2] = rand()%4;
+		music[3] = music[0];
+		while((music[3] == music[0]) || (music[3] == music[1]) || (music[3] == music[2])) music[3] = rand()%4;
+
+		break;
+	default:
+		break;
+	}
+
+	// Reinitialize answer
+	answer = 0;
+
+	// Play music
+	musical_draw_play();
+}
+
+// Draw and play next music
+void musical_draw_play(){
+	// Change status
+	occupied = true;
+
+	// Reset variable
+	tonenb = 0;
+
+	// Enable timer
+	TIMER0_CR |= TIMER_ENABLE;
+}
+
+// Play one tone of the music
+void musical_play_tone(){
 	// Play current tone
-	MUSIC tone = music[tonenb];
+	MUSIC tone = music[tonenb-2];
 
 	switch(tone){
 	case DO:
@@ -51,294 +249,130 @@ void musical_play(){
 	}
 
 	mmEffectEx(&sound);
-
-	// Increase tone
-	tonenb++;
-
-	// Enable time only if last tone not reached
-	if(tonenb>level){
-		tonenb = 0;
-		ready = true;
-	}
-	else TIMER0_CR |= TIMER_ENABLE;
 }
 
-void musical_wait_ISR(){
-	// Disable timer
-	TIMER1_CR &= ~(TIMER_ENABLE);
-
-	// Launch next challenge or play new music depending on game state
-	if((answer==(level+1)) || (wrong<=FA)) musical_next();
-	else musical_play();
-}
-
-void musical_init(int gameState){
-	// Desactivate BG1
-	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
-
-	// Copy tiles to memory
-	swiCopy(musical_toneTiles, BG_TILE_RAM_SUB(BG0TILE), musical_toneTilesLen);
-
-	// Set up palette colors (palette contains back, arrow, circle in this order)
-	BG_PALETTE_SUB[0x61] = GREY;
-	BG_PALETTE_SUB[0x62] = BLACKGREY;
-	BG_PALETTE_SUB[0x63] = BLUE;
-
-	BG_PALETTE_SUB[0x71] = GREY;
-	BG_PALETTE_SUB[0x72] = BLACKGREY;
-	BG_PALETTE_SUB[0x73] = RED;
-
-	BG_PALETTE_SUB[0x81] = GREY;
-	BG_PALETTE_SUB[0x82] = GREY;
-	BG_PALETTE_SUB[0x83] = GREY;
-
-	// Set whole BG0 in grey
-	int row, col;
+// Draw all tones
+void musical_draw_tones(){
+	// Draw the number of tones depending on level
+	int x, y;
 
 	swiWaitForVBlank();
-	for(row = 0; row < H; row++){
-		for(col = 0; col < W; col++){
-			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = musical_toneMap[0] | (BLUEPAL << 12);
+	for(x = XSTART; x < XSTART + (level+1)*WT; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*W + x] = musical_imMap[y*W + x] | (NORMALPAL << 12);
 		}
 	}
-
-	// Activate BG0
-	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
-
-	// Configure interrupts and timers, timer 0 for music and timer 1 for waiting
-	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-	TIMER0_DATA = TIMER_FREQ_1024(4);
-
-	irqSet(IRQ_TIMER0, &musical_play);
-	irqEnable(IRQ_TIMER0);
-
-	TIMER1_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
-	TIMER1_DATA = TIMER_FREQ_1024(2);
-
-	irqSet(IRQ_TIMER1, &musical_wait_ISR);
-	irqEnable(IRQ_TIMER1);
-
-	// Initialize sound parameters
-	sound.id = SFX_DO;
-	sound.rate    =	(int)(1.0f * (1<<10));		// rate
-	sound.handle  = 0;           				// 0 = allocate new handle
-	sound.volume  = 255;         				// Max volumen
-	sound.panning = 128;         				// centered panning
-
-	// Set global variables
-	ready = false;
-	wrong = 4;
-	score = -1;
-	level = EASY;
-	tonenb = 0;
-	state = gameState;
-
-	// Launch first music
-	musical_next();
-
-	// Draw infos
-	info_init(state);
 }
 
-bool musical_game(bool player, int gameCounter){
-	// Scan keys
-	scanKeys();
-	u16 keys = (u16) keysDown();
+// Draw one tone
+void musical_draw_tone(int tone, int palette){
+	// Draw tone with palette
+	int x, y;
 
+	swiWaitForVBlank();
+	for(x = XSTART + tone*WT; x < XSTART + (tone+1)*WT; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*W + x] = (BG_MAP_RAM_SUB(BG0MAP)[y*W + x] & (0x0fff)) | (palette << 12);
+		}
+	}
+}
+
+// Main function
+bool musical_game(bool player, int gameCounter){
 	// Stop game if START button pressed or time crossed 15 sec
 	int time;
 	time = info_get_time();
 
 	if(state != TRAIN) { info_store_temp_score(player, gameCounter, score); }
 
-	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
+	if(occupied) return false;
 	else{
-		// If game ready and touchscreen was touched, check if correct
-		if(ready && (keys & KEY_TOUCH)){
-			// Set sound rate to 0
-			sound.rate = 0;
+		// Scan keys
+		scanKeys();
+		u16 keys = (u16) keysDown();
 
-			// Find position touched on touchscreen
-			touchPosition touch;
-			touchRead(&touch);
+		// Check which key was pressed or where the touchscreen was touched
+		if(keys & KEY_START) return true;
+		else if(keys & KEY_TOUCH){
+				// Find position touched on touchscreen
+				touchPosition touch;
+				touchRead(&touch);
 
-			// Check if touched correct symbol
-			switch(level){
-			case HARD:
-				// Check if in fourth tone
-				if((touch.px>=179)&&(touch.px<=205)&&(touch.py>=79)&&(touch.py<=100)){
-					sound.rate = (int)(1.335f * 1024);
+				// Check which tone was touched
+				MUSIC touched = -1;
+				sound.rate = 0;
+				if(((touch.px>=179)&&(touch.px<=205)&&(touch.py>=79)&&(touch.py<=100)) && (level >= HARD)) touched = FA;
+				else if(((touch.px>=131)&&(touch.px<=157)&&(touch.py>=102)&&(touch.py<=123)) && (level >= MEDIUM)) touched = MI;
+				else if((touch.px>=83)&&(touch.px<=109)&&(touch.py>=126)&&(touch.py<=147)) touched = RE;
+				else if((touch.px>=35)&&(touch.px<=61)&&(touch.py>=150)&&(touch.py<=171)) touched = DO;
 
-					if(music[answer]==FA) answer++;
-					else wrong = FA;
+				// If a tone was touched, play it and check if correct
+				if(touched != -1){
+					switch(touched){
+					case DO: sound.rate = (int)(1.0f * 1024); break;
+					case RE: sound.rate = (int)(1.122f * 1024); break;
+					case MI: sound.rate = (int)(1.26f * 1024); break; 
+					case FA: sound.rate = (int)(1.335f * 1024); break;
+					}
+					mmEffectEx(&sound);
 
-					// Draw correct or wrong tone
-					musical_draw();
+					if(touched == music[answer]) musical_correct();
+					else{
+						wrongTone = touched;
+						musical_wrong();
+					}
 				}
-
-			case MEDIUM:
-				// Check if in third tone
-				if((touch.px>=131)&&(touch.px<=157)&&(touch.py>=102)&&(touch.py<=123)){
-					sound.rate = (int)(1.26f * 1024);
-
-					if(music[answer]==MI) answer++;
-					else wrong = MI;
-
-					// Draw correct or wrong tone
-					musical_draw();
-				}
-
-			case EASY:
-				// Check if in second tone
-				if((touch.px>=83)&&(touch.px<=109)&&(touch.py>=126)&&(touch.py<=147)){
-					sound.rate = (int)(1.122f * 1024);
-
-					if(music[answer]==RE) answer++;
-					else wrong = RE;
-
-					// Draw correct or wrong tone
-					musical_draw();
-				}
-
-				// Check if in first tone
-				if((touch.px>=35)&&(touch.px<=61)&&(touch.py>=150)&&(touch.py<=171)){
-					sound.rate = (int)(1.0f * 1024);
-
-					if(music[answer]==DO) answer++;
-					else wrong = DO;
-
-					// Draw correct or wrong tone
-					musical_draw();
-				}
-
-				break;
-			default:
-				break;
-			}
-
-			// Play sound if a tone was touched
-			if(sound.rate >= 0) mmEffectEx(&sound);
-
-			// If last ton or wrong, wait a few seconds and launch new music
-			if((answer==(level+1)) || (wrong<=FA)){
-				ready = false;
-				TIMER1_CR |= TIMER_ENABLE;
-			}
 		}
 	}
-
-	// Play effect if tone was false
-	//if(wrong<=FA) mmEffect(SFX_BOING);
 
 	// Return false (the game is note finished)
 	return false;
 }
 
-void musical_next(){
-	// Increment score only if precedent game wasn't wrong
-	if(wrong>FA){ 
+// Correct function
+void musical_correct(){
+	// Make the tone touched vanish
+	musical_draw_tone(music[answer], GREYPAL);
+
+	// Increment answer
+	answer++;
+
+	// Check if last not or not
+	if(answer > level){
+		// Increment score
 		score++;
 
 		// Update infos
 		info_update_score(score, 0);
+
+		// Check level
+		if(score > MUSICALHARD) level = HARD;
+		else{
+			if(score > MUSICALMEDIUM) level = MEDIUM;
+			else level = EASY;
+		}
+
+		// Launch next music
+		musical_next();
 	}
-	else wrong = FA+1;
+}
 
-	// Check level
-	if(score > MUSICALHARD) level = HARD;
-	else{
-		if(score > MUSICALMEDIUM) level = MEDIUM;
-		else level = EASY;
-	}
+// Wrong function
+void musical_wrong(){
+	// Update status
+	occupied = true;
 
-	// If first time, initiate third and fourth tone
-	if(score==0){
-		music[2] = MI;
-		music[3] = FA;
-	}
+	// Reset wrong variable
+	wrong = 0;
 
-	// Random numbers for the tone sequence (music) depending on the level
-	switch(level){
-	case VERYEASY:
-		break;
-	case EASY:
-		music[0] = rand()%2;
-		while((music[1]=rand()%2)==music[0]);
-
-		break;
-	case MEDIUM:
-		music[0] = rand()%3;
-		while((music[1]=rand()%3)==music[0])
-		music[2] = music[0];
-		while((music[2]==music[0])||(music[2]==music[1])) music[2] = rand()%3;
-
-		break;
-	case HARD:
-		music[0] = rand()%4;
-		while((music[1]=rand()%4)==music[0]);
-		music[2] = music[0];
-		while((music[2]==music[0])||(music[2]==music[1])) music[2] = rand()%4;
-		music[3] = music[0];
-		while((music[3]==music[0])||(music[3]==music[1])||(music[3]==music[2])) music[3] = rand()%4;
-
-		break;
-	default:
-		break;
-	}
-
-	// Reinitialize answer
-	answer = 0;
-
-	// Redraw screen
-	musical_draw();
-
-	// Wait a moment and launch music
+	// Launch wrong timer
 	TIMER1_CR |= TIMER_ENABLE;
+
+	// Play wrong effect
+	mmEffect(SFX_BOING);
 }
 
-void musical_draw(){
-	int x, y;
-	int xstart = 4;
-	int length = 6; 	// of the tones
-
-	// Draw first background with grey
-	swiWaitForVBlank();
-	for(x = 0; x < W; x++){
-		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = musical_toneMap[0] | (BLUEPAL << 12);
-		}
-	}
-
-	// Draw tones in function of the level
-	for(x = 0; x < xstart + (level+1)*length; x++){
-		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = musical_toneMap[y*W+x] | (BLUEPAL << 12);
-		}
-	}
-
-	// Undraw correct tones
-	int i;
-
-	for(i = 0; i < answer; i++){
-		if(music[i] != wrong){
-			for(x = xstart + music[i]*length; x < xstart + (music[i]+1)*length; x++){
-				for(y = 0; y < H; y++){
-					BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = (BG_MAP_RAM_SUB(BG0MAP)[y*W+x] & 0x0fff) | (GREYPAL << 12);
-				}
-			}
-		}
-	}
-
-	// Draw false tone in red
-	if(wrong <= FA){
-		for(x = xstart + wrong*length; x < xstart + (wrong+1)*length; x++){
-			for(y = 0; y < H; y++){
-				BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = (BG_MAP_RAM_SUB(BG0MAP)[y*W+x] & 0x0fff) | (REDPAL << 12);
-			}
-		}
-	}
-}
-
+// Reset
 void musical_reset(){
 	// Suppress infos display
 	info_finish(score, "musical", state);
@@ -352,10 +386,22 @@ void musical_reset(){
 	irqClear(IRQ_TIMER1);
 
 	// Desactivate BG0
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
 	// Reset all global variables (just to be sure)
+	int i;
+
+	for(i = 0; i < 4; i++){
+		music[i] = i;
+	}
+
 	score = 0;
-	wrong = 0;
 	level = EASY;
+	answer = 0;
+
+	tonenb = 0;
+	wrong = 0;
+
+	occupied = false;
 }

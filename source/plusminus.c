@@ -51,10 +51,10 @@ int draw_timer;
 // Timer for number display
 void plusminus_timer_ISR0(){
 	// Draw nothing at the beginnin
-	if(draw == 0) plusminus_draw_number(1);
+	if(draw == 0) plusminus_draw_number(GREYPAL);
 
 	// Draw after 0.2s
-	if(draw == 1) plusminus_draw_number(0);
+	if(draw == 1) plusminus_draw_number(NORMALPAL);
 
 	// Increment draw variable
 	draw++;
@@ -203,8 +203,8 @@ void plusminus_draw_number(int palette){
 		plusminus_draw_digit(POSX1 + NBW, dig2, palette);
 	}
 	else {
-		plusminus_draw_digit(POSX1, 0, 1);
-		plusminus_draw_digit(POSX1 + NBW, 0, 1);
+		plusminus_draw_digit(POSX1, 0, GREYPAL);
+		plusminus_draw_digit(POSX1 + NBW, 0, GREYPAL);
 		plusminus_draw_digit(POSX2, dig2, palette);
 	}
 }

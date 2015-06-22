@@ -63,8 +63,8 @@
 #define PATHMEDIUM 		4
 #define PATHHARD 		8
 
-#define MUSICALMEDIUM 	4
-#define MUSICALHARD 	8
+#define MUSICALMEDIUM 	3
+#define MUSICALHARD 	9
 
 #define JANKENPONMEDIUM 4
 #define JANKENPONHARD 	8
@@ -88,15 +88,6 @@ enum STATE
     TWOP = 3,
     SCORE = 4,
     CREDITS = 5
-};
-
-typedef enum MUSIC MUSIC;
-enum MUSIC
-{
-	DO = 0,
-	RE = 1,
-	MI = 2,
-	FA = 3
 };
 
 typedef enum LEVEL LEVEL;
