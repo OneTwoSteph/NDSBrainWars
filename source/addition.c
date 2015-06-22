@@ -2,315 +2,393 @@
  * addition.c
  *
  *  Created on: Jan 22, 2015
- *      Author: Nawaaz GS
+ *      Author: Nawaaz GS modified by Stephanie Amati
  *
  */
 
+
+/******************************************************************** Modules */
+ // General
 #include "general.h"
 #include "info.h"
 #include "addition.h"
+
+ // Image
 #include "addition_im.h"
-#include "numbers.h"
 
-static volatile int draw_timer;
-static volatile int counter;
-static volatile int total_number[3];
-static volatile int final_number;
-static volatile int numbers[2];
-static volatile int add_score;
 
+/****************************************************************** Constants */
+// Palettes
+#define NORMALPAL		6
+#define GREYPAL			7
+
+// Numbers
+#define	MINNB			3
+#define MAXNB			24
+
+// Drawing infos
+#define XSTART 			3
+#define YSTART 			2
+#define SIDE			5
+#define WIM				50
+#define POSX1			19
+#define POSX2			22
+#define POSY			4
+#define HNB				11
+#define WNB				5
+
+#define XSTARTP			24
+#define YSTARTP			20
+#define SIDEP			32
+#define INTP 			8
+
+
+/*********************************************************** Global variables */
+// Global game
 STATE state;
 
-void addition_timer_ISR(){
-	draw_timer++;
+// Game infos
+int number;
+
+// Game variables
+int counter;
+int numbers[3];
+
+int score;
+int touchedNb;
+
+// Timer variabels
+int draw;
+int wrong;
+
+// Status
+bool occupied;
+
+
+/***************************************************************** Timer ISRs */
+// New number draw ISR
+void addition_timer_ISR0(){	
+	// Check if time to draw blocks and number
+	if(draw == 1){
+		TIMER0_CR &= ~(TIMER_ENABLE);
+		swiWaitForVBlank();
+		addition_draw_blocks();
+		addition_draw_number();
+		occupied = false;
+	}
+
+	// Increment counter
+	draw++;
 }
 
+// Wrong blinking ISR
+void addition_timer_ISR1(){
+	// Draw for blinking effect
+	//addition_draw_block(((wrong%2) == 0) ? GREYPAL : NORMALPAL);
+
+	// Increment wrong
+	wrong++;
+
+	// When already blinked 3 times, update status, disable timer and launch new
+	// config
+	if(wrong == 6){
+		occupied = false;
+		TIMER1_CR &= ~(TIMER_ENABLE);
+		addition_next();
+	}
+}
+
+
+/****************************************************************** Functions */
+// Initialization
 void addition_init(int gameState) {
 	// Desactivate BG1
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Add BG1 and configure
-	BGCTRL_SUB[1] = BG_TILE_BASE(4) | BG_MAP_BASE(17) | BG_32x32 | BG_COLOR_16;
-
 	// Copy tiles to memory
-	swiCopy(numbersTiles, BG_TILE_RAM_SUB(BG0TILE), numbersTilesLen/2);
 	swiCopy(addition_imTiles, BG_TILE_RAM_SUB(BG0TILE), addition_imTilesLen/2);
 
-	// Copy palette
-	swiCopy(numbersPal, BG_PALETTE_SUB, numbersPalLen/2);
-	swiCopy(addition_imPal, &BG_PALETTE_SUB[16], addition_imPalLen/2);
-	swiCopy(addition_imPal, &BG_PALETTE_SUB[32], addition_imPalLen/2);
+	// Put correct colors in palettes
+	BG_PALETTE_SUB[0x61] = BLUE;
+	BG_PALETTE_SUB[0x62] = YELLOW;
+	BG_PALETTE_SUB[0x63] = WHITE;
+	BG_PALETTE_SUB[0x64] = GREY;
 
-	BG_PALETTE_SUB[0x01] = GREY;
-	BG_PALETTE_SUB[0x05] = BLACK;
+	BG_PALETTE_SUB[0x71] = GREY;
+	BG_PALETTE_SUB[0x72] = GREY;
+	BG_PALETTE_SUB[0x73] = GREY;
+	BG_PALETTE_SUB[0x74] = GREY;
 
-	BG_PALETTE_SUB[0x15] = GREY;
-	BG_PALETTE_SUB[0x16] = GREY;
-	BG_PALETTE_SUB[0x18] = BLUE;
+	// Set whole BG0 in grey
+	int row, col;
 
-	BG_PALETTE_SUB[0x25] = GREEN;
-	BG_PALETTE_SUB[0x26] = GREY;
-	BG_PALETTE_SUB[0x28] = GREY;
+	for(row = 0; row < H; row++){
+		for(col = 0; col < W; col++){
+			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = addition_imMap[0] | (NORMALPAL << 12);
+		}
+	}
 
+	// Activate BG0
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
+
+	// Configure timer for wrong blinking
 	TIMER0_DATA = TIMER_FREQ_1024(4);
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
-	irqSet(IRQ_TIMER0, &addition_timer_ISR);
+	irqSet(IRQ_TIMER0, &addition_timer_ISR0);
+	irqEnable(IRQ_TIMER0);
 
-	add_score = 0;
-	counter = 0;
+	// Configure timer for drawing
+	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
+	TIMER1_DATA = TIMER_FREQ_256(15);
+	irqSet(IRQ_TIMER1, &addition_timer_ISR1);
+	irqEnable(IRQ_TIMER1);
+
+	// Initialize variables
 	state = gameState;
 
-	addition_new_number();
-	addition_draw();
+	number = MINNB;
+
+	counter = 0;
+	int i;
+	for(i = 0; i < 3; i++) numbers[i] = 0;
+
+	score = 0;
+	touchedNb = 0;
+
+	draw = 0;
+	wrong = 0;
+
+	occupied = wrong;
+
+	// Launch first number
+	addition_next();
 
 	// Draw infos
 	info_init(state);
 }
 
-void addition_new_number() {
+void addition_next() {
+	// Save previous number
+	int prevNumber = number;
 
-	int i;
-	int temp_number[3];
-	final_number = 0;
+	// Find new number
+	while((number = (rand()%(MAXNB-MINNB+1) + MINNB)) == prevNumber);
 
-	for(i = 0; i < 3; i++) { temp_number[i] = rand()%10; }
+	// Change status
+	occupied = true;
 
-	while(temp_number[1]  == temp_number[0])  { temp_number[1] = rand()%10; }
-
-	while((temp_number[2] == temp_number[1]) ||
-		  (temp_number[2] == temp_number[0])) { temp_number[2] = rand()%10; }
-
-	for(i = 0; i < 3; i++) { final_number = final_number + temp_number[i]; }
-
-	numbers[0] = final_number%10;
-	numbers[1] = (final_number - numbers[0])/10;
-
+	// Reset counter
 	counter = 0;
+
+	// Reset drawing
+	draw = 0;
+
+	// Start timer to draw new number
+	TIMER0_CR |= TIMER_ENABLE;
 }
 
-void addition_draw() {
+void addition_draw_blocks() {
+	// Draw all numbers
+	int x, y;
 
+	for(x = 0; x < XSTART + 3*SIDE; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*W + x] = addition_imMap[y*WIM + x] | (NORMALPAL << 12);
+		}
+	}
+}
+
+void addition_draw_block(int palette){
+	// Draw tone with palette
+	int x, y;
+	int block = touchedNb-1;
+	int x1, x2, y1, y2;
+
+	swiWaitForVBlank();
+	if(block != -1){
+		x1 = XSTART + (block%3)*SIDE;
+		x2 = XSTART + (block%3 + 1)*SIDE;
+		y1 = YSTART + (block/3)*SIDE;
+		y2 = YSTART + (block/3 + 1)*SIDE;
+	}
+	else{
+		x1 = XSTART + 1*SIDE;
+		x2 = XSTART + 2*SIDE;
+		y1 = YSTART + 3*SIDE;
+		y2 = YSTART + 4*SIDE;
+	}
+
+	for(x = x1; x < x2; x++){
+		for(y = y1; y < y2; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*W + x] = (BG_MAP_RAM_SUB(BG0MAP)[y*W + x] & (0x0fff)) | (palette << 12);
+		}
+	}
+}
+
+void addition_draw_number(){
+	// Find digits
+	int dig[2];
+
+	dig[0] = number/10;
+	dig[1] = number%10;
+
+	// Check if we are in double digit case or unique digit case and draw
+	// number
+	if(dig[0] > 0){
+		// First digit
+		addition_draw_digit(POSX1, dig[0], NORMALPAL);
+
+		// Second digit
+		addition_draw_digit(POSX1 + WNB, dig[1], NORMALPAL);
+	}
+	else {
+		addition_draw_digit(POSX1, 0, GREYPAL);
+		addition_draw_digit(POSX1 + WNB, 0, GREYPAL);
+		addition_draw_digit(POSX2, dig[1], NORMALPAL);
+	}
+	
+}
+
+void addition_draw_digit(int xstart, int digit, int palette){
 	int row, col;
+	int x = 0;
+	int y = H;
 
-	// Draw Initial Field
-	for(row=0; row<32; row++){
-		for(col=0; col<32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 0;
-			BG_MAP_RAM_SUB(17)[row*32+col] = addition_imMap[row*32+col] | (1<<12);
+	for(col = xstart; col < xstart + WNB; col++){
+		for(row = POSY; row < POSY + HNB; row++){
+			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = addition_imMap[y*WIM + digit*WNB + x] | (palette<<12);
+			y++;
 		}
-	}
-
-	//First number
-	for(row = 3; row < 12; row++) {
-		for(col = 25; col < 31; col++) {
-			BG_MAP_RAM_SUB(0)[row*32+col] = numbersMap[((row-3)*60) + ((col-25)+numbers[0]*6)];
-		}
-	}
-
-	//Second number
-	for(row = 3; row < 12; row++) {
-		for(col = 19; col < 25; col++) {
-			BG_MAP_RAM_SUB(0)[row*32+col] = numbersMap[((row-3)*60) + ((col-19)+numbers[1]*6)];
-		}
+		y = H;
+		x++;
 	}
 }
 
 bool addition_game(bool player, int gameCounter) {
-
-	scanKeys();
-	u16 keys = (u16) keysDown();
-
 	// Stop game if START button pressed or time crossed 15 sec
 	int time;
 	time = info_get_time();
 
-	if(state != TRAIN) { info_store_temp_score(player, gameCounter, add_score); }
+	if(state != TRAIN) info_store_temp_score(player, gameCounter, score); 
 
-	if((keys & KEY_START) || (time > GAMETIME)) { return true; }
-	else if(keys & KEY_TOUCH) {
+	// Scan keys only if game not occupied
+	if(occupied) return false;
+	else{
+		scanKeys();
+		u16 keys = (u16) keysDown();
 
-		touchPosition touch;
-		touchRead(&touch);
+		if(keys & KEY_START) return true;
+		else if(keys & KEY_TOUCH) {
+			// Check what number was touched
+			touchPosition touch;
+			touchRead(&touch);
 
-		if		(touch.px < 48)   {
-			if		(touch.py < 64)	  { addition_add_num(1); }
-			else if	((touch.py >= 64) &&
-					 (touch.py < 128)){ addition_add_num(4); }
-			else 					  { addition_add_num(7); }
-		}
-		else if	((touch.px >= 48) &&
-				 (touch.px < 96)) {
-			if		(touch.py < 64)	 { addition_add_num(2); }
-			else if	((touch.py >= 64) &&
-					 (touch.py < 128)){ addition_add_num(5); }
-			else 					 { addition_add_num(8); }
-		}
-		else if ((touch.px >=96) &&
-				 (touch.px < 144 )){
-			if		(touch.py < 64)	 { addition_add_num(3); }
-			else if	((touch.py >= 64) &&
-					 (touch.py < 128)){ addition_add_num(6); }
-			else 					 { addition_add_num(9); }
-		}
-		else {
-			if(touch.py > 128) 		 { addition_add_num(0); }
-		}
-	}
+			int nb = -1;
+			int i, j;
 
-	// Return false because game did not end
-	return false;
+			for(i = 0; i < 3; i++){
+				for(j = 0; j < 3; j++){
+					if((touch.px >= (XSTARTP + i*(SIDEP + INTP))) &&
+					   (touch.px < (XSTARTP + i*(SIDEP + INTP) + SIDEP)) &&
+					   (touch.py >= (YSTARTP + j*(SIDEP + INTP))) &&
+					   (touch.py < (YSTARTP + j*(SIDEP + INTP) + SIDEP))){
+					   	nb = (i+1) + 3*j;
+						break;
+					} 
+				}
+			}
 
-}
+			if(nb == -1){
+				if((touch.px >= (XSTARTP + 1*(SIDEP + INTP))) &&
+				   (touch.px < (XSTARTP + 1*(SIDEP + INTP) + SIDEP)) &&
+				   (touch.py >= (YSTARTP + 3*(SIDEP + INTP))) &&
+				   (touch.py < (YSTARTP + 3*(SIDEP + INTP) + SIDEP))) nb = 0;
+			}
 
-void addition_add_num(int num) {
+			// Check number which was touched
+			if(nb != -1){
+				// Check if number already touched and go out if yes, 
+				// otherwise continue
+				int i;
+				for(i = 0; i < counter; i++){
+					if(nb == numbers[i]) return false;
+				}
 
-	bool draw = true;
+				// Save touched number
+				touchedNb = nb;
 
-	if (counter == 0) 					{ total_number[0] = num; }
-	else if ((counter == 1) &&
-			 (num != total_number[0])) 	{ total_number[1] = num; }
-	else if ((counter == 2) &&
-			 (num != total_number[0]) &&
-			 (num != total_number[1]))  { total_number[2] = num; }
-    else 								{ counter--;
-    									  draw = false;			 }
+				// Add new number to list
+				numbers[counter] = nb;
 
-	if(draw) {
+				// Compute sum
+				int sum = 0;
+				for(i = 0; i <= counter; i++){
+					sum += numbers[i];
+				}
 
-		int x, x_start, y, y_start, Lx;
-		Lx = 6;
-
-		switch(total_number[counter]){
-
-		case 0:
-			x_start = 18;
-			y_start = 16;
-			Lx = 14;
-			break;
-		case 1:
-			x_start = 0;
-			y_start = 0;
-			break;
-		case 2:
-			x_start = 6;
-			y_start = 0;
-			break;
-		case 3:
-			x_start = 12;
-			y_start = 0;
-			break;
-		case 4:
-			x_start = 0;
-			y_start = 8;
-			break;
-		case 5:
-			x_start = 6;
-			y_start = 8;
-			break;
-		case 6:
-			x_start = 12;
-			y_start = 8;
-			break;
-		case 7:
-			x_start = 0;
-			y_start = 16;
-			break;
-		case 8:
-			x_start = 6;
-			y_start = 16;
-			break;
-		case 9:
-			x_start = 12;
-			y_start = 16;
-			break;
-		default:
-			break;
-
-		}
-
-		for(x=x_start; x<(x_start + Lx); x++){
-			for(y=y_start; y<(y_start + 8); y++){
-				BG_MAP_RAM_SUB(17)[y*32+x] = addition_imMap[y*32+x] | (2<<12);
+				// Check if sum above number or equal to it if last touch
+				if(((counter == 2) && (sum == number)) || 
+				   ((counter < 2) && (sum <= number))) addition_correct();
+				else addition_wrong();	
 			}
 		}
-	}
 
-	counter++;
-
-	if (counter >= 3) {
-
-		int i, total;
-		total = 0;
-
-		for(i = 0; i < 3; i++) { total = total + total_number[i]; }
-
-		if(total == final_number) { addition_correct(); }
-		else					  { addition_wrong();   }
+		// Return false because game did not end
+		return false;
 	}
 }
 
 void addition_correct() {
-	add_score++;
+	// Make number pressed disappear
+	addition_draw_block(GREYPAL);
 
-	// Update infos
-	info_update_score(add_score, 0);
+	// Increment counter
+	counter++;
 
-	int old_color = BG_PALETTE_SUB[1];
+	// Check if last number to tap
+	if(counter >= 3){
+		// Increment score
+		score++;
 
-	BG_PALETTE_SUB[1] = GREEN;
-	BG_PALETTE_SUB[22] = GREEN;
+		// Update infos
+		info_update_score(score, 0);
 
-	draw_timer = 0;
-	irqEnable(IRQ_TIMER0);
-	while(draw_timer <= 2);
-	irqDisable(IRQ_TIMER0);
-
-	BG_PALETTE_SUB[1] = old_color;
-	BG_PALETTE_SUB[22] = old_color;
-
-	addition_new_number();
-	addition_draw();
+		// Launch next number
+		addition_next();
+	}
 }
 
 void addition_wrong() {
+	// Make number pressed disappear
+	addition_draw_block(GREYPAL);
+
+	// Update status
+	occupied = true;
+
+	// Reset wrong counter
+	wrong = 0;
+
+	// Launch timer
+	TIMER1_CR |= TIMER_ENABLE;
+
+	// Play wrong effect
 	mmEffect(SFX_BOING);
-
-	int old_color = BG_PALETTE_SUB[1];
-
-	BG_PALETTE_SUB[1] = RED;
-	BG_PALETTE_SUB[22] = RED;
-
-	draw_timer = 0;
-	irqEnable(IRQ_TIMER0);
-	while(draw_timer <= 2);
-	irqDisable(IRQ_TIMER0);
-
-	BG_PALETTE_SUB[1] = old_color;
-	BG_PALETTE_SUB[22] = old_color;
-
-	addition_new_number();
-	addition_draw();
-
 }
 
 void addition_reset() {
 	// Suppress infos
-	info_finish(add_score, "addition", state);
+	info_finish(score, "addition", state);
 
-	draw_timer = 0;
-	add_score = 0;
-	counter = 0;
-
-	int row, col;
-
-	for(row=0; row<32; row++){
-		for(col=0; col<32; col++){
-			BG_MAP_RAM_SUB(0)[row*32+col] = 1;
-			BG_MAP_RAM_SUB(17)[row*32+col] = addition_imMap[2];
-		}
-	}
-
-	irqDisable(IRQ_TIMER0);
-	irqClear(IRQ_TIMER0);
+	// Disable timers
 	TIMER0_CR = 0;
+	TIMER1_CR = 0;
+	irqDisable(IRQ_TIMER0);
+	irqDisable(IRQ_TIMER1);
+	irqClear(IRQ_TIMER0);
+	irqClear(IRQ_TIMER1);
+
+	// Desactivate BG0
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 }
