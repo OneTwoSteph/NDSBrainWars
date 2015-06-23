@@ -13,8 +13,7 @@
 #include "info.h"
 
 // Images
-#include "result.h"
-#include "score.h"
+#include "info_im.h"
 
 /****************************************************************** Constants */
 // Palettes
@@ -22,12 +21,11 @@
 
 // Display
 #define XSTART1 			4
-#define XSTART2 			11
-#define XSTART3				23
+#define XSTART2				23
 #define YSTART 				20
 #define NBW					1
 #define NBH					2
-#define YM 					6
+#define YM 					3
 #define NBDIG 				4
 
 // Game names
@@ -68,7 +66,7 @@ void info_init(state){
 
 	for(x = 0; x < W; x++){
 		for(y = YSTART; y < H; y++){
-			BG_MAP_RAM(BG0MAP)[y*W + x] = scoreMap[32] | (NORMALPAL << 12);
+			BG_MAP_RAM(BG0MAP)[y*W + x] = info_imMap[32] | (NORMALPAL << 12);
 		}
 	}
 
@@ -79,7 +77,7 @@ void info_init(state){
 
 	for(x = 0; x < W; x++){
 		for(y = ystart; y < ystart + h; y++){
-			BG_MAP_RAM(BG0MAP)[y*W + x] = scoreMap[ym*W + x] | (NORMALPAL << 12);
+			BG_MAP_RAM(BG0MAP)[y*W + x] = info_imMap[ym*W + x] | (NORMALPAL << 12);
 			ym++;
 		}
 		ym = ((state == TWOP) ? h : 0);
@@ -127,15 +125,14 @@ void info_update_score(int score, int player){
 	int i;
 	int x, y;
 	int xm, ym;
-	int xstart = ((player == 1) ? XSTART2 : XSTART1);
 
 	swiWaitForVBlank();
 	for(i = 0; i < NBDIG; i++){
 		xm = dig[i]*NBW;
 		ym = YM;
-		for(x = xstart + i*NBW; x < xstart + (i+1)*NBW; x++){
+		for(x = XSTART1 + i*NBW; x < XSTART1 + (i+1)*NBW; x++){
 			for(y = YSTART; y < YSTART + NBH; y++){
-				BG_MAP_RAM(BG0MAP)[y*W + x] = scoreMap[ym*W + xm] | (NORMALPAL << 12);
+				BG_MAP_RAM(BG0MAP)[y*W + x] = info_imMap[ym*W + xm] | (NORMALPAL << 12);
 				ym++;
 			}
 			ym = YM;
@@ -163,9 +160,9 @@ void info_update_time(){
 	for(i = 0; i < NBDIG+1; i++){
 		xm = dig[i]*NBW;
 		ym = YM;
-		for(x = XSTART3 + i*NBW; x < XSTART3 + (i+1)*NBW; x++){
+		for(x = XSTART2 + i*NBW; x < XSTART2 + (i+1)*NBW; x++){
 			for(y = YSTART; y < YSTART + NBH; y++){
-				BG_MAP_RAM(BG0MAP)[y*W + x] = scoreMap[ym*W + xm] | (NORMALPAL << 12);
+				BG_MAP_RAM(BG0MAP)[y*W + x] = info_imMap[ym*W + xm] | (NORMALPAL << 12);
 				ym++;
 			}
 			ym = YM;
@@ -238,161 +235,4 @@ int info_get_score(char* game){
 
 	// Return score
 	return score;
-}
-
-void info_store_temp_score(bool player, int counter, int score){
-
-	if(player)	{ score_p2[counter-1] = score; }
-	else 		{ score_p1[counter-1] = score; }
-
-}
-
-void info_draw_final_score(STATE state){
-	int x,y,j;
-
-	int digits[4];
-	u16 keys;
-
-	int final_p1 = 0;
-	int final_p2 = 0;
-
-	switch(state){
-
-	case ONEP:
-		final_p1 = score_p1[2];
-
-		digits[0] = final_p1/1000;
-		digits[1] = (final_p1-1000*digits[0])/100;
-		digits[2] = (final_p1-1000*digits[0]-100*digits[1])/10;
-		digits[3] = (final_p1-1000*digits[0]-100*digits[1]-10*digits[2]);
-
-		// Copy image to memory
-		swiCopy(resultTiles, BG_TILE_RAM_SUB(1), resultTilesLen/2);
-		swiCopy(resultPal, BG_PALETTE_SUB, resultPalLen/2);
-
-		// Draw Initial Field
-		for(x=0; x<32; x++){
-			for(y=0; y<24; y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[1];
-			}
-		}
-
-		for(x=0; x<32; x++){
-			for(y=5; y<10; y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[y*32+x];
-			}
-		}
-
-		for(j=0;j<4;j++){
-			for(x=18; x<20; x++){
-				for(y=5; y<10; y++){
-					BG_MAP_RAM_SUB(0)[y*32+(x+2*j)] = resultMap[(y-5+15)*32 + (x-18)+2*digits[j]];
-				}
-			}
-		}
-		keys = keysDown();
-
-		while(!(keys & KEY_START)){
-			keys = keysDown();
-		}
-
-		break;
-	case TWOP:
-
-		for(x=0; x<3; x++){
-			final_p1 = final_p1 + score_p1[x];
-			final_p2 = final_p2 + score_p2[x];
-		}
-
-		digits[0] = final_p1/1000;
-		digits[1] = (final_p1-1000*digits[0])/100;
-		digits[2] = (final_p1-1000*digits[0]-100*digits[1])/10;
-		digits[3] = (final_p1-1000*digits[0]-100*digits[1]-10*digits[2]);
-
-		// Copy image to memory
-		swiCopy(resultTiles, BG_TILE_RAM_SUB(1), resultTilesLen/2);
-		swiCopy(resultPal, BG_PALETTE_SUB, resultPalLen/2);
-		swiCopy(resultPal, &BG_PALETTE_SUB[16], resultPalLen/2);
-		swiCopy(resultPal, &BG_PALETTE_SUB[32], resultPalLen/2);
-
-		BG_PALETTE_SUB[0x18] = BLUE;
-		BG_PALETTE_SUB[0x28] = RED;
-
-		// Draw Initial Field
-		int l = 5;
-
-		for(x=0; x<32; x++){
-			for(y=0; y<24; y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[1];
-			}
-		}
-
-		for(x=0; x<32; x++){
-			for(y=0; y<5; y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[y*32+x];
-			}
-			for(y=10+l; y<15+l; y++){
-				BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-l)*32+x];
-			}
-		}
-
-		for(j=0;j<4;j++){
-			for(x=6; x<8; x++){
-				for(y=5; y<10; y++){
-					BG_MAP_RAM_SUB(0)[y*32+(x+2*j)] = resultMap[(y-5+15)*32 + (x-6)+2*digits[j]] | (1 << 12);
-				}
-			}
-		}
-
-		digits[0] = final_p2/1000;
-		digits[1] = (final_p2-1000*digits[0])/100;
-		digits[2] = (final_p2-1000*digits[0]-100*digits[1])/10;
-		digits[3] = (final_p2-1000*digits[0]-100*digits[1]-10*digits[2]);
-
-
-		for(j=0;j<4;j++){
-			for(x=18; x<20; x++){
-				for(y=5; y<10; y++){
-					BG_MAP_RAM_SUB(0)[y*32+(x+2*j)] = resultMap[(y-5+15)*32 + (x-18)+2*digits[j]] | (2 << 12);
-				}
-			}
-		}
-
-
-		if(final_p1 > final_p2){
-			for(x=15;x<17;x++){
-				for(y=10+l; y<15+l; y++){
-					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-10+15-l)*32 + (x-15)+2] | (1 << 12);
-				}
-			}
-		}
-		else if (final_p1 < final_p2){
-			for(x=15;x<17;x++){
-				for(y=10+l; y<15+l; y++){
-					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[(y-10+15-l)*32 + (x-15)+4] | (2 << 12);
-				}
-			}
-		}
-		else	{
-			for(x=0; x<32; x++){
-				for(y=10+l; y<15+l; y++){
-					BG_MAP_RAM_SUB(0)[y*32+x] = resultMap[1];
-				}
-			}
-		}
-
-
-
-		keys = keysDown();
-
-		while(!(keys & KEY_START)){
-			keys = keysDown();
-		}
-
-		break;
-	default:
-		break;
-	}
-
-	counter = 0;
 }

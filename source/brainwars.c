@@ -38,7 +38,7 @@
 #include "sub_credits.h"
 
 // Other
-#include "score.h"
+#include "info_im.h"
 
 
 /****************************************************************** Constants */
@@ -57,12 +57,11 @@
 typedef enum PSTATE PSTATE;
 enum PSTATE
 {
-	INIT = 0,
-	SEL = 1,
-	SHOW = 2,
-	PLAY = 3,
-	RESULT = 4,
-	FINAL = 5
+	SEL = 0,
+	SHOW = 1,
+	PLAY = 2,
+	RESULT = 3,
+	FINAL = 4
 };
 
 
@@ -97,6 +96,8 @@ bool pStateChange;
 GAME pGames[3];
 int onepCurrent;
 int twopCurrent;
+int onepScores[3];
+int twopScores[6];
 
 // Score
 int scores[7];
@@ -166,7 +167,7 @@ void brainwars_start_configMain(){
 
 	// Load image in BG0 which will never changer (score and timer) and put
 	// correct colors in palette
-	swiCopy(scoreTiles, BG_TILE_RAM(BG0TILE), scoreTilesLen/2);
+	swiCopy(info_imTiles, BG_TILE_RAM(BG0TILE), info_imTilesLen/2);
 
 	BG_PALETTE[0x61] = GREY;
 	BG_PALETTE[0x62] = BLACKGREY;
@@ -672,11 +673,23 @@ void brainwars_p_init(){
 	// Inactivate BG1 while copying new images to  memory
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy tiles
+	// Copy tiles in MAIN BG1 and put correct colors in palettes
+	swiCopy(main_expTiles, BG_TILE_RAM(BG1TILE), main_expTilesLen/2);
+
+	BG_PALETTE[0x01] = RED;
+	BG_PALETTE[0x02] = BLUE;
+	BG_PALETTE[0x03] = GREEN;
+	BG_PALETTE[0x04] = YELLOW;
+	BG_PALETTE[0x05] = WHITE;
+	BG_PALETTE[0x06] = GREY;
+	BG_PALETTE[0x07] = BLACKGREY;
+	BG_PALETTE[0x08] = BLACK;
+
+	// Copy tiles in SUB BG1 and put correct colors in palette
 	swiCopy(sub_pTiles, BG_TILE_RAM_SUB(BG1TILE), sub_pTilesLen/2);
 
-	// Put correct colors in palette
 	BG_PALETTE_SUB[0x01] = RED;
 	BG_PALETTE_SUB[0x02] = BLUE;
 	BG_PALETTE_SUB[0x03] = GREEN;
@@ -684,6 +697,14 @@ void brainwars_p_init(){
 	BG_PALETTE_SUB[0x05] = GREY;
 	BG_PALETTE_SUB[0x06] = BLACKGREY;
 	BG_PALETTE_SUB[0x07] = BLACK;
+
+	BG_PALETTE_SUB[0x11] = RED;
+	BG_PALETTE_SUB[0x12] = BLUE;
+	BG_PALETTE_SUB[0x13] = GREEN;
+	BG_PALETTE_SUB[0x14] = YELLOW;
+	BG_PALETTE_SUB[0x15] = GREY;
+	BG_PALETTE_SUB[0x16] = BLACKGREY;
+	BG_PALETTE_SUB[0x17] = BLACK;
 
 	// Fill screen with grey
 	int x, y;
@@ -696,7 +717,7 @@ void brainwars_p_init(){
 
 	// Initialize global variables
 	pState = SEL;
-	pStateChange = false;
+	pStateChange = true;
 
 	onepCurrent = 0;
 	twopCurrent = 0;
@@ -722,22 +743,18 @@ void brainwars_p_init(){
 
 	// Activate BG1
 	swiWaitForVBlank();
-	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
-
-	// Reset timer variable for displaying in next function
-	display = 0;
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;	
 }
 
 void brainwars_p(){
 	// Check if state changed an initialize module in function of new state
 	if(pStateChange){
 		switch(pState){
-		case INIT: 
-		case SEL: 
-		case SHOW: 
-		case PLAY: 
-		case RESULT: 
-		case FINAL: 
+		case SEL: brainwars_p_sel_init(); break;
+		case SHOW: brainwars_p_show_init(); break;
+		case PLAY: brainwars_p_play_init(); break;
+		case RESULT: brainwars_p_result_init(); break;
+		case FINAL: brainwars_p_final_init(); break;
 		default: break;
 		}
 
@@ -746,37 +763,243 @@ void brainwars_p(){
 
 	// Execute correct module in function of state
 	switch(pState){
-	case INIT: 
-	case SEL: brainwars_p_sel();
-	case SHOW: 
-	case PLAY: 
-	case RESULT: 
-	case FINAL: 
+	case SEL: brainwars_p_sel(); break;
+	case SHOW: brainwars_p_show(); break;
+	case PLAY: brainwars_p_play(); break;
+	case RESULT: brainwars_p_result(); break;
+	case FINAL: brainwars_p_final(); break;
+	default: break;
+	}
+
+	// Check if user wants to end mode
+	u16 keys = (u16) keysDown();
+
+	if(keys & KEY_START){
+		state = MAIN;
+		stateChange = true;
+	}
+}
+
+void brainwars_p_sel_init(){
+	// Start timer
+	display = 0;
+	TIMER2_CR |= TIMER_ENABLE;
+}
+
+void brainwars_p_sel(){
+	// Draw games one by one and stop mode after a while
+	swiWaitForVBlank();
+	if(display > 17){
+		// Disable time
+		TIMER2_CR &= ~(TIMER_ENABLE);
+
+		// Go to next state
+		pState = SHOW;
+		pStateChange = true;
+	}
+	else if(display > 15) brainwars_p_draw_block(pGames[2], 2);
+	else if(display > 10) brainwars_p_draw_block(pGames[1], 1);
+	else if(display > 5) brainwars_p_draw_block(pGames[0], 0);
+}
+
+void brainwars_p_show_init(){
+	// Launch timer to create 1s pause
+	display = 0;
+	TIMER2_CR |= TIMER_ENABLE;
+
+	// See in what game we are
+	int game = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
+
+	// Put correct explanation in MAIN screen
+	int x, y;
+
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM(BG1MAP)[y*W + x] = main_expMap[(y + pGames[game]*H)*W + x];
+		}
+	}
+
+	// Wait a moment
+	while(display < 3);
+
+	// Activate BG1 of MAIN
+	swiWaitForVBlank();
+	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
+
+	// Draw the 3 blocks again with the right one selected
+	brainwars_p_draw_block(pGames[0], 0);
+	brainwars_p_draw_block(pGames[1], 1);
+	brainwars_p_draw_block(pGames[2], 2);
+	brainwars_p_draw_block_sel(game);
+
+}
+
+void brainwars_p_show(){
+	// Scan keys
+	u16 keys = (u16) keysDown();
+
+	// Scan if exit asked
+	if(keys & KEY_A){
+		pState = PLAY;
+		pStateChange = true;
+	}
+}
+
+void brainwars_p_play_init(){
+	// Check which game we are playing
+	int game = game = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
+
+	// Initialize infos
+	info_init(state);
+
+	// Initialize game
+	switch(pGames[game]){
+	case LEADER: leader_init(); break;
+	case EATIT: eatit_init(); break;
+	case MUSICAL: musical_init(); break;
+	case PATH: path_init(); break;
+	case ADDITION: addition_init(); break;
+	case PLUSMINUS: plusminus_init(); break;
+	case JANKENPON: jankenpon_init(); break;
+	case NOGAME: brainwars_train_init(); break;
 	default: break;
 	}
 }
 
-void brainwars_p_sel(){
-	// Start timer
+void brainwars_p_play(){
+	// Check which game
+	int game = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
+
+	// Execute game
+	int score;
+
+	switch(pGames[game]){
+	case LEADER: score = leader_game(); break;
+	case EATIT: score = eatit_game(); break;
+	case MUSICAL: score = musical_game(); break;
+	case PATH: score = path_game(); break;
+	case ADDITION: score = addition_game(); break;
+	case PLUSMINUS: score = plusminus_game(); break;
+	case JANKENPON: score = jankenpon_game(); break;
+	case NOGAME: brainwars_train_select(); break;
+	default: break;
+	}
+
+	// Update infos
+	info_update_score(score, 0);
+
+	// Check if game has to end
+	if(info_get_time() >= GAMETIME){
+		// Reset infos
+		info_finish(score, game, state);
+
+		// Stop game
+		switch(trainGame){
+		case LEADER: leader_reset(); break;
+		case EATIT: eatit_reset(); break;
+		case MUSICAL: musical_reset(); break;
+		case PATH: path_reset(); break;
+		case ADDITION: addition_reset(); break;
+		case PLUSMINUS: plusminus_reset(); break;
+		case JANKENPON: jankenpon_reset(); break;
+		case NOGAME: break;
+		default: break;
+		}
+
+		// Store score and update state
+		if(state == ONEP){
+			onepScores[onepCurrent] = score;
+			onepCurrent++;
+		} 
+		else{
+			twopScores[twopCurrent] = score;
+			twopCurrent++;
+		} 
+
+		// Go to next state
+		pState = RESULT;
+		pStateChange = true;
+	}
+}
+
+void brainwars_p_result_init(){
+	// Launch timer to create 1s pause
+	display = 0;
 	TIMER2_CR |= TIMER_ENABLE;
 
-	// Draw games one by one
-	while(display < 5);
-	brainwars_p_draw_block(pGames[0], 0);
-	while(display < 10);
-	brainwars_p_draw_block(pGames[1], 1);
-	while(display < 15); 
-	brainwars_p_draw_block(pGames[2], 2);
+	// Inactivate BG1 while copying new images to  memory
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
 
-	// Wait a bit more
-	while(display < 20);
-	
-	// Disable time
+	// Create result image
+	int x, y;
+
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[PSIDE*PWIM] | (NORMALPAL << 12);
+		}
+	}
+
+	// Activate BG1 of SUB
+	while(display < 3);
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+
+	// Stop timer
 	TIMER2_CR &= ~(TIMER_ENABLE);
+}
 
-	// Go to next state
-	pState = SHOW;
-	pStateChange = true;
+void brainwars_p_result(){
+	// Scan keys
+	u16 keys = (u16) keysDown();
+
+	// Scan if exit asked
+	if(keys & KEY_A){
+		if(((state == ONEP) && (onepCurrent > 2)) || ((state == TWOP) && (twopCurrent > 5))) pState = FINAL;
+		else pState = SHOW;
+		pStateChange = true;
+	}
+}
+
+void brainwars_p_final_init(){
+	// Launch timer to create 1s pause
+	display = 0;
+	TIMER2_CR |= TIMER_ENABLE;
+
+	// Inactivate BG1 while creating correct image
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+
+	// Draw correct infos
+	int x, y;
+
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[PSIDE*PWIM] | (NORMALPAL << 12);
+		}
+	}
+
+	// Activate BG1 after some time
+	while(display < 3);
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+
+	// Stop timer
+	TIMER2_CR &= ~(TIMER_ENABLE);
+}
+
+void brainwars_p_final(){
+	void brainwars_p_result(){
+	// Scan keys
+	u16 keys = (u16) keysDown();
+
+	// Scan if exit asked
+	if(keys & KEY_A){
+		state = MAIN;
+		stateChange = true;
+	}
+}
 }
 
 void brainwars_p_draw_block(int game, int pos){
@@ -786,7 +1009,6 @@ void brainwars_p_draw_block(int game, int pos){
 
 	xm = game*PSIDE;
 	ym = 0;
-	swiWaitForVBlank();
 	for(x = PSTARTX + pos*(PSIDE + PINT); x < PSTARTX + pos*(PSIDE + PINT) + PSIDE; x++){
 		for(y = PSTARTY; y < PSTARTY + PSIDE; y++){
 			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[ym*PWIM + xm] | (NORMALPAL<< 12);
@@ -794,6 +1016,17 @@ void brainwars_p_draw_block(int game, int pos){
 		}
 		ym = 0;
 		xm++;
+	}
+}
+
+void brainwars_p_draw_block_sel(int pos){
+	// Change the palette of the selected game
+	int x, y;
+
+	for(x = PSTARTX + pos*(PSIDE + PINT); x < PSTARTX + pos*(PSIDE + PINT) + PSIDE; x++){
+		for(y = PSTARTY; y < PSTARTY + PSIDE; y++){
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = BG_MAP_RAM_SUB(BG1MAP)[y*W + x] | (YELLOWPAL<< 12);
+		}
 	}
 }
 
@@ -806,6 +1039,7 @@ void brainwars_score_init(){
 	// Inactivate BG1 while copying new images to  memory
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy tiles
 	swiCopy(sub_scoreTiles, BG_TILE_RAM_SUB(BG1TILE), sub_scoreTilesLen/2);
@@ -928,6 +1162,7 @@ void brainwars_credits_init(){
 	// Inactivate BG1 while copying new images to  memory
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
 
 	// Copy tiles
 	swiCopy(sub_creditsTiles, BG_TILE_RAM_SUB(BG1TILE), sub_creditsTilesLen/2);
