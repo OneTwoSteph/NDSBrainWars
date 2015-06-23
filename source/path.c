@@ -57,6 +57,7 @@ void path_wrong(){
 	}
 
 	// Draw
+	swiWaitForVBlank();
 	path_draw();
 }
 
@@ -84,6 +85,15 @@ void path_init(){
 	BG_PALETTE_SUB[0x92] = WHITE;
 	BG_PALETTE_SUB[0x93] = GREY;
 
+	// Draw first background with grey
+	int x, y;
+
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*H+x] = path_arrowMap[0] | (BLUEPAL << 12);
+		}
+	}
+
 	// Set initial random direction and color
 	direction = rand()%4;
 	color = rand()%2;
@@ -92,12 +102,12 @@ void path_init(){
 	path_draw();
 
 	// Activate BG0
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
 	// Configure interrupts and timer for false blinking effect
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
-
 	irqSet(IRQ_TIMER1, &path_wrong);
 	irqEnable(IRQ_TIMER1);
 
@@ -111,16 +121,7 @@ void path_draw(){
 	int x, y;
 	int L = 32;	// length of the image
 
-	// Draw first background with grey
-	swiWaitForVBlank();
-	for(x = 0; x < W; x++){
-		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(BG0MAP)[y*H+x] = path_arrowMap[0] | (BLUEPAL << 12);
-		}
-	}
-
 	// If we are not in the wrong case, draw figures
-	swiWaitForVBlank();
 	if((wrong%2) == 0){
 		for(x = 0; x < W; x++){
 			for(y = 0; y < H; y++){
@@ -144,6 +145,13 @@ void path_draw(){
 
 				// Color
 				BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = BG_MAP_RAM_SUB(BG0MAP)[y*W+x] | ((color+6) << 12);
+			}
+		}
+	}
+	else{
+		for(x = 0; x < W; x++){
+			for(y = 0; y < H; y++){
+				BG_MAP_RAM_SUB(BG0MAP)[y*H+x] = path_arrowMap[0] | (BLUEPAL << 12);
 			}
 		}
 	}
@@ -237,6 +245,7 @@ void path_next(){
 	color = nb2;
 
 	// Redraw screen
+	swiWaitForVBlank();
 	path_draw();
 }
 

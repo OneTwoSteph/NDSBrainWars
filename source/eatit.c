@@ -70,8 +70,8 @@ void eatit_timer_ISR1(void){
 
 	// When already blinked 3 times, update status and disable timer
 	if(wrong == 6){
-		occupied = false;
 		TIMER1_CR &= ~(TIMER_ENABLE);
+		occupied = false;
 	}
 }
 
@@ -272,6 +272,9 @@ void eatit_wrong(){
 	swiWaitForVBlank();
 	eatit_draw_pacman();
 
+	// Play wrong effect
+	if(wrong == 0) mmEffect(SFX_BOING);
+
 	// Update status
 	occupied = true;
 
@@ -280,9 +283,6 @@ void eatit_wrong(){
 
 	// Launch wrong timer
 	TIMER1_CR |= TIMER_ENABLE;
-
-	// Play wrong effect
-	if(wrong == 0) mmEffect(SFX_BOING);
 }
 
 // Reset game
