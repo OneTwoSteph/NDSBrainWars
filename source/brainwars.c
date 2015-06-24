@@ -46,12 +46,15 @@
 #define NORMALPAL		0
 #define YELLOWPAL		1
 #define GREENPAL		2
+#define BLUEPAL			3
+#define REDPAL			4
+#define GREYPAL			5
 
 // 1p and 2p display infos
 #define PWIM		42
 #define PSIDE		6
 #define PSTARTX		5
-#define PSTARTY		6
+#define PSTARTY		3
 #define PINT 		2
 
 typedef enum PSTATE PSTATE;
@@ -117,13 +120,13 @@ void brainwars_start_init(){
 	fatInitDefault();
 
 	// Read saved best scores in files to initialize scores array
-	scores[0] = info_get_score("leader");
-	scores[1] = info_get_score("eatit");
-	scores[2] = info_get_score("musical");
-	scores[3] = info_get_score("path");
-	scores[4] = info_get_score("addition");
-	scores[5] = info_get_score("plusminus");
-	scores[6] = info_get_score("jankenpon");
+	scores[0] = info_get_score(LEADER);
+	scores[1] = info_get_score(EATIT);
+	scores[2] = info_get_score(MUSICAL);
+	scores[3] = info_get_score(PATH);
+	scores[4] = info_get_score(ADDITION);
+	scores[5] = info_get_score(PLUSMINUS);
+	scores[6] = info_get_score(JANKENPON);
 
 	// Initialize sound
 	mmInitDefaultMem((mm_addr)soundbank_bin);
@@ -172,6 +175,10 @@ void brainwars_start_configMain(){
 	BG_PALETTE[0x61] = GREY;
 	BG_PALETTE[0x62] = BLACKGREY;
 	BG_PALETTE[0x63] = BLACK;
+
+	BG_PALETTE[0x71] = GREY;
+	BG_PALETTE[0x72] = BLACKGREY;
+	BG_PALETTE[0x73] = RED;
 
 	// Load image in BG2 which will never change (just grey background) and use
 	// palette 15 to put grey in it
@@ -511,7 +518,7 @@ void brainwars_train_init(){
 void brainwars_train(){
 	// Check if game has changed and initialize correct module
 	if(trainGameChange){
-		if(trainGame != NOGAME) info_init(state);
+		if(trainGame != NOGAME) info_init();
 
 		switch(trainGame){
 		case LEADER: leader_init(); break;
@@ -545,7 +552,7 @@ void brainwars_train(){
 	// Check if game has to end
 	if(trainGame != NOGAME){
 		// Update infos
-		info_update_score(score, 0);
+		info_update_score(score);
 
 		// Scan keys
 		u16 keys = (u16) keysDown();
@@ -706,12 +713,36 @@ void brainwars_p_init(){
 	BG_PALETTE_SUB[0x16] = BLACKGREY;
 	BG_PALETTE_SUB[0x17] = BLACK;
 
+	BG_PALETTE_SUB[0x31] = RED;
+	BG_PALETTE_SUB[0x32] = BLUE;
+	BG_PALETTE_SUB[0x33] = GREEN;
+	BG_PALETTE_SUB[0x34] = WHITE;
+	BG_PALETTE_SUB[0x35] = GREY;
+	BG_PALETTE_SUB[0x36] = BLACKGREY;
+	BG_PALETTE_SUB[0x37] = BLUE;
+
+	BG_PALETTE_SUB[0x41] = RED;
+	BG_PALETTE_SUB[0x42] = BLUE;
+	BG_PALETTE_SUB[0x43] = GREEN;
+	BG_PALETTE_SUB[0x44] = WHITE;
+	BG_PALETTE_SUB[0x45] = GREY;
+	BG_PALETTE_SUB[0x46] = BLACKGREY;
+	BG_PALETTE_SUB[0x47] = RED;
+
+	BG_PALETTE_SUB[0x51] = GREY;
+	BG_PALETTE_SUB[0x52] = GREY;
+	BG_PALETTE_SUB[0x53] = GREY;
+	BG_PALETTE_SUB[0x54] = GREY;
+	BG_PALETTE_SUB[0x55] = GREY;
+	BG_PALETTE_SUB[0x56] = GREY;
+	BG_PALETTE_SUB[0x57] = GREY;
+
 	// Fill screen with grey
 	int x, y;
 
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[PSIDE*PWIM] | (NORMALPAL << 12);
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[(PSIDE+1)*PWIM - 1] | (NORMALPAL << 12);
 		}
 	}
 
@@ -723,7 +754,7 @@ void brainwars_p_init(){
 	twopCurrent = 0;
 
 	// Choose the 3 games
-	int tab[3];
+	int tab[7];
 	int i, j;
 	int max, maxi;
 
@@ -775,6 +806,26 @@ void brainwars_p(){
 	u16 keys = (u16) keysDown();
 
 	if(keys & KEY_START){
+		if(pState == PLAY){
+			// Check the game
+			int game = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
+
+			// Reset infos
+			info_finish(-1, game, state);
+
+			// Stop game
+			switch(pGames[game]){
+			case LEADER: leader_reset(); break;
+			case EATIT: eatit_reset(); break;
+			case MUSICAL: musical_reset(); break;
+			case PATH: path_reset(); break;
+			case ADDITION: addition_reset(); break;
+			case PLUSMINUS: plusminus_reset(); break;
+			case JANKENPON: jankenpon_reset(); break;
+			case NOGAME: break;
+			default: break;
+			}
+		}
 		state = MAIN;
 		stateChange = true;
 	}
@@ -789,7 +840,7 @@ void brainwars_p_sel_init(){
 void brainwars_p_sel(){
 	// Draw games one by one and stop mode after a while
 	swiWaitForVBlank();
-	if(display > 17){
+	if(display > 20){
 		// Disable time
 		TIMER2_CR &= ~(TIMER_ENABLE);
 
@@ -808,7 +859,7 @@ void brainwars_p_show_init(){
 	TIMER2_CR |= TIMER_ENABLE;
 
 	// See in what game we are
-	int game = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
+	int game = (state == ONEP) ? onepCurrent : twopCurrent/2;
 
 	// Put correct explanation in MAIN screen
 	int x, y;
@@ -826,12 +877,28 @@ void brainwars_p_show_init(){
 	swiWaitForVBlank();
 	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 
+	// Disable time
+	TIMER2_CR &= ~(TIMER_ENABLE);
+
 	// Draw the 3 blocks again with the right one selected
 	brainwars_p_draw_block(pGames[0], 0);
 	brainwars_p_draw_block(pGames[1], 1);
 	brainwars_p_draw_block(pGames[2], 2);
 	brainwars_p_draw_block_sel(game);
 
+	// Draw game
+	brainwars_p_draw(0, 6, 5, 2, 4, 11,  NORMALPAL);
+	brainwars_p_draw(game+1, 14, 1, 2, 27, 11, NORMALPAL);
+
+	// Draw player
+	if(state == TWOP){
+		brainwars_p_draw(0, 8, 8, 2, 4, 14, NORMALPAL);
+		if((twopCurrent%2) == 0) brainwars_p_draw(1, 14, 1, 2, 27, 14, NORMALPAL);
+		else brainwars_p_draw(2, 14, 1, 2, 27, 14, NORMALPAL);
+	}
+
+	// Draw "press A"
+	brainwars_p_draw(0, 12, 23, 2, 0, 19, NORMALPAL);
 }
 
 void brainwars_p_show(){
@@ -847,10 +914,10 @@ void brainwars_p_show(){
 
 void brainwars_p_play_init(){
 	// Check which game we are playing
-	int game = game = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
+	int game = game = (state == ONEP) ? onepCurrent : twopCurrent/2;
 
 	// Initialize infos
-	info_init(state);
+	info_init();
 
 	// Initialize game
 	switch(pGames[game]){
@@ -864,37 +931,59 @@ void brainwars_p_play_init(){
 	case NOGAME: brainwars_train_init(); break;
 	default: break;
 	}
+
+	// Reinitialize display
+	display = 0;
 }
 
 void brainwars_p_play(){
 	// Check which game
 	int game = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
 
-	// Execute game
-	int score;
+	// Check if game has to end otherwise execute game
+	if(info_get_time() <= GAMETIME){
+		int score = 0;
 
-	switch(pGames[game]){
-	case LEADER: score = leader_game(); break;
-	case EATIT: score = eatit_game(); break;
-	case MUSICAL: score = musical_game(); break;
-	case PATH: score = path_game(); break;
-	case ADDITION: score = addition_game(); break;
-	case PLUSMINUS: score = plusminus_game(); break;
-	case JANKENPON: score = jankenpon_game(); break;
-	case NOGAME: brainwars_train_select(); break;
-	default: break;
+		switch(pGames[game]){
+		case LEADER: score = leader_game(); break;
+		case EATIT: score = eatit_game(); break;
+		case MUSICAL: score = musical_game(); break;
+		case PATH: score = path_game(); break;
+		case ADDITION: score = addition_game(); break;
+		case PLUSMINUS: score = plusminus_game(); break;
+		case JANKENPON: score = jankenpon_game(); break;
+		case NOGAME: brainwars_train_select(); break;
+		default: break;
+		}
+
+		// Update infos
+		info_update_score(score);
+
+		// Check if game just ended
+		if(info_get_time() == GAMETIME){
+			// Stop game time
+			info_stop_time();
+
+			// Store score
+			if(state == ONEP) onepScores[onepCurrent] = score;
+			else twopScores[twopCurrent] = score; 
+
+			// Start timer
+			display = 0;
+			TIMER2_CR |= TIMER_ENABLE;
+		}
 	}
 
-	// Update infos
-	info_update_score(score, 0);
+	// Finish game but keep a pause on it before
+	if(display > 10){
+		// Stop timer
+		TIMER2_CR &= ~(TIMER_ENABLE);
 
-	// Check if game has to end
-	if(info_get_time() >= GAMETIME){
 		// Reset infos
-		info_finish(score, game, state);
+		info_finish((state == ONEP) ? onepScores[onepCurrent] : twopScores[twopCurrent], game, state);
 
 		// Stop game
-		switch(trainGame){
+		switch(pGames[game]){
 		case LEADER: leader_reset(); break;
 		case EATIT: eatit_reset(); break;
 		case MUSICAL: musical_reset(); break;
@@ -906,16 +995,6 @@ void brainwars_p_play(){
 		default: break;
 		}
 
-		// Store score and update state
-		if(state == ONEP){
-			onepScores[onepCurrent] = score;
-			onepCurrent++;
-		} 
-		else{
-			twopScores[twopCurrent] = score;
-			twopCurrent++;
-		} 
-
 		// Go to next state
 		pState = RESULT;
 		pStateChange = true;
@@ -923,6 +1002,9 @@ void brainwars_p_play(){
 }
 
 void brainwars_p_result_init(){
+	// Check which game
+	int currentGame = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
+
 	// Launch timer to create 1s pause
 	display = 0;
 	TIMER2_CR |= TIMER_ENABLE;
@@ -932,14 +1014,84 @@ void brainwars_p_result_init(){
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
 
-	// Create result image
+	// Fill screen with grey
 	int x, y;
 
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[PSIDE*PWIM] | (NORMALPAL << 12);
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[(PSIDE+1)*PWIM - 1] | (NORMALPAL << 12);
 		}
 	}
+
+	// Print scores of all the games played until now
+	int s;
+
+	for(s = 0; s < currentGame + 1; s++){
+		// Draw game
+		brainwars_p_draw(0, 6, 5, 2, 4, 4 + s*3,  NORMALPAL);
+		brainwars_p_draw(s+1, 14, 1, 2, 4 + 5 + 1, 4 + s*3, NORMALPAL);
+
+		// Draw score
+		if(state == ONEP){
+			// Compute score digits
+			int dig[4];
+
+			dig[0] = onepScores[s]/1000;
+			dig[1] = (onepScores[s]-1000*dig[0])/100;
+			dig[2] = (onepScores[s]-1000*dig[0]-100*dig[1])/10;
+			dig[3] = (onepScores[s]-1000*dig[0]-100*dig[1]-10*dig[2]);
+
+			// Draw result
+			int i;
+			for(i = 0; i < 4; i++){
+				brainwars_p_draw(dig[i], 14, 1, 2, 24+i, 4 + s*3, BLUEPAL);
+			}
+		}
+		else{
+			// Check at what player we are
+			if((2*s + 1) <= twopCurrent){
+				int j;
+				int pal[2] = {BLUEPAL, BLUEPAL};
+
+				if(twopScores[2*s] > twopScores[2*s+1]) pal[1] = REDPAL;
+				else if(twopScores[2*s] < twopScores[2*s+1]) pal[0] = REDPAL;
+
+				for(j = 0; j < 2; j++){
+					// Compute score digits
+					int dig[4];
+
+					dig[0] = twopScores[2*s + j]/1000;
+					dig[1] = (twopScores[2*s + j]-1000*dig[0])/100;
+					dig[2] = (twopScores[2*s + j]-1000*dig[0]-100*dig[1])/10;
+					dig[3] = (twopScores[2*s + j]-1000*dig[0]-100*dig[1]-10*dig[2]);
+
+					// Draw result
+					int i;
+					for(i = 0; i < 4; i++){
+						brainwars_p_draw(dig[i], 14, 1, 2, 17 + j*7 + i, 4 + s*3, pal[j]);
+					}
+				}
+			}
+			else{
+				// Compute score digits
+				int dig[4];
+
+				dig[0] = twopScores[2*s]/1000;
+				dig[1] = (twopScores[2*s]-1000*dig[0])/100;
+				dig[2] = (twopScores[2*s]-1000*dig[0]-100*dig[1])/10;
+				dig[3] = (twopScores[2*s]-1000*dig[0]-100*dig[1]-10*dig[2]);
+
+				// Draw result
+				int i;
+				for(i = 0; i < 4; i++){
+					brainwars_p_draw(dig[i], 14, 1, 2, 17 + (twopCurrent%2)*7 + i, 4 + s*3, BLUEPAL);
+				}
+			}
+
+		}
+	}
+
+	if(!((state == ONEP) && (onepCurrent == 2)))brainwars_p_draw(0, 12, 23, 2, 0, 19, NORMALPAL);
 
 	// Activate BG1 of SUB
 	while(display < 3);
@@ -956,41 +1108,68 @@ void brainwars_p_result(){
 
 	// Scan if exit asked
 	if(keys & KEY_A){
-		if(((state == ONEP) && (onepCurrent > 2)) || ((state == TWOP) && (twopCurrent > 5))) pState = FINAL;
-		else pState = SHOW;
-		pStateChange = true;
+		// Update state for next step
+		if(state == ONEP) onepCurrent++;
+		else twopCurrent++;
+
+		// Go to next state in function of current game
+		if((state == TWOP) && (twopCurrent > 5)) pState = FINAL;
+		else if((state == ONEP) && (onepCurrent > 2));
+		else{
+			// Fill screen with grey
+			int x, y;
+
+			for(x = 0; x < W; x++){
+				for(y = 0; y < H; y++){
+					BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[(PSIDE+1)*PWIM - 1] | (NORMALPAL << 12);
+				}
+			}
+
+			// Change state
+			pState = SHOW;
+			pStateChange = true;
+		} 
 	}
 }
 
 void brainwars_p_final_init(){
-	// Launch timer to create 1s pause
-	display = 0;
-	TIMER2_CR |= TIMER_ENABLE;
+	// Erase press A
+	brainwars_p_draw(0, 12, 23, 2, 0, 19, GREYPAL);
 
-	// Inactivate BG1 while creating correct image
-	swiWaitForVBlank();
-	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+	// Draw total title
+	brainwars_p_draw(0, 10, 5, 1, 4, 15, NORMALPAL);
 
-	// Draw correct infos
-	int x, y;
+	// Compute totals
+	int total[2] = {0, 0};
+	int i;
 
-	for(x = 0; x < W; x++){
-		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[PSIDE*PWIM] | (NORMALPAL << 12);
+	for(i = 0; i < 2*4; i++) total[i%2] += twopScores[i];
+
+	// Draw totals
+	int j;
+	int pal[2] = {BLUEPAL, BLUEPAL};
+
+	if(total[0] > total[1]) pal[1] = REDPAL;
+	else if(total[0] < total[1]) pal[0] = REDPAL;
+
+	for(j = 0; j < 2; j++){
+		// Compute score digits
+		int dig[4];
+
+		dig[0] = total[j]/1000;
+		dig[1] = (total[j]-1000*dig[0])/100;
+		dig[2] = (total[j]-1000*dig[0]-100*dig[1])/10;
+		dig[3] = (total[j]-1000*dig[0]-100*dig[1]-10*dig[2]);
+
+		// Draw result
+		int i;
+		for(i = 0; i < 4; i++){
+			brainwars_p_draw(dig[i], 14, 1, 2, 17 + j*7 + i, 15, pal[j]);
 		}
 	}
-
-	// Activate BG1 after some time
-	while(display < 3);
-	swiWaitForVBlank();
-	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
-
-	// Stop timer
-	TIMER2_CR &= ~(TIMER_ENABLE);
 }
 
 void brainwars_p_final(){
-	void brainwars_p_result(){
 	// Scan keys
 	u16 keys = (u16) keysDown();
 
@@ -999,7 +1178,6 @@ void brainwars_p_final(){
 		state = MAIN;
 		stateChange = true;
 	}
-}
 }
 
 void brainwars_p_draw_block(int game, int pos){
@@ -1027,6 +1205,23 @@ void brainwars_p_draw_block_sel(int pos){
 		for(y = PSTARTY; y < PSTARTY + PSIDE; y++){
 			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = BG_MAP_RAM_SUB(BG1MAP)[y*W + x] | (YELLOWPAL<< 12);
 		}
+	}
+}
+
+void brainwars_p_draw(int xim, int yim, int w, int h, int x, int y, int pal){
+	// Change the palette of the selected game
+	int col, row;
+	int xm, ym;
+
+	xm = xim;
+	ym = yim;
+	for(col = x; col < x + w; col++){
+		for(row = y; row < y + h; row++){
+			BG_MAP_RAM_SUB(BG1MAP)[row*W + col] = sub_pMap[ym*PWIM + xm] | (pal << 12);
+			ym++;
+		}
+		ym = yim;
+		xm++;
 	}
 }
 
@@ -1096,13 +1291,13 @@ void brainwars_score_init(){
 
 		// Get new score
 		switch(i){
-		case 0: score = info_get_score("leader"); break;
-		case 1: score = info_get_score("eatit"); break;
-		case 2: score = info_get_score("musical"); break;
-		case 3: score = info_get_score("path"); break;
-		case 4: score = info_get_score("addition"); break;
-		case 5: score = info_get_score("plusminus"); break;
-		case 6: score = info_get_score("jankenpon"); break;
+		case 0: score = info_get_score(LEADER); break;
+		case 1: score = info_get_score(EATIT); break;
+		case 2: score = info_get_score(MUSICAL); break;
+		case 3: score = info_get_score(PATH); break;
+		case 4: score = info_get_score(ADDITION); break;
+		case 5: score = info_get_score(PLUSMINUS); break;
+		case 6: score = info_get_score(JANKENPON); break;
 		}
 
 		// Check if higher then old score

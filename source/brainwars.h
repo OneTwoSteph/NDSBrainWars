@@ -38,6 +38,7 @@ void brainwars_p_final_init(void);
 void brainwars_p_final(void);
 void brainwars_p_draw_block(int game, int pos);
 void brainwars_p_draw_block_sel(int pos);
+void brainwars_p_draw(int xim, int yim, int w, int h, int x, int y, int pal);
 
 void brainwars_score_init(void);
 void brainwars_score(void);

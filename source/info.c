@@ -18,6 +18,7 @@
 /****************************************************************** Constants */
 // Palettes
 #define NORMALPAL			6
+#define REDPAL				7
 
 // Display
 #define XSTART1 			4
@@ -29,18 +30,12 @@
 #define NBDIG 				4
 
 // Game names
-const char *names[7] = {"leader", "eatit", "musical", "path", "addition", "plusminus", "jankenpon"};
+const char *names[7] = {"leader", "eatit", "musical", "path", "addition",
+					    "plusminus", "jankenpon"};
 
 /*********************************************************** Global variables */
-STATE gameState;
-
+// Time variables
 int sec, min;
-
-int score_p1[3];
-int score_p2[3];
-
-int counter;
-
 
 /***************************************************************** Timer ISRs */
 void info_time_ISR3(){
@@ -60,7 +55,7 @@ void info_time_ISR3(){
 
 /***************************************************************** Functions */
 // Initialization
-void info_init(state){
+void info_init(){
 	// Fill with gray
 	int x, y;
 
@@ -73,23 +68,16 @@ void info_init(state){
 	// Draw score and time titles
 	int ystart = 17;
 	int h = 3;
-	int ym = ((state == TWOP) ? h : 0);
 
 	for(x = 0; x < W; x++){
 		for(y = ystart; y < ystart + h; y++){
-			BG_MAP_RAM(BG0MAP)[y*W + x] = info_imMap[ym*W + x] | (NORMALPAL << 12);
-			ym++;
+			BG_MAP_RAM(BG0MAP)[y*W + x] = info_imMap[(y-ystart)*W + x] | (NORMALPAL << 12);
 		}
-		ym = ((state == TWOP) ? h : 0);
 	}
 
 	// Initialize variables
-	gameState = state;
-
 	sec = 0;
 	min = 0;
-
-	counter = 0;
 
 	// Initialize the timer
 	TIMER3_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
@@ -98,21 +86,16 @@ void info_init(state){
 	irqEnable(IRQ_TIMER3);
 
 	// Print initial null score and time
-	info_update_score(0, 0);
+	info_update_score(0);
 	info_update_time();
 
 	// Activate BG0
+	swiWaitForVBlank();
 	REG_DISPCNT |= DISPLAY_BG0_ACTIVE;
-
-	// Update game counter if two player mode
-	if(gameState == TWOP) counter++;
 }
 
-void info_update_score(int score, int player){
-	// Update score
-	if(player == 1) score_p2[0] = score;
-	else score_p1[0] = score;
-
+// Update score display
+void info_update_score(int score){
 	// Compute score's digits
 	int dig[NBDIG];
 
@@ -141,6 +124,7 @@ void info_update_score(int score, int player){
 	}
 }
 
+// Update time display
 void info_update_time(){
 	// Compute time digits
 	int dig[NBDIG+1];
@@ -155,6 +139,7 @@ void info_update_time(){
 	int i;
 	int x, y;
 	int xm, ym;
+	int pal = ((60*min+sec) == 20) ? REDPAL : NORMALPAL;
 
 	swiWaitForVBlank();	
 	for(i = 0; i < NBDIG+1; i++){
@@ -162,7 +147,7 @@ void info_update_time(){
 		ym = YM;
 		for(x = XSTART2 + i*NBW; x < XSTART2 + (i+1)*NBW; x++){
 			for(y = YSTART; y < YSTART + NBH; y++){
-				BG_MAP_RAM(BG0MAP)[y*W + x] = info_imMap[ym*W + xm] | (NORMALPAL << 12);
+				BG_MAP_RAM(BG0MAP)[y*W + x] = info_imMap[ym*W + xm] | (pal << 12);
 				ym++;
 			}
 			ym = YM;
@@ -171,42 +156,60 @@ void info_update_time(){
 	}
 }
 
+// Return current time
 int info_get_time(){
-	return 60*min+sec;
+	return 60*min + sec;
 }
 
+void info_stop_time(){
+	TIMER3_CR &= ~(TIMER_ENABLE);
+	min = 60;
+	sec = 60;
+}
+
+// Finish score and time displaying
 void info_finish(int score, int game, int state){
 	// Disable BG0
+	swiWaitForVBlank();
 	REG_DISPCNT &= ~DISPLAY_BG0_ACTIVE;
 
+	// Disable timer
 	// Disable timer
 	irqDisable(IRQ_TIMER3);
 	irqClear(IRQ_TIMER3);
 	TIMER3_CR = 0;
 
-	// Read into file to find if best score beated only if state not TRAIN
-	if(state != TRAIN) info_save_score(score, game);
+	// Reinitialize variables
+	min = 0;
+	sec = 0;
+
+	// See if score needs to be saved only if in 1p or 2p mode and if game was
+	// not abruptly stopped (score = -1)
+	if((state != TRAIN) && (score != -1)) info_save_score(score, game);
 }
 
+// Save best scores
 void info_save_score(int score, int game){
+	// Open file
 	FILE* file;
 	char name[20] = "/";
-	int max_score;
-	bool write = false;
 
-	// Open file
 	strcat(name, names[game]);
 	strcat(name, ".txt");
 	file = fopen(name, "r");
 
-	// Read score and check if new score better or not to write new one
+	// Read score and check if new score better or not
+	int max_score;
+	bool write = false;
+
 	if(file==NULL) write = true;
 	else{
-		fscanf(file,"%i\n",&max_score);
+		fscanf(file,"%i\n", &max_score);
 
 		if(score > max_score) write = true;
 	}
 
+	// Write new best score if previous beaten
 	if(write){
 		fclose(file);
 		file = fopen(name, "w");
@@ -216,17 +219,19 @@ void info_save_score(int score, int game){
 	else fclose(file);
 }
 
-int info_get_score(char* game){
+// Returns the score of a specific game
+int info_get_score(int game){
+	// Open correct file corresponding to the asked game
 	FILE* file;
 	char name[20] = "/";
-	int score;
 
-	// Open correct file corresponding to the
-	strcat(name, game);
+	strcat(name, names[game]);
 	strcat(name, ".txt");
 	file = fopen(name, "r");
 
 	// Read score or put 0 if no file exists
+	int score;
+
 	if(file==NULL) score = 0;
 	else fscanf(file,"%i\n",&score);
 

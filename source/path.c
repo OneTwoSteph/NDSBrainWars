@@ -225,9 +225,6 @@ void path_next(){
 	// Increment score
 	score++;
 
-	// Update infos
-	info_update_score(score, 0);
-
 	// Check level
 	if(score == PATHMEDIUM) level = MEDIUM;
 	if(score == PATHHARD) level = HARD;
