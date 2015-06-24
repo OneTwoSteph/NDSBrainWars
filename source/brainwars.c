@@ -560,7 +560,7 @@ void brainwars_train(){
 		// Check if start was pressed and stop current game if yes
 		if(keys & KEY_START){
 			// Reset infos
-			info_finish(score, trainGame, state);
+			info_finish(-1, trainGame);
 
 			// Stop games
 			switch(trainGame){
@@ -811,7 +811,7 @@ void brainwars_p(){
 			int game = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
 
 			// Reset infos
-			info_finish(-1, game, state);
+			info_finish(-1, game);
 
 			// Stop game
 			switch(pGames[game]){
@@ -980,7 +980,7 @@ void brainwars_p_play(){
 		TIMER2_CR &= ~(TIMER_ENABLE);
 
 		// Reset infos
-		info_finish((state == ONEP) ? onepScores[onepCurrent] : twopScores[twopCurrent], game, state);
+		info_finish((state == ONEP) ? onepScores[onepCurrent] : -1, pGames[game]);
 
 		// Stop game
 		switch(pGames[game]){
@@ -1113,7 +1113,10 @@ void brainwars_p_result(){
 		else twopCurrent++;
 
 		// Go to next state in function of current game
-		if((state == TWOP) && (twopCurrent > 5)) pState = FINAL;
+		if((state == TWOP) && (twopCurrent > 5)){
+			pState = FINAL;
+			pStateChange = true;
+		} 
 		else if((state == ONEP) && (onepCurrent > 2));
 		else{
 			// Fill screen with grey
@@ -1137,7 +1140,7 @@ void brainwars_p_final_init(){
 	brainwars_p_draw(0, 12, 23, 2, 0, 19, GREYPAL);
 
 	// Draw total title
-	brainwars_p_draw(0, 10, 5, 1, 4, 15, NORMALPAL);
+	brainwars_p_draw(0, 10, 5, 2, 4, 15, NORMALPAL);
 
 	// Compute totals
 	int total[2] = {0, 0};
@@ -1236,6 +1239,16 @@ void brainwars_score_init(){
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
 
+	// Copy start image for MAIN screen in BG1 and put correct colors in palette
+	swiCopy(main_startTiles, BG_TILE_RAM(BG1TILE), main_startTilesLen/2);
+	swiCopy(main_startMap, BG_MAP_RAM(BG1MAP), main_startMapLen);
+
+	BG_PALETTE[0x01] = RED;
+	BG_PALETTE[0x02] = BLUE;
+	BG_PALETTE[0x03] = GREEN;
+	BG_PALETTE[0x04] = GREY;
+	BG_PALETTE[0x05] = BLACK;
+
 	// Copy tiles
 	swiCopy(sub_scoreTiles, BG_TILE_RAM_SUB(BG1TILE), sub_scoreTilesLen/2);
 
@@ -1330,6 +1343,7 @@ void brainwars_score_init(){
 	// Wait 1s before activating BG1
 	while(display < PAUSE*TIMERF);
 	swiWaitForVBlank();
+	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 
 	// Stop timer
@@ -1359,6 +1373,16 @@ void brainwars_credits_init(){
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
 
+	// Copy start image for MAIN screen in BG1 and put correct colors in palette
+	swiCopy(main_startTiles, BG_TILE_RAM(BG1TILE), main_startTilesLen/2);
+	swiCopy(main_startMap, BG_MAP_RAM(BG1MAP), main_startMapLen);
+
+	BG_PALETTE[0x01] = RED;
+	BG_PALETTE[0x02] = BLUE;
+	BG_PALETTE[0x03] = GREEN;
+	BG_PALETTE[0x04] = GREY;
+	BG_PALETTE[0x05] = BLACK;
+
 	// Copy tiles
 	swiCopy(sub_creditsTiles, BG_TILE_RAM_SUB(BG1TILE), sub_creditsTilesLen/2);
 
@@ -1382,6 +1406,7 @@ void brainwars_credits_init(){
 	// Wait 1s before activating BG1
 	while(display < PAUSE*TIMERF);
 	swiWaitForVBlank();
+	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
 
 	// Stop timer

@@ -14,7 +14,7 @@ void info_update_score(int score);
 void info_update_time(void);
 int info_get_time(void);
 void info_stop_time(void);
-void info_finish(int score, int game, int state);
+void info_finish(int score, int game);
 void info_save_score(int score, int game);
 int info_get_score(int game);
 

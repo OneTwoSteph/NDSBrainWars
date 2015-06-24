@@ -30,7 +30,7 @@
 #define NBDIG 				4
 
 // Game names
-const char *names[7] = {"leader", "eatit", "musical", "path", "addition",
+const char* names[7] = {"leader", "eatit", "musical", "path", "addition",
 					    "plusminus", "jankenpon"};
 
 /*********************************************************** Global variables */
@@ -168,7 +168,7 @@ void info_stop_time(){
 }
 
 // Finish score and time displaying
-void info_finish(int score, int game, int state){
+void info_finish(int score, int game){
 	// Disable BG0
 	swiWaitForVBlank();
 	REG_DISPCNT &= ~DISPLAY_BG0_ACTIVE;
@@ -183,9 +183,9 @@ void info_finish(int score, int game, int state){
 	min = 0;
 	sec = 0;
 
-	// See if score needs to be saved only if in 1p or 2p mode and if game was
+	// See if score needs to be saved only if in 1p mode and if game was
 	// not abruptly stopped (score = -1)
-	if((state != TRAIN) && (score != -1)) info_save_score(score, game);
+	if(score != -1) info_save_score(score, game);
 }
 
 // Save best scores
