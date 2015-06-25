@@ -143,12 +143,12 @@ void jankenpon_init(){
 	irqSet(IRQ_TIMER1, &jankenpon_timer_ISR1);
 	irqEnable(IRQ_TIMER1);
 
+	// Launch first configuration
+	jankenpon_next();	
+	
 	// Activate BG0 SUB
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
-
-	// Launch first configuration
-	jankenpon_next();	
 }
 
 // Find next configuration

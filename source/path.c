@@ -135,12 +135,12 @@ void path_init(){
 	irqSet(IRQ_TIMER1, &path_timer_ISR1);
 	irqEnable(IRQ_TIMER1);
 
+	// Launch first arrow
+	path_next();
+
 	// Activate BG0 SUB
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
-
-	// Launch first arrow
-	path_next();
 }
 
 // Find next arrow

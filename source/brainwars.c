@@ -36,6 +36,7 @@
 #include "sub_p.h"
 #include "sub_score.h"
 #include "sub_credits.h"
+#include "sub_easteregg.h"
 
 // Other
 #include "info_im.h"
@@ -104,6 +105,9 @@ int twopScores[6];
 
 // Score
 int scores[7];
+
+// Easteregg
+int counter = 0;
 
 
 /***************************************************************** Timer ISRs */
@@ -363,6 +367,7 @@ void brainwars_main(){
 		case TWOP: brainwars_p_init(); break;
 		case SCORE: brainwars_score_init(); break;
 		case CREDITS: brainwars_credits_init(); break;
+		case EASTEREGG: brainwars_easteregg_init(); break;
 		default: break;
 		}
 
@@ -377,6 +382,7 @@ void brainwars_main(){
 	case TWOP: brainwars_p(); break;
 	case SCORE: brainwars_score(); break;
 	case CREDITS: brainwars_credits(); break;
+	case EASTEREGG: brainwars_easteregg(); break;
 	default: break;
 	}
 }
@@ -411,13 +417,17 @@ void brainwars_main_select(){
 			}
 		}
 	}
+	else if((keys & KEY_SELECT)){
+		state = EASTEREGG;
+		stateChange = true;
+	}
 
 	// Check if an option in menu was chosen or changed
 	if(option == selectMain){
 		state = selectMain;
 		stateChange = true;
 	}
-	else if(option != -1){
+	else if((option != -1) && (state != EASTEREGG)){
 		selectMain = option;
 		brainwars_main_draw();
 	}
@@ -806,7 +816,7 @@ void brainwars_p(){
 	case SHOW: brainwars_p_show(); break;
 	case PLAY: brainwars_p_play(); break;
 	case RESULT: brainwars_p_result(); break;
-	case FINAL: brainwars_p_final(); break;
+	case FINAL: break;
 	default: break;
 	}
 
@@ -895,6 +905,7 @@ void brainwars_p_show_init(){
 	TIMER2_CR &= ~(TIMER_ENABLE);
 
 	// Draw the 3 blocks again with the right one selected
+	swiWaitForVBlank();
 	brainwars_p_draw_block(pGames[0], 0);
 	brainwars_p_draw_block(pGames[1], 1);
 	brainwars_p_draw_block(pGames[2], 2);
@@ -912,7 +923,7 @@ void brainwars_p_show_init(){
 	}
 
 	// Draw "press A"
-	brainwars_p_draw(0, 12, 23, 2, 0, 19, NORMALPAL);
+	brainwars_p_draw(0, 12, 30, 2, 0, 19, NORMALPAL);
 }
 
 // Show game instructions main function
@@ -924,6 +935,14 @@ void brainwars_p_show(){
 	if(keys & KEY_A){
 		pState = PLAY;
 		pStateChange = true;
+	}
+	else if(keys & KEY_TOUCH){
+		touchPosition touch;
+		touchRead(&touch);
+		if((touch.px > 0) && (touch.py > 0)){
+			pState = PLAY;
+			pStateChange = true;
+		}
 	}
 }
 
@@ -1041,6 +1060,7 @@ void brainwars_p_result_init(){
 	// Fill screen with grey
 	int x, y;
 
+	swiWaitForVBlank();
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
 			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[(PSIDE+1)*PWIM - 1] | (NORMALPAL << 12);
@@ -1050,6 +1070,7 @@ void brainwars_p_result_init(){
 	// Print scores of all the games played until now
 	int s;
 
+	swiWaitForVBlank();
 	for(s = 0; s < currentGame + 1; s++){
 		// Draw game
 		brainwars_p_draw(0, 6, 5, 2, 4, 4 + s*3,  NORMALPAL);
@@ -1115,7 +1136,7 @@ void brainwars_p_result_init(){
 		}
 	}
 
-	if(!((state == ONEP) && (onepCurrent == 2)))brainwars_p_draw(0, 12, 23, 2, 0, 19, NORMALPAL);
+	brainwars_p_draw(0, 12, 30, 2, 0, 19, NORMALPAL);
 
 	// Activate BG1 of SUB
 	while(display < 3);
@@ -1138,11 +1159,7 @@ void brainwars_p_result(){
 		else twopCurrent++;
 
 		// Go to next state in function of current game
-		if((state == TWOP) && (twopCurrent > 5)){
-			pState = FINAL;
-			pStateChange = true;
-		} 
-		else if((state == ONEP) && (onepCurrent > 2));
+		if(((state == TWOP) && (twopCurrent > 5)) || ((state == ONEP) && (onepCurrent > 2))) pState = FINAL;
 		else{
 			// Fill screen with grey
 			int x, y;
@@ -1155,59 +1172,82 @@ void brainwars_p_result(){
 
 			// Change state
 			pState = SHOW;
-			pStateChange = true;
 		} 
+		pStateChange = true;
+	}
+	else if(keys & KEY_TOUCH){
+		touchPosition touch;
+		touchRead(&touch);
+
+		if((touch.px > 0) && (touch.py > 0)){
+			// Update state for next step
+			if(state == ONEP) onepCurrent++;
+			else twopCurrent++;
+
+			// Go to next state in function of current game
+			if(((state == TWOP) && (twopCurrent > 5)) || ((state == ONEP) && (onepCurrent > 2))) pState = FINAL;
+			else{
+				// Fill screen with grey
+				int x, y;
+
+				for(x = 0; x < W; x++){
+					for(y = 0; y < H; y++){
+						BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_pMap[(PSIDE+1)*PWIM - 1] | (NORMALPAL << 12);
+					}
+				}
+
+				// Change state
+				pState = SHOW;
+			} 
+			pStateChange = true;
+		}
 	}
 }
 
 // Final screen initialization
 void brainwars_p_final_init(){
-	// Erase press A
-	brainwars_p_draw(0, 12, 23, 2, 0, 19, GREYPAL);
+	// Just to be sure
+	swiWaitForVBlank();
 
-	// Draw total title
-	brainwars_p_draw(0, 10, 5, 2, 4, 15, NORMALPAL);
+	// Draw total title for 2p or draw score advice for 1p
+	if(state == ONEP){
+		brainwars_p_draw(0, 16, 30, 2, 0, 17, NORMALPAL);
+	}
+	else{
+		brainwars_p_draw(0, 10, 5, 2, 4, 15, NORMALPAL);
 
-	// Compute totals
-	int total[2] = {0, 0};
-	int i;
-
-	for(i = 0; i < 2*4; i++) total[i%2] += twopScores[i];
-
-	// Draw totals
-	int j;
-	int pal[2] = {BLUEPAL, BLUEPAL};
-
-	if(total[0] > total[1]) pal[1] = REDPAL;
-	else if(total[0] < total[1]) pal[0] = REDPAL;
-
-	for(j = 0; j < 2; j++){
-		// Compute score digits
-		int dig[4];
-
-		dig[0] = total[j]/1000;
-		dig[1] = (total[j]-1000*dig[0])/100;
-		dig[2] = (total[j]-1000*dig[0]-100*dig[1])/10;
-		dig[3] = (total[j]-1000*dig[0]-100*dig[1]-10*dig[2]);
-
-		// Draw result
+		// Compute totals
+		int total[2] = {0, 0};
 		int i;
-		for(i = 0; i < 4; i++){
-			brainwars_p_draw(dig[i], 14, 1, 2, 17 + j*7 + i, 15, pal[j]);
+
+		for(i = 0; i < 2*4; i++) total[i%2] += twopScores[i];
+
+		// Draw totals
+		int j;
+		int pal[2] = {BLUEPAL, BLUEPAL};
+
+		if(total[0] > total[1]) pal[1] = REDPAL;
+		else if(total[0] < total[1]) pal[0] = REDPAL;
+
+		for(j = 0; j < 2; j++){
+			// Compute score digits
+			int dig[4];
+
+			dig[0] = total[j]/1000;
+			dig[1] = (total[j]-1000*dig[0])/100;
+			dig[2] = (total[j]-1000*dig[0]-100*dig[1])/10;
+			dig[3] = (total[j]-1000*dig[0]-100*dig[1]-10*dig[2]);
+
+			// Draw result
+			int i;
+			for(i = 0; i < 4; i++){
+				brainwars_p_draw(dig[i], 14, 1, 2, 17 + j*7 + i, 15, pal[j]);
+			}
 		}
 	}
-}
 
-// Final screen main function
-void brainwars_p_final(){
-	// Scan keys
-	u16 keys = (u16) keysDown();
-
-	// Scan if exit asked
-	if(keys & KEY_A){
-		state = MAIN;
-		stateChange = true;
-	}
+	// Draw exit advice
+	brainwars_p_draw(0, 18, 30, 2, 0, 19, NORMALPAL);
 }
 
 // Draw game blocks
@@ -1235,7 +1275,7 @@ void brainwars_p_draw_block_sel(int pos){
 
 	for(x = PSTARTX + pos*(PSIDE + PINT); x < PSTARTX + pos*(PSIDE + PINT) + PSIDE; x++){
 		for(y = PSTARTY; y < PSTARTY + PSIDE; y++){
-			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = BG_MAP_RAM_SUB(BG1MAP)[y*W + x] | (YELLOWPAL<< 12);
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = (BG_MAP_RAM_SUB(BG1MAP)[y*W + x] & (0x0fff)) | (YELLOWPAL<< 12);
 		}
 	}
 }
@@ -1456,5 +1496,95 @@ void brainwars_credits(){
 	if(keys & KEY_START){
 		state = MAIN;
 		stateChange = true;
+	}
+}
+
+/***************************************************************** Easter egg */
+// Initialization
+void brainwars_easteregg_init(){
+	// Launch timer to create 1s pause
+	display = 0;
+	TIMER2_CR |= TIMER_ENABLE;
+
+	// Inactivate BG1 while copying new images to  memory
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT &= ~DISPLAY_BG1_ACTIVE;
+
+	// Copy start image for MAIN screen in BG1 and put correct colors in palette
+	swiCopy(main_startTiles, BG_TILE_RAM(BG1TILE), main_startTilesLen/2);
+	swiCopy(main_startMap, BG_MAP_RAM(BG1MAP), main_startMapLen);
+
+	BG_PALETTE[0x01] = RED;
+	BG_PALETTE[0x02] = BLUE;
+	BG_PALETTE[0x03] = GREEN;
+	BG_PALETTE[0x04] = GREY;
+	BG_PALETTE[0x05] = BLACK;
+
+	// Copy tiles
+	swiCopy(sub_eastereggTiles, BG_TILE_RAM_SUB(BG1TILE), sub_eastereggTilesLen/2);
+
+	// Set palette colors
+	BG_PALETTE_SUB[0x01] = RED;
+	BG_PALETTE_SUB[0x02] = BLUE;
+	BG_PALETTE_SUB[0x03] = GREEN;
+	BG_PALETTE_SUB[0x04] = YELLOW;
+	BG_PALETTE_SUB[0x05] = WHITE;
+	BG_PALETTE_SUB[0x06] = GREY;
+	BG_PALETTE_SUB[0x07] = BLACK;
+
+
+	// Draw first image
+	int x, y;
+
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_eastereggMap[0];
+		}
+	}
+
+	// Wait 1s before activating BG1
+	while(display < PAUSE*TIMERF);
+	swiWaitForVBlank();
+	REG_DISPCNT |= DISPLAY_BG1_ACTIVE;
+	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;
+
+	// Initialize variable
+	counter = 0;
+
+	// Reinitialize
+	display = 0;
+
+	// Draw each image one after another
+	int i;
+
+	for(i = 0; i < 7; i++){
+		while(display < (counter+1)*2);
+
+		int x, y;
+
+		swiWaitForVBlank();
+		for(x = 0; x < W; x++){
+			for(y = 0; y < H; y++){
+				BG_MAP_RAM_SUB(BG1MAP)[y*W + x] = sub_eastereggMap[(y+counter*H)*W + x];
+			}
+		}
+
+		counter++;
+	}
+
+	// Stop timer
+	TIMER2_CR &= ~(TIMER_ENABLE);
+}
+
+// Main function
+void brainwars_easteregg(){
+	// Scan keys
+	u16 keys = (u16) keysDown();
+
+	// Scan if exit asked
+	if(keys & KEY_START){
+		state = MAIN;
+	stateChange = true;
 	}
 }

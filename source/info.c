@@ -143,7 +143,7 @@ void info_update_time(){
 	int i;
 	int x, y;
 	int xm, ym;
-	int pal = ((60*min+sec) == 20) ? REDPAL : NORMALPAL;
+	int pal = ((60*min+sec) == GAMETIME) ? REDPAL : NORMALPAL;
 
 	swiWaitForVBlank();	
 	for(i = 0; i < NBDIG+1; i++){

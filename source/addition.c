@@ -151,12 +151,12 @@ void addition_init() {
 
 	occupied = false;
 
+	// Launch first number
+	addition_next();
+
 	// Activate BG0
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
-
-	// Launch first number
-	addition_next();
 }
 
 // New number

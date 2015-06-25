@@ -57,8 +57,8 @@
 // Game level tresholds
 #define LEADERLEVEL		3
 
-#define PATHMEDIUM 		4
-#define PATHHARD 		8
+#define PATHMEDIUM 		5
+#define PATHHARD 		10
 
 #define MUSICALMEDIUM 	2
 #define MUSICALHARD 	5
@@ -79,7 +79,8 @@ enum STATE
     ONEP = 2,
     TWOP = 3,
     SCORE = 4,
-    CREDITS = 5
+    CREDITS = 5,
+    EASTEREGG = 6
 };
 
 typedef enum GAME GAME;

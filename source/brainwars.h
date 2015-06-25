@@ -46,4 +46,7 @@ void brainwars_score(void);
 void brainwars_credits_init(void);
 void brainwars_credits(void);
 
+void brainwars_easteregg_init(void);
+void brainwars_easteregg(void);
+
 #endif /* BRAINWARS_H_ */
