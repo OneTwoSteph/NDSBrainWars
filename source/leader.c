@@ -14,12 +14,6 @@
 
 
 /****************************************************************** Constants */
-// Block infos
-#define SIDE 		   	6							// block side in tiles
-#define MAXB 		   	9  						// max nb of blocks
-const int block_x[3] = {6, 13, 20};		// x positions of blocks
-const int block_y[3] = {2, 9, 16};		// y positions of blocks
-
 // Palettes
 #define BLUEPAL			6
 #define REDPAL			7
@@ -29,6 +23,13 @@ const int block_y[3] = {2, 9, 16};		// y positions of blocks
 #define FULL			0
 #define	CORNER			1
 
+// Image/tile infos
+#define SIDE 		   	6							// block side in tiles
+#define MAXB 		   	9  							// max nb of blocks
+const int block_x[3] = {6, 13, 20};					// x positions of blocks
+const int block_y[3] = {2, 9, 16};					// y positions of blocks
+
+// Game constants
 typedef enum TAPORDER TAPORDER;
 enum TAPORDER
 {
@@ -61,18 +62,22 @@ u8 cornerT[] = {
 
 
 /*********************************************************** Global variables */
+// Game variables
 TAPORDER taporder;			// order in which the blocks have to be taped
 int order[MAXB];			// order of the blocks
 
-int score;					// score of the player
-LEVEL level;				// level of the player
+// Game state
+int score;			
+LEVEL level;		
 int nb_blocks;				// number of blocks to draw (depends on level)
-int block;					// gives at what block the player is
+int block;					// gives the next block the player has to touch
 
+// Timer variables
 int draw;					// block drawing counter for timer
 int wrong;					// wrong blinking counter for timer
 
-bool occupied;				// drawing status
+// Drawing status
+bool occupied;	
 
 
 /***************************************************************** Timer ISRs */
@@ -120,14 +125,14 @@ void leader_timer_ISR1(){
 /****************************************************************** Functions */
 // Initialization
 void leader_init() {
-	// Desactivate BG1
+	// Deactivate BG1 SUB
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Load tiles in RAM
+	// Load tiles in BG0 SUB and put correct colors in palette
 	swiCopy(fullT, (u8*)BG_TILE_RAM_SUB(BG0TILE) + FULL*8*8*4/8, 8*8*4/8/2);
 	swiCopy(cornerT, (u8*)BG_TILE_RAM_SUB(BG0TILE) + CORNER*8*8*4/8, 8*8*4/8/2);
 
-	// Set up palette colors
 	BG_PALETTE_SUB[0x61] = BLUE;
 	BG_PALETTE_SUB[0x62] = GREY;
 
@@ -147,16 +152,17 @@ void leader_init() {
 		}
 	}
 
-	// Activate BG0
+	// Activate BG0 SUB
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
-	// Configure interrupts and timer for block display every 0.4s
+	// Timer 0 for block drawing
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
 	TIMER0_DATA = TIMER_FREQ_1024(5);
 	irqSet(IRQ_TIMER0, &leader_timer_ISR0);
 	irqEnable(IRQ_TIMER0);
 	
-	// Configure interrupts and timer for false blinking effect every 0.123s
+	// Timer 1 for wrong blinking effect
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
 	irqSet(IRQ_TIMER1, &leader_timer_ISR1);
@@ -280,9 +286,9 @@ void leader_draw_blinking() {
 
 // Draw one block
 void leader_draw_block(int x, int y, int palette){
+	// Fill the block
 	int row, col;
 
-	// Fill the block
 	for(col = x; col < x+SIDE; col++){
 		for(row = y; row < y+SIDE; row++){
 			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = FULL | (palette << 12);
@@ -342,8 +348,11 @@ int leader_game() {
 	return score;
 }
 
-// Correct answer
+// Correct function
 void leader_correct(){
+	// Play sound
+	mmEffect(SFX_BON);
+
 	// Erase taped block
 	int x, y;
 	int current;
@@ -373,8 +382,11 @@ void leader_correct(){
 	}
 }
 
-// Wrong answer
+// Wrong function
 void leader_wrong(){
+	// Play sound
+	mmEffect(SFX_NUL);
+
 	// Update status
 	occupied = true;
 
@@ -383,21 +395,20 @@ void leader_wrong(){
 
 	// Launch wrong timer
 	TIMER1_CR |= TIMER_ENABLE;
-
-	// Play wrong effect
-	mmEffect(SFX_BOING);
 }
 
-// Reset game 
+// Reset function
 void leader_reset() {
-	// Desactivate BG0
+	// Deactivate BG0 SUB
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
-	// Disable timers
+	// Disable timer 0
 	irqDisable(IRQ_TIMER0);
 	irqClear(IRQ_TIMER0);
 	TIMER0_CR = 0;
 
+	// Disable timer 1
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER1);
 	TIMER0_CR = 1;
@@ -414,4 +425,6 @@ void leader_reset() {
 
 	draw = 0;
 	wrong = 0;
+
+	occupied = false;
 }

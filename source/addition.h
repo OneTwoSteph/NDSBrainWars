@@ -12,7 +12,7 @@ void addition_init(void);
 void addition_next(void);
 void addition_draw_blocks(void);
 void addition_draw_block(int palette);
-void addition_draw_number(void);
+void addition_draw_number(int pal);
 void addition_draw_digit(int xstart, int digit, int palette);
 int addition_game(void);
 void addition_correct(void);

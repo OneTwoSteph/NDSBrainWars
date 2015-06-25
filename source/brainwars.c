@@ -130,11 +130,11 @@ void brainwars_start_init(){
 
 	// Initialize sound
 	mmInitDefaultMem((mm_addr)soundbank_bin);
-	mmLoad(MOD_AURORA);
+	mmLoad(MOD_REGGAEBANANA);
 	mmLoadEffect(SFX_DO);
-	mmLoadEffect(SFX_BOING);
 	mmLoadEffect(SFX_DUM_DUM);
-	mmLoadEffect(SFX_OULALA);
+	mmLoadEffect(SFX_BON);
+	mmLoadEffect(SFX_NUL);
 
 	// Initialize timer for background change
 	TIMER2_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
@@ -288,8 +288,8 @@ void brainwars_start(){
 	}
 
 	// Initialize game music that will play all the time
-	//mmStart(MOD_AURORA, MM_PLAY_LOOP);
-	//mmSetModuleVolume(350);
+	mmStart(MOD_REGGAEBANANA, MM_PLAY_LOOP);
+	mmSetModuleVolume(350);
 
 	// Launch main menu
 	brainwars_main_init();
@@ -454,7 +454,7 @@ void brainwars_main_draw(){
 
 
 /******************************************************************* Training */
-// Initialize
+// Initialization
 void brainwars_train_init(){
 	// Launch timer to create 1s pause
 	display = 0;
@@ -518,7 +518,10 @@ void brainwars_train_init(){
 void brainwars_train(){
 	// Check if game has changed and initialize correct module
 	if(trainGameChange){
-		if(trainGame != NOGAME) info_init();
+		if(trainGame != NOGAME) {
+			info_init();
+			mmStop();
+		}
 
 		switch(trainGame){
 		case LEADER: leader_init(); break;
@@ -559,6 +562,9 @@ void brainwars_train(){
 
 		// Check if start was pressed and stop current game if yes
 		if(keys & KEY_START){
+			// Restart music
+			mmStart(MOD_REGGAEBANANA, MM_PLAY_LOOP);
+
 			// Reset infos
 			info_finish(-1, trainGame);
 
@@ -676,6 +682,7 @@ void brainwars_train_draw(){
 
 
 /***************************************************************** One player */
+// Initialization
 void brainwars_p_init(){
 	// Inactivate BG1 while copying new images to  memory
 	swiWaitForVBlank();
@@ -777,6 +784,7 @@ void brainwars_p_init(){
 	REG_DISPCNT_SUB |= DISPLAY_BG1_ACTIVE;	
 }
 
+// Main function
 void brainwars_p(){
 	// Check if state changed an initialize module in function of new state
 	if(pStateChange){
@@ -807,6 +815,9 @@ void brainwars_p(){
 
 	if(keys & KEY_START){
 		if(pState == PLAY){
+			// Restart music
+			mmStart(MOD_REGGAEBANANA, MM_PLAY_LOOP);
+
 			// Check the game
 			int game = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
 
@@ -831,12 +842,14 @@ void brainwars_p(){
 	}
 }
 
+// Selected games animation initialization
 void brainwars_p_sel_init(){
 	// Start timer
 	display = 0;
 	TIMER2_CR |= TIMER_ENABLE;
 }
 
+// Selected games animation main function
 void brainwars_p_sel(){
 	// Draw games one by one and stop mode after a while
 	swiWaitForVBlank();
@@ -853,6 +866,7 @@ void brainwars_p_sel(){
 	else if(display > 5) brainwars_p_draw_block(pGames[0], 0);
 }
 
+// Show game instructions initialization
 void brainwars_p_show_init(){
 	// Launch timer to create 1s pause
 	display = 0;
@@ -901,6 +915,7 @@ void brainwars_p_show_init(){
 	brainwars_p_draw(0, 12, 23, 2, 0, 19, NORMALPAL);
 }
 
+// Show game instructions main function
 void brainwars_p_show(){
 	// Scan keys
 	u16 keys = (u16) keysDown();
@@ -912,12 +927,16 @@ void brainwars_p_show(){
 	}
 }
 
+// Play game initialization
 void brainwars_p_play_init(){
 	// Check which game we are playing
 	int game = game = (state == ONEP) ? onepCurrent : twopCurrent/2;
 
 	// Initialize infos
 	info_init();
+
+	// Stop music
+	mmStop();
 
 	// Initialize game
 	switch(pGames[game]){
@@ -936,6 +955,7 @@ void brainwars_p_play_init(){
 	display = 0;
 }
 
+// Play game main function
 void brainwars_p_play(){
 	// Check which game
 	int game = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
@@ -976,6 +996,9 @@ void brainwars_p_play(){
 
 	// Finish game but keep a pause on it before
 	if(display > 10){
+		// Restart music
+		mmStart(MOD_REGGAEBANANA, MM_PLAY_LOOP);
+
 		// Stop timer
 		TIMER2_CR &= ~(TIMER_ENABLE);
 
@@ -1001,6 +1024,7 @@ void brainwars_p_play(){
 	}
 }
 
+// Show game results initialization
 void brainwars_p_result_init(){
 	// Check which game
 	int currentGame = (state == ONEP) ? onepCurrent : (int)twopCurrent/2;
@@ -1102,6 +1126,7 @@ void brainwars_p_result_init(){
 	TIMER2_CR &= ~(TIMER_ENABLE);
 }
 
+// Show game results main function
 void brainwars_p_result(){
 	// Scan keys
 	u16 keys = (u16) keysDown();
@@ -1135,6 +1160,7 @@ void brainwars_p_result(){
 	}
 }
 
+// Final screen initialization
 void brainwars_p_final_init(){
 	// Erase press A
 	brainwars_p_draw(0, 12, 23, 2, 0, 19, GREYPAL);
@@ -1172,6 +1198,7 @@ void brainwars_p_final_init(){
 	}
 }
 
+// Final screen main function
 void brainwars_p_final(){
 	// Scan keys
 	u16 keys = (u16) keysDown();
@@ -1183,6 +1210,7 @@ void brainwars_p_final(){
 	}
 }
 
+// Draw game blocks
 void brainwars_p_draw_block(int game, int pos){
 	// Draw block
 	int x, y;
@@ -1200,6 +1228,7 @@ void brainwars_p_draw_block(int game, int pos){
 	}
 }
 
+// Draw selected block in yellow
 void brainwars_p_draw_block_sel(int pos){
 	// Change the palette of the selected game
 	int x, y;
@@ -1211,6 +1240,7 @@ void brainwars_p_draw_block_sel(int pos){
 	}
 }
 
+// Draw results and other infos
 void brainwars_p_draw(int xim, int yim, int w, int h, int x, int y, int pal){
 	// Change the palette of the selected game
 	int col, row;
@@ -1228,7 +1258,9 @@ void brainwars_p_draw(int xim, int yim, int w, int h, int x, int y, int pal){
 	}
 }
 
+
 /********************************************************************* Scores */
+// Initialization
 void brainwars_score_init(){
 	// Launch timer to create 1s pause
 	display = 0;
@@ -1350,6 +1382,7 @@ void brainwars_score_init(){
 	TIMER2_CR &= ~(TIMER_ENABLE);
 }
 
+// Wait for exit
 void brainwars_score(void){
 	// Scan keys
 	u16 keys = (u16) keysDown();
@@ -1363,6 +1396,7 @@ void brainwars_score(void){
 
 
 /******************************************************************** Credits */
+// Initialization
 void brainwars_credits_init(){
 	// Launch timer to create 1s pause
 	display = 0;
@@ -1413,6 +1447,7 @@ void brainwars_credits_init(){
 	TIMER2_CR &= ~(TIMER_ENABLE);
 }
 
+// Wait for exit
 void brainwars_credits(){
 	// Scan keys
 	u16 keys = (u16) keysDown();

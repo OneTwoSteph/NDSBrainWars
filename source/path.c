@@ -6,16 +6,25 @@
  *
  */
 
-#include "general.h"
-#include "info.h"
-#include "path.h"
-#include "path_arrow.h"
 
+/******************************************************************** Modules */
+// General
+#include "general.h"
+#include "path.h"
+
+// Image
+#include "path_im.h"
+
+
+/****************************************************************** Constants */
+// Palette
 #define BLUEPAL		6
 #define REDPAL		7
 #define GREENPAL	8
 #define YELLOWPAL	9
+#define GREYPAL		10
 
+// Game constants
 typedef enum DIRECTION DIRECTION;
 enum DIRECTION
 {
@@ -35,40 +44,51 @@ enum COLOR
     N = 4
 };
 
+
+/*********************************************************** Global variables */
+// Game variables
 DIRECTION direction;
 COLOR color;
 
+// Game state
 int score;
-int wrong;
 LEVEL level;
 
-void path_wrong(){
-	// Play effect
-	if(wrong == 0) mmEffect(SFX_BOING);
+// Timer variables
+int wrong;
 
-	// Update wrong variable
+// Drawing status
+bool occupied;
+
+
+/***************************************************************** Timer ISRs */
+// Wrong blinking ISR
+void path_timer_ISR1(){
+	// Draw for blinking effect
+	path_draw(((wrong%2) == 0) ? GREYPAL : color + 6);
+
+	// Increment wrong
 	wrong++;
 
-	// Start timer at beginning and stop after two blinking effect
-	if(wrong==1) TIMER1_CR |= TIMER_ENABLE;
-	if(wrong==4){
+	// When already blinked 3 times, update status, disable timer and launch new
+	// configuration
+	if(wrong == 6){
 		TIMER1_CR &= ~(TIMER_ENABLE);
-		wrong = 0;
+		occupied = false;
 	}
-
-	// Draw
-	swiWaitForVBlank();
-	path_draw();
 }
 
+
+/****************************************************************** Functions */
+// Initialization
 void path_init(){
-	// Desactivate BG1
+	// Deactivate BG1 SUB
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy tiles to memory
-	swiCopy(path_arrowTiles, BG_TILE_RAM_SUB(BG0TILE), path_arrowTilesLen/2);
+	// Copy tiles to BG0 SUB and put correct colors in palettes
+	swiCopy(path_imTiles, BG_TILE_RAM_SUB(BG0TILE), path_imTilesLen/2);
 
-	// Set up palette colors (palette contains back, arrow, circle in this order)
 	BG_PALETTE_SUB[0x61] = BLUE;
 	BG_PALETTE_SUB[0x62] = WHITE;
 	BG_PALETTE_SUB[0x63] = GREY;
@@ -85,151 +105,47 @@ void path_init(){
 	BG_PALETTE_SUB[0x92] = WHITE;
 	BG_PALETTE_SUB[0x93] = GREY;
 
+	BG_PALETTE_SUB[0xa1] = GREY;
+	BG_PALETTE_SUB[0xa2] = GREY;
+	BG_PALETTE_SUB[0xa3] = GREY;
+
 	// Draw first background with grey
 	int x, y;
 
 	for(x = 0; x < W; x++){
 		for(y = 0; y < H; y++){
-			BG_MAP_RAM_SUB(BG0MAP)[y*H+x] = path_arrowMap[0] | (BLUEPAL << 12);
+			BG_MAP_RAM_SUB(BG0MAP)[y*H+x] = path_imMap[0] | (BLUEPAL << 12);
 		}
 	}
 
-	// Set initial random direction and color
-	direction = rand()%4;
-	color = rand()%2;
+	// Initialize global variables
+	direction = UP;
+	color = B;
 
-	// Set draw on screen
-	path_draw();
+	score = 0;
+	level = EASY;
 
-	// Activate BG0
+	wrong = 0;
+	
+	occupied = false;
+
+	// Configure timer 1 for wrong blinking effect
+	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
+	TIMER1_DATA = TIMER_FREQ_256(15);
+	irqSet(IRQ_TIMER1, &path_timer_ISR1);
+	irqEnable(IRQ_TIMER1);
+
+	// Activate BG0 SUB
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
-	// Configure interrupts and timer for false blinking effect
-	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
-	TIMER1_DATA = TIMER_FREQ_256(15);
-	irqSet(IRQ_TIMER1, &path_wrong);
-	irqEnable(IRQ_TIMER1);
-
-	// Set global variables
-	score = 0;
-	wrong = 0;
-	level = EASY;
+	// Launch first arrow
+	path_next();
 }
 
-void path_draw(){
-	int x, y;
-	int L = 32;	// length of the image
-
-	// If we are not in the wrong case, draw figures
-	if((wrong%2) == 0){
-		for(x = 0; x < W; x++){
-			for(y = 0; y < H; y++){
-				// Direction
-				switch(direction){
-				case RIGHT:
-					BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_arrowMap[(y+32+4)*L+x];
-					break;
-				case LEFT:
-					BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_arrowMap[(y+32+4)*L+(31-x)]^(1<<10);
-					break;
-				case UP:
-					BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_arrowMap[(y+4)*L+x];
-					break;
-				case DOWN:
-					BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_arrowMap[(31-4-y)*L+x]^(1<<11);
-					break;
-				default:
-					break;
-				}
-
-				// Color
-				BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = BG_MAP_RAM_SUB(BG0MAP)[y*W+x] | ((color+6) << 12);
-			}
-		}
-	}
-	else{
-		for(x = 0; x < W; x++){
-			for(y = 0; y < H; y++){
-				BG_MAP_RAM_SUB(BG0MAP)[y*H+x] = path_arrowMap[0] | (BLUEPAL << 12);
-			}
-		}
-	}
-}
-
-int path_game(){
-	// Scan keys to find pressed ones
-	u16 keys = (u16) keysDown();
-
-	// Check how many keys were pressed
-	int counter = 0;
-	if(keys & KEY_RIGHT) counter++;
-	if(keys & KEY_LEFT) counter++;
-	if(keys & KEY_UP) counter++;
-	if(keys & KEY_DOWN) counter++;
-	if(keys & KEY_A) counter++;
-	if(keys & KEY_B) counter++;
-	if(keys & KEY_X) counter++;
-	if(keys & KEY_Y) counter++;
-
-	// Decide what to do in function of how many keys were pressed
-	// If several keys, wrong
-	// If one key, check if ok
-	// If no key, do nothing
-	if(counter > 1) path_wrong();
-	else if(counter == 1){
-		// Check  if the key which was pressed is correct
-		switch(color){
-		case B:
-			if((keys & KEY_RIGHT) && (direction == RIGHT)) path_next();
-			else if((keys & KEY_LEFT) && (direction == LEFT)) path_next();
-			else if((keys & KEY_UP) && (direction == UP)) path_next();
-			else if((keys & KEY_DOWN) && (direction == DOWN)) path_next();
-			else path_wrong();
-			break;
-		case R:
-			if((keys & KEY_RIGHT) && (direction == LEFT))  path_next();
-			else if((keys & KEY_LEFT) && (direction == RIGHT)) path_next();
-			else if((keys & KEY_UP) && (direction == DOWN)) path_next();
-			else if((keys & KEY_DOWN) && (direction == UP)) path_next();
-			else path_wrong();
-			break;
-		case G:
-			if((keys & KEY_A) && (direction == RIGHT)) path_next();
-			else if((keys & KEY_Y) && (direction == LEFT)) path_next();
-			else if((keys & KEY_X) && (direction == UP)) path_next();
-			else if((keys & KEY_B) && (direction == DOWN)) path_next();
-			else path_wrong();
-			break;
-		case Y:
-			if((keys & KEY_A) && (direction == LEFT)) path_next();
-			else if((keys & KEY_Y) && (direction == RIGHT)) path_next();
-			else if((keys & KEY_X) && (direction == DOWN)) path_next();
-			else if((keys & KEY_B) && (direction == UP)) path_next();
-			else path_wrong();
-			break;
-		default:
-			break;
-		}
-	}
-
-	// In the case the player was wrong, wait until wrong blinking ends
-	while(wrong != 0);
-
-	// Return score
-	return score;
-}
-
-
+// Find next arrow
 void path_next(){
-	// Increment score
-	score++;
-
-	// Check level
-	if(score == PATHMEDIUM) level = MEDIUM;
-	if(score == PATHHARD) level = HARD;
-
-	// Random numbers for direction and color
+	// Find andom numbers for direction and color
 	int nb1, nb2;
 	while((nb1 = rand()%4) == direction);
 	if(level == EASY) nb2 = rand()%2;
@@ -243,18 +159,153 @@ void path_next(){
 
 	// Redraw screen
 	swiWaitForVBlank();
-	path_draw();
+	path_draw(color + 6);
+}
+
+// Draw arrow
+void path_draw(int pal){
+	int x, y;
+
+	swiWaitForVBlank();
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			// Direction
+			switch(direction){
+			case RIGHT:
+				BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_imMap[(y+H)*W+x];
+				break;
+			case LEFT:
+				BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_imMap[(y+H)*W+((W-1)-x)]^(1<<10);
+				break;
+			case UP:
+				BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_imMap[y*W+x];
+				break;
+			case DOWN:
+				BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = path_imMap[((H-1)-y)*W+x]^(1<<11);
+				break;
+			default:
+				break;
+			}
+
+			// Color
+			BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = BG_MAP_RAM_SUB(BG0MAP)[y*W+x] | (pal << 12);
+		}
+	}
+}
+
+// Main function
+int path_game(){
+	// Scan keys to find pressed ones only if game not occupied
+	if(!occupied){
+		// Scan
+		u16 keys = (u16) keysDown();
+
+		// Check how many keys were pressed
+		int counter = 0;
+		if(keys & KEY_RIGHT) counter++;
+		if(keys & KEY_LEFT) counter++;
+		if(keys & KEY_UP) counter++;
+		if(keys & KEY_DOWN) counter++;
+		if(keys & KEY_A) counter++;
+		if(keys & KEY_B) counter++;
+		if(keys & KEY_X) counter++;
+		if(keys & KEY_Y) counter++;
+
+		// Decide what to do in function of how many keys were pressed
+		// If several keys, wrong
+		// If one key, check if ok
+		// If no key, do nothing
+		if(counter > 1) path_wrong();
+		else if(counter == 1){
+			// Check  if the key which was pressed is correct
+			switch(color){
+			case B:
+				if((keys & KEY_RIGHT) && (direction == RIGHT)) path_correct();
+				else if((keys & KEY_LEFT) && (direction == LEFT)) path_correct();
+				else if((keys & KEY_UP) && (direction == UP)) path_correct();
+				else if((keys & KEY_DOWN) && (direction == DOWN)) path_correct();
+				else path_wrong();
+				break;
+			case R:
+				if((keys & KEY_RIGHT) && (direction == LEFT))  path_correct();
+				else if((keys & KEY_LEFT) && (direction == RIGHT)) path_correct();
+				else if((keys & KEY_UP) && (direction == DOWN)) path_correct();
+				else if((keys & KEY_DOWN) && (direction == UP)) path_correct();
+				else path_wrong();
+				break;
+			case G:
+				if((keys & KEY_A) && (direction == RIGHT)) path_correct();
+				else if((keys & KEY_Y) && (direction == LEFT)) path_correct();
+				else if((keys & KEY_X) && (direction == UP)) path_correct();
+				else if((keys & KEY_B) && (direction == DOWN)) path_correct();
+				else path_wrong();
+				break;
+			case Y:
+				if((keys & KEY_A) && (direction == LEFT)) path_correct();
+				else if((keys & KEY_Y) && (direction == RIGHT)) path_correct();
+				else if((keys & KEY_X) && (direction == DOWN)) path_correct();
+				else if((keys & KEY_B) && (direction == UP)) path_correct();
+				else path_wrong();
+				break;
+			default:
+				break;
+			}
+		}
+	}
+
+	// Return score
+	return score;
+}
+
+// Correct function
+void path_correct(){
+	// Play sound
+	mmEffect(SFX_BON);
+
+	// Increment score
+	score++;
+
+	// Check level
+	if(score == PATHMEDIUM) level = MEDIUM;
+	if(score == PATHHARD) level = HARD;
+
+	// Launch next arrow
+	path_next();
+}
+
+// Wrong function
+void path_wrong(){
+	// Play sound
+	mmEffect(SFX_NUL);
+
+	// Update status
+	occupied = true;
+
+	// Reset wrong variable
+	wrong = 0;
+
+	// Launch wrong timer
+	TIMER1_CR |= TIMER_ENABLE;
 }
 
 void path_reset(){
-	// Desactivate BG0
+	// Deactivate BG0 SUB
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
+	// Disable timer 1
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER1);
 	TIMER1_CR = 0;
 
 	// Reset all global variables
+	direction = UP;
+	color = B;
+
 	score = 0;
+	level = EASY;
+
 	wrong = 0;
+	
+	occupied = false;
 }

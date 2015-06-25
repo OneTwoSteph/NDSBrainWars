@@ -15,6 +15,7 @@
 // Images
 #include "info_im.h"
 
+
 /****************************************************************** Constants */
 // Palettes
 #define NORMALPAL			6
@@ -33,11 +34,14 @@
 const char* names[7] = {"leader", "eatit", "musical", "path", "addition",
 					    "plusminus", "jankenpon"};
 
+
 /*********************************************************** Global variables */
 // Time variables
 int sec, min;
 
+
 /***************************************************************** Timer ISRs */
+// Time ISR
 void info_time_ISR3(){
 	// Update sec
 	sec++;
@@ -161,10 +165,11 @@ int info_get_time(){
 	return 60*min + sec;
 }
 
+// Stops the time timer and puts max values to min and sec
 void info_stop_time(){
 	TIMER3_CR &= ~(TIMER_ENABLE);
-	min = 60;
-	sec = 60;
+	min = 59;
+	sec = 59;
 }
 
 // Finish score and time displaying
@@ -232,7 +237,7 @@ int info_get_score(int game){
 	// Read score or put 0 if no file exists
 	int score;
 
-	if(file==NULL) score = 0;
+	if(file == NULL) score = 0;
 	else fscanf(file,"%i\n",&score);
 
 	// Close file

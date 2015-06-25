@@ -17,7 +17,7 @@
 
 
 /****************************************************************** Constants */
-// Palette
+// Palettes
 #define NORMALPAL	6
 #define GREYPAL 	7
 
@@ -27,7 +27,7 @@
 #define WPAC 		8
 #define WFOOD		6
 
-// Game
+// Game constants
 typedef enum ROW ROW;
 enum ROW
 {
@@ -46,20 +46,22 @@ enum FOOD
 
 /*********************************************************** Global variables */
 // Game variables
-ROW row;
-FOOD up[4];
-FOOD down[4];
+ROW row;					// gives where the pacman is
+FOOD up[4];					// occupation from left to right of up row
+FOOD down[4];				// occupation from left to right of down row
 
-// Game state variables
+// Game state 
 int score;
-int wrong;
+
+// Time variables
+int wrong;					// wrong blinking effect
 
 // Drawing variables
 bool occupied;
 
 
 /***************************************************************** Timer ISRs */
-// Wrong blinking effect
+// Wrong blinking effect ISR
 void eatit_timer_ISR1(void){
 	// Draw for blinking effect
 	swiWaitForVBlank();
@@ -79,14 +81,13 @@ void eatit_timer_ISR1(void){
 /****************************************************************** Functions */
 // Initialization
 void eatit_init(){
-	// Desactivate BG1
+	// Deactivate BG1 SUB
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy tiles to memory
+	// Copy tiles in BG0 SUB and put colors in palette
 	swiCopy(eatit_imTiles, BG_TILE_RAM_SUB(BG0TILE), eatit_imTilesLen);
 
-	// Set up palette colors
 	BG_PALETTE_SUB[0x61] = RED;
 	BG_PALETTE_SUB[0x62] = BLUE;
 	BG_PALETTE_SUB[0x63] = GREEN;
@@ -101,8 +102,16 @@ void eatit_init(){
 	BG_PALETTE_SUB[0x75] = GREY;
 	BG_PALETTE_SUB[0x76] = GREY;
 
+	// Draw grey background first
+	int x, y;
 
-	// Initialize variables
+	for(x = 0; x < W; x++){
+		for(y = 0; y < H; y++){
+			BG_MAP_RAM_SUB(BG0MAP)[y*W+x] = eatit_imMap[0] | (NORMALPAL << 12);
+		}
+	}
+
+	// Initialize global variables
 	int i;
 
 	for(i = 0; i < 4; i++){
@@ -112,30 +121,28 @@ void eatit_init(){
 
 	row = UP;
 
-	// Run 4 times new config in order to set the food random
-	for(i = 0; i < 4; i++) eatit_next();
-
-	// Draw pacman for the first time
-	eatit_draw_pacman();
-
-	// Configure interrupts and timer for false blinking effect
-	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
-	TIMER1_DATA = TIMER_FREQ_256(15);
-
-	irqSet(IRQ_TIMER1, &eatit_timer_ISR1);
-	irqEnable(IRQ_TIMER1);
-
-	// Set global variables
 	score = 0;
+
 	wrong = 0;
 
-	// Activate BG0 of SUB to draw first configuration
+	// Configure timer 1 for blinking effect
+	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
+	TIMER1_DATA = TIMER_FREQ_256(15);
+	irqSet(IRQ_TIMER1, &eatit_timer_ISR1);
+	irqEnable(IRQ_TIMER1);
+	
+	// Draw pacman for the first time and run 4 times new config in order to set the 
+	// food randomly
+	eatit_draw_pacman();
+	for(i = 0; i < 4; i++) eatit_next();
+
+	// Activate BG0 of SUB
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 }
 
-// new config
-void eatit_next(void){
+// New config
+void eatit_next(){
 	// Random food for new entries
 	int nb1, nb2;
 
@@ -254,8 +261,11 @@ int eatit_game(){
 	return score;
 }
 
-// Correct answer
+// Correct function
 void eatit_correct(){
+	// Play sound
+	mmEffect(SFX_BON);
+
 	// Draw pacman
 	swiWaitForVBlank();
 	eatit_draw_pacman();
@@ -267,13 +277,14 @@ void eatit_correct(){
 	eatit_next();
 }
 
+// Wrong function
 void eatit_wrong(){
+	// Play wrong effect
+	mmEffect(SFX_NUL);
+
 	// Draw false position
 	swiWaitForVBlank();
 	eatit_draw_pacman();
-
-	// Play wrong effect
-	if(wrong == 0) mmEffect(SFX_BOING);
 
 	// Update status
 	occupied = true;
@@ -285,11 +296,13 @@ void eatit_wrong(){
 	TIMER1_CR |= TIMER_ENABLE;
 }
 
-// Reset game
+// Reset function
 void eatit_reset(){
-	// Desactivate BG0
+	// Deactivate BG0 SUB
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
+	// Reset timer 1
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER1);
 	TIMER1_CR = 0;
@@ -305,5 +318,8 @@ void eatit_reset(){
 	row = UP;
 
 	score = 0;
+
 	wrong = 0;
+
+	occupied = false;
 }

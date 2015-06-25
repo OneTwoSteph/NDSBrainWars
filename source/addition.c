@@ -53,11 +53,11 @@ int numbers[3];
 int score;
 int touchedNb;
 
-// Timer variabels
+// Timer variables
 int draw;
 int wrong;
 
-// Status
+// Drawing tatus
 bool occupied;
 
 
@@ -69,7 +69,7 @@ void addition_timer_ISR0(){
 		TIMER0_CR &= ~(TIMER_ENABLE);
 		swiWaitForVBlank();
 		addition_draw_blocks();
-		addition_draw_number();
+		addition_draw_number(NORMALPAL);
 		occupied = false;
 	}
 
@@ -80,7 +80,7 @@ void addition_timer_ISR0(){
 // Wrong blinking ISR
 void addition_timer_ISR1(){
 	// Draw for blinking effect
-	//addition_draw_block(((wrong%2) == 0) ? GREYPAL : NORMALPAL);
+	addition_draw_number(((wrong%2) == 0) ? GREYPAL : NORMALPAL);
 
 	// Increment wrong
 	wrong++;
@@ -99,12 +99,12 @@ void addition_timer_ISR1(){
 // Initialization
 void addition_init() {
 	// Desactivate BG1
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy tiles to memory
+	// Copy tiles to BG0 SUB and put colors in palettes
 	swiCopy(addition_imTiles, BG_TILE_RAM_SUB(BG0TILE), addition_imTilesLen/2);
 
-	// Put correct colors in palettes
 	BG_PALETTE_SUB[0x61] = BLUE;
 	BG_PALETTE_SUB[0x62] = YELLOW;
 	BG_PALETTE_SUB[0x63] = WHITE;
@@ -124,22 +124,19 @@ void addition_init() {
 		}
 	}
 
-	// Activate BG0
-	swiWaitForVBlank();
-	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
-
-	// Configure timer for wrong blinking
+	// Configure timer 0 for drawing
 	TIMER0_DATA = TIMER_FREQ_1024(4);
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ | TIMER_ENABLE;
 	irqSet(IRQ_TIMER0, &addition_timer_ISR0);
 	irqEnable(IRQ_TIMER0);
 
-	// Configure timer for drawing
+	// Configure timer 1 for wrong blinking
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
 	irqSet(IRQ_TIMER1, &addition_timer_ISR1);
 	irqEnable(IRQ_TIMER1);
 
+	// Initialize global variables
 	number = MINNB;
 
 	counter = 0;
@@ -152,12 +149,17 @@ void addition_init() {
 	draw = 0;
 	wrong = 0;
 
-	occupied = wrong;
+	occupied = false;
+
+	// Activate BG0
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
 	// Launch first number
 	addition_next();
 }
 
+// New number
 void addition_next() {
 	// Save previous number
 	int prevNumber = number;
@@ -178,6 +180,7 @@ void addition_next() {
 	TIMER0_CR |= TIMER_ENABLE;
 }
 
+// Draw blocks
 void addition_draw_blocks() {
 	// Draw all numbers
 	int x, y;
@@ -189,6 +192,7 @@ void addition_draw_blocks() {
 	}
 }
 
+// Draw one block
 void addition_draw_block(int palette){
 	// Draw tone with palette
 	int x, y;
@@ -216,7 +220,8 @@ void addition_draw_block(int palette){
 	}
 }
 
-void addition_draw_number(){
+// Draw number
+void addition_draw_number(int pal){
 	// Find digits
 	int dig[2];
 
@@ -227,27 +232,28 @@ void addition_draw_number(){
 	// number
 	if(dig[0] > 0){
 		// First digit
-		addition_draw_digit(POSX1, dig[0], NORMALPAL);
+		addition_draw_digit(POSX1, dig[0], pal);
 
 		// Second digit
-		addition_draw_digit(POSX1 + WNB, dig[1], NORMALPAL);
+		addition_draw_digit(POSX1 + WNB, dig[1], pal);
 	}
 	else {
 		addition_draw_digit(POSX1, 0, GREYPAL);
 		addition_draw_digit(POSX1 + WNB, 0, GREYPAL);
-		addition_draw_digit(POSX2, dig[1], NORMALPAL);
+		addition_draw_digit(POSX2, dig[1], pal);
 	}
 	
 }
 
-void addition_draw_digit(int xstart, int digit, int palette){
+// Draw digits of the number
+void addition_draw_digit(int xstart, int digit, int pal){
 	int row, col;
 	int x = 0;
 	int y = H;
 
 	for(col = xstart; col < xstart + WNB; col++){
 		for(row = POSY; row < POSY + HNB; row++){
-			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = addition_imMap[y*WIM + digit*WNB + x] | (palette<<12);
+			BG_MAP_RAM_SUB(BG0MAP)[row*W+col] = addition_imMap[y*WIM + digit*WNB + x] | (pal<<12);
 			y++;
 		}
 		y = H;
@@ -255,6 +261,7 @@ void addition_draw_digit(int xstart, int digit, int palette){
 	}
 }
 
+// Man function
 int addition_game() {
 	// Scan keys only if game not occupied
 	if(!occupied){
@@ -323,7 +330,11 @@ int addition_game() {
 	return score;
 }
 
+// Correct function
 void addition_correct() {
+	// Play music
+	mmEffect(SFX_BON);
+
 	// Make number pressed disappear
 	addition_draw_block(GREYPAL);
 
@@ -340,7 +351,11 @@ void addition_correct() {
 	}
 }
 
+// Wrong function
 void addition_wrong() {
+	// Play wrong effect
+	mmEffect(SFX_NUL);
+
 	// Make number pressed disappear
 	addition_draw_block(GREYPAL);
 
@@ -352,21 +367,36 @@ void addition_wrong() {
 
 	// Launch timer
 	TIMER1_CR |= TIMER_ENABLE;
-
-	// Play wrong effect
-	mmEffect(SFX_BOING);
 }
 
+// Reset function
 void addition_reset() {
-	// Disable timers
-	TIMER0_CR = 0;
-	TIMER1_CR = 0;
-	irqDisable(IRQ_TIMER0);
-	irqDisable(IRQ_TIMER1);
-	irqClear(IRQ_TIMER0);
-	irqClear(IRQ_TIMER1);
-
-	// Desactivate BG0
+	// Deactivate BG0 SUB
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
+
+	// Disable timer 0
+	irqDisable(IRQ_TIMER0);
+	irqClear(IRQ_TIMER0);
+	TIMER0_CR = 0;
+
+	// Disable timer 1
+	irqDisable(IRQ_TIMER1);
+	irqClear(IRQ_TIMER1);
+	TIMER1_CR = 0;
+	
+	// Reset global variables
+	number = MINNB;
+
+	counter = 0;
+	int i;
+	for(i = 0; i < 3; i++) numbers[i] = 0;
+
+	score = 0;
+	touchedNb = 0;
+
+	draw = 0;
+	wrong = 0;
+
+	occupied = false;
 }

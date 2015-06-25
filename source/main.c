@@ -9,19 +9,23 @@
 
 
 /******************************************************************** Modules */
-//General
+// General
 #include "general.h"
 #include "brainwars.h"
 
 
-/*********************************************************************** Main */
+/****************************************************************** Functions */
+// Main function of the game (main loop)
 int main(void) {
     // Initialize game
     brainwars_start_init();
 
     // Game infinite loop
     while(1){
+    	// Execute game
     	brainwars_main();
+
+    	// Scan keys one time per loop to avoid over-reading
     	scanKeys();
     }
 }

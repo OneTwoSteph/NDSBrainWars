@@ -31,8 +31,6 @@
 // Screen dimensions
 #define W			   32				// width of screen in tiles
 #define H 			   24				// height of screen in tile
-#define WP			  256				// width of screen in pixels
-#define HP			  192				// height of screen in pixels
 
 // Backgrounds memory infos
 #define BG0TILE		1
@@ -41,7 +39,6 @@
 #define BG1MAP		3
 #define BG2TILE		5
 #define BG2MAP		6
-
 
 // Colors
 #define BLACK 		ARGB16(1,11,11,11)
@@ -58,25 +55,20 @@
 #define PAUSE			0.6
 
 // Game level tresholds
-#define LEADERLEVEL		4
+#define LEADERLEVEL		3
 
 #define PATHMEDIUM 		4
 #define PATHHARD 		8
 
-#define MUSICALMEDIUM 	3
-#define MUSICALHARD 	9
+#define MUSICALMEDIUM 	2
+#define MUSICALHARD 	5
 
-#define JANKENPONMEDIUM 4
-#define JANKENPONHARD 	8
+#define JANKENPONMEDIUM 3
+#define JANKENPONHARD 	6
 
 // 1p and 2p info
 #define GAMETIME	    20
 
-// Players
-#define P1               0
-#define P2               1
-#define PLAYERONE        0
-#define PLAYERTWO        1
 
 /*************************************************************** Enumerations */
 typedef enum STATE STATE;

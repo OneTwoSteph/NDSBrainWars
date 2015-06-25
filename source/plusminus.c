@@ -10,7 +10,6 @@
 /******************************************************************** Modules */
 // General
 #include "general.h"
-#include "info.h"
 #include "plusminus.h"
 
 // Images
@@ -18,38 +17,40 @@
 
 
 /****************************************************************** Constants */
-// Display infos
+// Palettes
+#define NORMALPAL	6
+#define GREYPAL		7
+
+// Image infos
 #define POSX1 		8
 #define POSX2		12
 #define POSY		4
 #define NBW			8
 #define NBH			16
 
-// Paletters
-#define NORMALPAL	6
-#define GREYPAL		7
-
-// Game
+// Game constants
 #define GREATER 	1
 #define SMALLER 	2
 
 
 /*********************************************************** Global variables */
-int number;
-int compare;
+// Game variable
+int number;					// current number
+int compare;				// current number status comparing to previous one
 
+// Game state
 int score;
 
-int draw;					// number draw counter for timer
-int wrong;					// wrong blinking counter for timer
+// Timer variables
+int draw;					// number drawing pause				
+int wrong;					// wrong blinking effect
 
-bool occupied;				// drawing status
-
-int draw_timer;
+// Drawing status
+bool occupied;				// block actions while drawing
 
 
 /***************************************************************** Timer ISRs */
-// Timer for number display
+// Number drawing ISR
 void plusminus_timer_ISR0(){
 	// Draw nothing at the beginnin
 	if(draw == 0) plusminus_draw_number(GREYPAL);
@@ -94,15 +95,17 @@ void plusminus_timer_ISR1(){
 	}
 }
 
+
 /****************************************************************** Functions */
+// Initialization
 void plusminus_init() {
-	// Desacitvate BG1
+	// Deactivate BG1 SUB
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy images containing numbers in BG1 and palette in second palette
+	// Copy tiles in BG0 of SUB and put correct colors in palette
 	swiCopy(plusminus_imTiles, BG_TILE_RAM_SUB(BG0TILE), plusminus_imTilesLen/2);
 
-	// Configure palette with correct colors
 	BG_PALETTE_SUB[0x61] = BLUE;
 	BG_PALETTE_SUB[0x62] = GREY;
 
@@ -119,16 +122,13 @@ void plusminus_init() {
 		}
 	}
 
-	//
-	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
-
-	// Configure timer for initial 0 display
+	// Configure timer 0 for drawing
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
 	TIMER0_DATA = TIMER_FREQ_1024(5);
 	irqSet(IRQ_TIMER0, &plusminus_timer_ISR0);
 	irqEnable(IRQ_TIMER0);
 
-	// Configure interrupts and timer for false blinking effect every 0.123s
+	// Configure timer 1 for wrong blinking
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
 	irqSet(IRQ_TIMER1, &plusminus_timer_ISR1);
@@ -143,10 +143,17 @@ void plusminus_init() {
 	draw = 0;
 	wrong = 0;
 
-	// Launch first number 0
+	occupied = false;
+
+	// Activate BG0 SUB
+	swiWaitForVBlank();
+	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
+
+	// Launch first number
 	plusminus_start();
 }
 
+// Draw first the 0 to start
 void plusminus_start(){
 	// Set status to occupied
 	occupied = true;
@@ -158,6 +165,7 @@ void plusminus_start(){
 	TIMER0_CR |= TIMER_ENABLE;
 }
 
+// Find new number
 void plusminus_new_number() {
 	// Put flag
 	occupied = true;
@@ -181,6 +189,7 @@ void plusminus_new_number() {
 	TIMER0_CR |= TIMER_ENABLE;
 }
 
+// Draw number 
 void plusminus_draw_number(int palette){
 	// Check digits of the number
 	int dig1, dig2;
@@ -205,6 +214,7 @@ void plusminus_draw_number(int palette){
 	}
 }
 
+// Draw digit of number
 void plusminus_draw_digit(int xstart, int digit, int palette){
 	int row, col;
 	int x = 0;
@@ -220,6 +230,7 @@ void plusminus_draw_digit(int xstart, int digit, int palette){
 	}
 }
 
+// Main function
 int plusminus_game() {
 	// Scan the keys only the game is not in drawing
 	// mode or in error blinking mode
@@ -247,7 +258,11 @@ int plusminus_game() {
 	return score;
 }
 
+// Correct function
 void plusminus_correct() {
+	// Play sound
+	mmEffect(SFX_BON);
+
 	// Update score
 	score++;
 
@@ -255,7 +270,12 @@ void plusminus_correct() {
 	plusminus_new_number();
 }
 
+
+// Wrong function
 void plusminus_wrong(){
+	// Play sound
+	mmEffect(SFX_NUL);
+
 	// Update status
 	occupied = true;
 
@@ -264,26 +284,25 @@ void plusminus_wrong(){
 
 	// Launch wrong timer
 	TIMER1_CR |= TIMER_ENABLE;
-
-	// Play wrong effect
-	if(wrong == 0) mmEffect(SFX_BOING);
 }
 
+// Reset function
 void plusminus_reset(void) {
-	// Desactivate BG0
+	// Deactivate BG0 SUB
+	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
-	// Disable timers
+	// Disable timer 0
 	irqDisable(IRQ_TIMER0);
 	irqClear(IRQ_TIMER0);
 	TIMER0_CR = 0;
 
+	// Disable timer 1
 	irqDisable(IRQ_TIMER1);
 	irqClear(IRQ_TIMER1);
 	TIMER0_CR = 1;
 
-	// Reset variable
-
+	// Reset all global variables
 	number = 0;
 	compare = GREATER;
 
@@ -291,4 +310,6 @@ void plusminus_reset(void) {
 
 	draw = 0;
 	wrong = 0;
+
+	occupied = false;
 }

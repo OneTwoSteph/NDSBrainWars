@@ -25,7 +25,7 @@
 #define XSTART 		4
 #define WT 			6
 
-// Music
+// Game constants
 typedef enum MUSIC MUSIC;
 enum MUSIC
 {
@@ -37,24 +37,24 @@ enum MUSIC
 
 
 /*********************************************************** Global variables */
-// Sound variable
+// Sound variable for playing music tones
 mm_sound_effect sound;
 
 // Game variables
-MUSIC music[4];
+MUSIC music[4];				// tones order
 
 // Game state
 int score;
 LEVEL level;
-int answer;
-MUSIC wrongTone;
+int answer;					// current tone to find
+MUSIC wrongTone;			// last wrong tone touched
 
 // Timer variables
-int tonenb;
-MUSIC wrong;
+int tonenb;					// draw notes and play music
+MUSIC wrong;				// wrong blinking effect
 
 // Drawing status
-bool occupied;
+bool occupied;				// block actions while drawing
 
 
 /***************************************************************** Timer ISRs */
@@ -85,7 +85,7 @@ void musical_timer_ISR1(){
 	wrong++;
 
 	// When already blinked 3 times, update status, disable timer and launch new
-	// config
+	// configuration
 	if(wrong == 6){
 		TIMER1_CR &= ~(TIMER_ENABLE);
 		occupied = false;
@@ -97,11 +97,11 @@ void musical_timer_ISR1(){
 /****************************************************************** Functions */
 // Initialization
 void musical_init(){
-	// Desactivate BG1
+	// Deactivate BG1 SUB
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG1_ACTIVE;
 
-	// Copy tiles to memory
+	// Copy tiles in BG0 of SUB and put correct colors in palette
 	swiCopy(musical_imTiles, BG_TILE_RAM_SUB(BG0TILE), musical_imTilesLen);
 
 	// Set up palette colors (palette contains back, arrow, circle in this order)
@@ -122,13 +122,13 @@ void musical_init(){
 		}
 	}
 
-	// Configure music timer
+	// Configure music timer 0
 	TIMER0_CR = TIMER_DIV_1024 | TIMER_IRQ_REQ;
 	TIMER0_DATA = TIMER_FREQ_1024(4);
 	irqSet(IRQ_TIMER0, &musical_timer_ISR0);
 	irqEnable(IRQ_TIMER0);
 
-	// Configure wrong blinking timer
+	// Configure wrong blinking timer 1
 	TIMER1_CR = TIMER_DIV_256 | TIMER_IRQ_REQ;
 	TIMER1_DATA = TIMER_FREQ_256(15);
 	irqSet(IRQ_TIMER1, &musical_timer_ISR1);
@@ -158,7 +158,7 @@ void musical_init(){
 
 	occupied = false;
 
-	// Activate BG0
+	// Activate BG0 SUB
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB |= DISPLAY_BG0_ACTIVE;
 
@@ -270,6 +270,8 @@ void musical_draw_tone(int tone, int palette){
 
 // Main function
 int musical_game(){
+	// Scan the keys only the game is not in drawing
+	// mode or in error blinking mode
 	if(!occupied){
 		// Scan keys
 		u16 keys = (u16) keysDown();
@@ -346,26 +348,25 @@ void musical_wrong(){
 
 	// Launch wrong timer
 	TIMER1_CR |= TIMER_ENABLE;
-
-	// Play wrong effect
-	mmEffect(SFX_BOING);
 }
 
-// Reset
+// Reset function
 void musical_reset(){
-	// Disable timers
-	TIMER0_CR = 0;
-	TIMER1_CR = 0;
-	irqDisable(IRQ_TIMER0);
-	irqDisable(IRQ_TIMER1);
-	irqClear(IRQ_TIMER0);
-	irqClear(IRQ_TIMER1);
-
-	// Desactivate BG0
+	// Deactivate BG0 SUB
 	swiWaitForVBlank();
 	REG_DISPCNT_SUB &= ~DISPLAY_BG0_ACTIVE;
 
-	// Reset all global variables (just to be sure)
+	// Disable timer 0
+	irqDisable(IRQ_TIMER0);
+	irqClear(IRQ_TIMER0);
+	TIMER0_CR = 0;
+
+	// Disable timer 1
+	irqDisable(IRQ_TIMER1);
+	irqClear(IRQ_TIMER1);
+	TIMER1_CR = 0;
+
+	// Reset all global variables
 	int i;
 
 	for(i = 0; i < 4; i++){
